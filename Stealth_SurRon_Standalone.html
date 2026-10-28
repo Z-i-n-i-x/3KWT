@@ -661,6 +661,10 @@
           <span>ЧЕРТЕЖИ И ТЕХКАРТЫ (1:1)</span>
           <span>CAD DOCS</span>
         </div>
+        <button class="blueprint-btn" data-modal="battery">
+          <span>СХЕМА: СБОРКА АКБ 20S7P (140 ЯЧЕЕК)</span>
+          <small>Змейка 1S→20S • Медь+Никель • Распайка BMS 120A</small>
+        </button>
         <button class="blueprint-btn" data-modal="saddle">
           <span>ЧЕРТЕЖ: МОТО-СЕДЛО И ПОДРАМНИК</span>
           <small>П-паз 40×70 мм • Сталь 18×2 мм • Стоп-сигнал</small>
@@ -730,11 +734,12 @@ import gsap from 'gsap';
 // --- [1/5] MATERIALS & PROCEDURAL PBR TEXTURES ---
 // ============================================================================
 // STEALTH SUR-RON 72V 3000W — PBR MATERIALS & PROCEDURAL TEXTURE GENERATOR
-// Full Matte Black Stealth RAL 9005 + Cordura 1000D + Anodized CNC + Decals
+// Full Matte Black Stealth RAL 9005 + Cordura 1000D Basketweave + FOXSID 32 +
+// KENDA K-RAD Sidewall + ZOOM HB-890E + 20S7P Copper/Nickel Busbar Textures
 // ============================================================================
 
 /**
- * Generates a tileable 2D value/Perlin micro-grain noise texture for powder coat
+ * 1. Tileable 2D micro-grain noise texture for matte powder coat (RAL 9005)
  */
 function createMicroGrainTexture(size = 512, contrast = 0.25) {
   const canvas = document.createElement('canvas');
@@ -747,11 +752,10 @@ function createMicroGrainTexture(size = 512, contrast = 0.25) {
   for (let i = 0; i < data.length; i += 4) {
     const px = (i / 4) % size;
     const py = Math.floor((i / 4) / size);
-    // Multi-frequency deterministic pseudo-perlin micro-grain
     const n1 = Math.sin(px * 0.37 + py * 0.73) * 0.5 + 0.5;
     const n2 = Math.cos(px * 1.13 - py * 0.89) * 0.5 + 0.5;
     const rand = Math.random();
-    const val = Math.floor((128 + ((n1 * 0.35 + n2 * 0.35 + rand * 0.3) - 0.5) * 255 * contrast));
+    const val = Math.floor(128 + ((n1 * 0.35 + n2 * 0.35 + rand * 0.3) - 0.5) * 255 * contrast);
     const clamped = Math.max(0, Math.min(255, val));
     data[i] = clamped;
     data[i + 1] = clamped;
@@ -768,64 +772,128 @@ function createMicroGrainTexture(size = 512, contrast = 0.25) {
 }
 
 /**
- * Generates ballistic nylon Cordura 1000D PU weave + stitching texture
+ * 2. High-Definition Ballistic Nylon CORDURA 1000D 2x2 Basketweave Texture
+ * Scaled for meter-space ExtrudeGeometry UVs (repeat = 26x26 per meter -> ~1.9mm yarn pitch)
  */
-function createCorduraWeaveTexture(size = 512) {
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
+function createCorduraWeaveTextures(size = 512) {
+  const colorCanvas = document.createElement('canvas');
+  colorCanvas.width = size;
+  colorCanvas.height = size;
+  const cCtx = colorCanvas.getContext('2d');
 
-  ctx.fillStyle = '#141416';
-  ctx.fillRect(0, 0, size, size);
+  const bumpCanvas = document.createElement('canvas');
+  bumpCanvas.width = size;
+  bumpCanvas.height = size;
+  const bCtx = bumpCanvas.getContext('2d');
 
-  const step = 4;
-  for (let y = 0; y < size; y += step) {
-    for (let x = 0; x < size; x += step) {
-      const isWarp = ((x / step) + (y / step)) % 2 === 0;
-      const shade = isWarp ? 36 + Math.floor(Math.random() * 14) : 18 + Math.floor(Math.random() * 10);
-      ctx.fillStyle = `rgb(${shade},${shade},${shade + 2})`;
-      ctx.fillRect(x, y, step - 0.5, step - 0.5);
+  // Deep tactical black base in sRGB
+  cCtx.fillStyle = '#07080a';
+  cCtx.fillRect(0, 0, size, size);
+
+  bCtx.fillStyle = '#0c0c0c';
+  bCtx.fillRect(0, 0, size, size);
+
+  const cell = 32; // 16x16 distinct 2x2 basketweave cells per tile (avoids mipmap aliasing)
+  for (let y = 0; y < size; y += cell) {
+    for (let x = 0; x < size; x += cell) {
+      const isWarp = ((x / cell) + (y / cell)) % 2 === 0;
+      const jitter = Math.floor(Math.sin(x * 0.13 + y * 0.29) * 8);
+
+      if (isWarp) {
+        // Vertical 1000D ballistic nylon double-filament bundle (2x2 basketweave)
+        const gradC = cCtx.createLinearGradient(x, y, x + cell, y);
+        gradC.addColorStop(0.0, '#060709');
+        gradC.addColorStop(0.22, '#1d2026');
+        gradC.addColorStop(0.46, '#2d323b');
+        gradC.addColorStop(0.50, '#0c0e12'); // center split between dual 1000D yarns
+        gradC.addColorStop(0.54, '#2d323b');
+        gradC.addColorStop(0.78, '#1d2026');
+        gradC.addColorStop(1.0, '#060709');
+        cCtx.fillStyle = gradC;
+        cCtx.fillRect(x + 2, y + 2, cell - 4, cell - 4);
+
+        // Bump height for warp yarn
+        const peak = Math.max(180, Math.min(250, 230 + jitter)).toString(16);
+        const gradB = bCtx.createLinearGradient(x, y, x + cell, y);
+        gradB.addColorStop(0.0, '#101010');
+        gradB.addColorStop(0.42, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#555555');
+        gradB.addColorStop(0.58, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(1.0, '#101010');
+        bCtx.fillStyle = gradB;
+        bCtx.fillRect(x + 2, y + 2, cell - 4, cell - 4);
+      } else {
+        // Horizontal 1000D ballistic nylon double-filament bundle
+        const gradC = cCtx.createLinearGradient(x, y, x, y + cell);
+        gradC.addColorStop(0.0, '#050608');
+        gradC.addColorStop(0.22, '#171a20');
+        gradC.addColorStop(0.46, '#252932');
+        gradC.addColorStop(0.50, '#0b0c10');
+        gradC.addColorStop(0.54, '#252932');
+        gradC.addColorStop(0.78, '#171a20');
+        gradC.addColorStop(1.0, '#050608');
+        cCtx.fillStyle = gradC;
+        cCtx.fillRect(x + 2, y + 2, cell - 4, cell - 4);
+
+        const peak = Math.max(170, Math.min(240, 205 + jitter)).toString(16);
+        const gradB = bCtx.createLinearGradient(x, y, x, y + cell);
+        gradB.addColorStop(0.0, '#101010');
+        gradB.addColorStop(0.42, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#505050');
+        gradB.addColorStop(0.58, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(1.0, '#101010');
+        bCtx.fillStyle = gradB;
+        bCtx.fillRect(x + 2, y + 2, cell - 4, cell - 4);
+      }
     }
   }
 
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(24, 24);
-  return tex;
+  const colorTex = new THREE.CanvasTexture(colorCanvas);
+  colorTex.colorSpace = THREE.SRGBColorSpace;
+  colorTex.wrapS = THREE.RepeatWrapping;
+  colorTex.wrapT = THREE.RepeatWrapping;
+  colorTex.repeat.set(9.5, 9.5);
+  colorTex.anisotropy = 8;
+
+  const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+  bumpTex.wrapS = THREE.RepeatWrapping;
+  bumpTex.wrapT = THREE.RepeatWrapping;
+  bumpTex.repeat.set(9.5, 9.5);
+  bumpTex.anisotropy = 8;
+
+  return { colorTex, bumpTex };
 }
 
 /**
- * Generates radial brushed steel texture with brake pad friction tracks for 180mm rotors
+ * 3. Radial brushed stainless steel texture for 180mm brake rotors
  */
 function createRotorBrushedTexture(size = 512) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  const cx = size / 2;
-  const cy = size / 2;
 
-  ctx.fillStyle = '#c8cdd2';
+  ctx.fillStyle = '#d0d5dd';
   ctx.fillRect(0, 0, size, size);
 
-  // Concentric friction grooves from sintered pads
-  for (let r = 40; r < size * 0.49; r += 1.2) {
-    const shade = 185 + Math.floor(Math.sin(r * 0.9) * 28 + (Math.random() - 0.5) * 25);
-    ctx.strokeStyle = `rgb(${shade},${shade + 2},${shade + 5})`;
-    ctx.lineWidth = 1.1;
+  const cx = size / 2;
+  const cy = size / 2;
+  for (let r = 40; r < size * 0.48; r += 1.5) {
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    const shade = 185 + Math.floor(Math.sin(r * 0.9) * 25 + (Math.random() - 0.5) * 20);
+    ctx.strokeStyle = `rgb(${shade}, ${shade + 2}, ${shade + 5})`;
+    ctx.lineWidth = 1.1;
     ctx.stroke();
   }
 
   const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4;
   return tex;
 }
 
 /**
- * Generates anti-slip dimpled moto-vinyl bump texture for Sur-Ron / Pitbike seat
+ * 4. Anti-slip dimpled motorcycle vinyl texture for the 530mm Sur-Ron saddle
  */
 function createMotoVinylBumpTexture(size = 512) {
   const canvas = document.createElement('canvas');
@@ -833,16 +901,16 @@ function createMotoVinylBumpTexture(size = 512) {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#404040';
+  ctx.fillStyle = '#505050';
   ctx.fillRect(0, 0, size, size);
 
-  const spacing = 8;
-  for (let y = 0; y < size; y += spacing) {
-    const offset = (Math.floor(y / spacing) % 2) * (spacing / 2);
-    for (let x = 0; x < size; x += spacing) {
-      ctx.fillStyle = '#d8d8d8';
+  const step = 10;
+  for (let y = 0; y < size; y += step) {
+    for (let x = 0; x < size; x += step) {
+      const offsetX = (y / step) % 2 === 0 ? 0 : step / 2;
       ctx.beginPath();
-      ctx.arc(x + offset, y, 2.3, 0, Math.PI * 2);
+      ctx.arc(x + offsetX, y, 2.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#d8d8d8';
       ctx.fill();
     }
   }
@@ -850,12 +918,12 @@ function createMotoVinylBumpTexture(size = 512) {
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(18, 8);
+  tex.repeat.set(22, 10);
   return tex;
 }
 
 /**
- * Generates high-resolution vertical FOXSID decal texture for fork lowers
+ * 5. Authentic FOXSID 32 / XSD / AIR FORK decal material matching Reference Photo #4
  */
 function createFoxsidDecalMaterial() {
   const canvas = document.createElement('canvas');
@@ -865,26 +933,54 @@ function createFoxsidDecalMaterial() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // 1) Upper "32" stylized hollow-block holographic/silver decal (top of lower leg)
   ctx.save();
-  ctx.translate(128, 512);
-  ctx.rotate(-Math.PI / 2);
-
-  // Subtle grey & red technical accent stripes
-  ctx.fillStyle = '#383d47';
-  ctx.fillRect(-310, -76, 620, 8);
-  ctx.fillStyle = '#d92b2b';
-  ctx.fillRect(-310, 62, 165, 8);
-
-  // Crisp white FOXSID vertical typography
-  ctx.font = '900 112px "JetBrains Mono", Arial, sans-serif';
+  ctx.translate(128, 210);
+  ctx.font = '900 110px "JetBrains Mono", Impact, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#f5f7fa';
-  ctx.fillText('FOXSID', 0, -4);
+  ctx.strokeStyle = '#d8e4f0';
+  ctx.lineWidth = 6;
+  ctx.strokeText('32', 0, 0);
+  ctx.fillStyle = 'rgba(130, 210, 230, 0.25)';
+  ctx.fillText('32', 0, 0);
+  ctx.restore();
 
-  ctx.font = '700 24px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#c4cbd6';
-  ctx.fillText('AIR EVOLUTION // X2 32MM', 55, 70);
+  // 2) Middle "XSD" shield emblem (from FOXSID 32 reference photo)
+  ctx.save();
+  ctx.translate(128, 370);
+  ctx.fillStyle = '#181a1f';
+  ctx.strokeStyle = '#d8e0ea';
+  ctx.lineWidth = 4;
+  ctx.fillRect(-52, -26, 104, 52);
+  ctx.strokeRect(-52, -26, 104, 52);
+  ctx.fillStyle = '#f5b800';
+  ctx.font = '900 32px "JetBrains Mono", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('XSD', 0, 2);
+  ctx.restore();
+
+  // 3) Lower vertical "FOXSID" + "AIR FORK" typography
+  ctx.save();
+  ctx.translate(128, 690);
+  ctx.rotate(-Math.PI / 2);
+
+  // Top dashed tech bar
+  ctx.fillStyle = '#cfd8e3';
+  ctx.fillRect(-230, -72, 460, 8);
+  ctx.fillStyle = '#d92b2b';
+  ctx.fillRect(-230, 62, 130, 8);
+
+  ctx.font = '900 98px "JetBrains Mono", Impact, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f4f7fb';
+  ctx.fillText('FOXSID', 0, -6);
+
+  ctx.font = '800 26px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#bfc8d6';
+  ctx.fillText('AIR FORK // 32MM', 42, 66);
   ctx.restore();
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -893,15 +989,71 @@ function createFoxsidDecalMaterial() {
   return new THREE.MeshPhysicalMaterial({
     map: tex,
     transparent: true,
-    alphaTest: 0.08,
-    roughness: 0.42,
-    metalness: 0.25,
-    clearcoat: 0.2
+    alphaTest: 0.06,
+    roughness: 0.35,
+    metalness: 0.3,
+    clearcoat: 0.25
   });
 }
 
 /**
- * Generates MTX39 circular polar rim arc decal texture matching RingGeometry planar UVs
+ * 6. Authentic KENDA Sidewall Tire Logo + Subtle Rim Decal Texture (Reference Photo #1 & #3)
+ */
+function createKendaTireSidewallMaterial() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+  const cx = 512;
+  const cy = 512;
+
+  ctx.clearRect(0, 0, 1024, 1024);
+
+  // At 6 o'clock (angle = Math.PI / 2 in canvas coordinates): yellow "KENDA" + "K-RAD 26x2.35"
+  const baseAngle = Math.PI / 2;
+  const letters = ['K', 'E', 'N', 'D', 'A'];
+  letters.forEach((ch, idx) => {
+    const ang = baseAngle + (idx - 2) * 0.052;
+    ctx.save();
+    ctx.translate(cx + Math.cos(ang) * 474, cy + Math.sin(ang) * 474);
+    ctx.rotate(ang - Math.PI / 2);
+    ctx.font = 'italic 900 34px "JetBrains Mono", Impact, Arial, sans-serif';
+    ctx.fillStyle = idx === 0 ? '#e62222' : '#f5c400';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
+  });
+
+  // Opposite side (12 o'clock): subtle molded "K-RAD K905 26x2.35" marking
+  const topLetters = 'K-RAD 26x2.35'.split('');
+  topLetters.forEach((ch, idx) => {
+    const ang = -Math.PI / 2 + (idx - 6) * 0.032;
+    ctx.save();
+    ctx.translate(cx + Math.cos(ang) * 474, cy + Math.sin(ang) * 474);
+    ctx.rotate(ang + Math.PI / 2);
+    ctx.font = '700 20px "JetBrains Mono", sans-serif';
+    ctx.fillStyle = 'rgba(210, 215, 220, 0.35)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
+  });
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 8;
+  return new THREE.MeshPhysicalMaterial({
+    map: tex,
+    transparent: true,
+    alphaTest: 0.05,
+    roughness: 0.85,
+    metalness: 0.05,
+    side: THREE.DoubleSide
+  });
+}
+
+/**
+ * 7. Stealth Black MTX39 Rim Texture with subtle authentic valve/joint technical markings
  */
 function createMtx39DecalTexture() {
   const canvas = document.createElement('canvas');
@@ -911,48 +1063,31 @@ function createMtx39DecalTexture() {
   const cx = 512;
   const cy = 512;
 
-  // Deep matte black rim base
-  ctx.fillStyle = '#0c0c0e';
+  // Deep stealth anodized matte black rim base (matching Reference Photo #1)
+  ctx.fillStyle = '#0c0d0f';
   ctx.fillRect(0, 0, 1024, 1024);
 
-  // Draw 3 authentic SunRingle MTX39 arc decals around the rim circumference
-  const decalAngles = [0.25, 2.35, 4.45];
-  decalAngles.forEach((baseAngle) => {
-    // Red/magenta racing arc
+  // Subtle dark-grey & red technical rim spec badges at 2 opposite points
+  [0.2, Math.PI + 0.2].forEach((baseAngle) => {
     ctx.beginPath();
-    ctx.arc(cx, cy, 496, baseAngle - 0.26, baseAngle - 0.08);
-    ctx.strokeStyle = '#d91642';
-    ctx.lineWidth = 22;
+    ctx.arc(cx, cy, 496, baseAngle - 0.10, baseAngle - 0.03);
+    ctx.strokeStyle = '#b81d33';
+    ctx.lineWidth = 10;
     ctx.stroke();
 
-    // Yellow accent tick
-    ctx.beginPath();
-    ctx.arc(cx, cy, 496, baseAngle - 0.07, baseAngle - 0.03);
-    ctx.strokeStyle = '#f5b800';
-    ctx.lineWidth = 22;
-    ctx.stroke();
-
-    // White MTX39 lettering along arc
-    const letters = ['M', 'T', 'X', '3', '9'];
+    const letters = 'MTX39'.split('');
     letters.forEach((ch, idx) => {
-      const ang = baseAngle + 0.02 + idx * 0.048;
+      const ang = baseAngle + idx * 0.032;
       ctx.save();
       ctx.translate(cx + Math.cos(ang) * 496, cy + Math.sin(ang) * 496);
       ctx.rotate(ang + Math.PI / 2);
-      ctx.font = '900 26px "JetBrains Mono", Impact, sans-serif';
-      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 18px "JetBrains Mono", sans-serif';
+      ctx.fillStyle = '#8b929e';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(ch, 0, 0);
       ctx.restore();
     });
-
-    // Red tail stripe
-    ctx.beginPath();
-    ctx.arc(cx, cy, 496, baseAngle + 0.27, baseAngle + 0.38);
-    ctx.strokeStyle = '#d91642';
-    ctx.lineWidth = 18;
-    ctx.stroke();
   });
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -961,7 +1096,7 @@ function createMtx39DecalTexture() {
 }
 
 /**
- * Generates SW900 LCD Computer Screen texture
+ * 8. Generates SW900 LCD Computer Screen texture
  */
 function createSw900ScreenTexture() {
   const canvas = document.createElement('canvas');
@@ -995,11 +1130,46 @@ function createSw900ScreenTexture() {
 }
 
 /**
+ * 9. Generates crisp 3D badge material for each of the 20 battery series sections (1S..20S)
+ */
+function createBatterySeriesLabelMaterial(seriesId, polarityOnLeft) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+
+  const isMainNeg = seriesId === 1;
+  const isMainPos = seriesId === 20;
+
+  ctx.fillStyle = isMainPos ? '#4a1208' : isMainNeg ? '#08223a' : '#10141c';
+  ctx.fillRect(0, 0, 256, 64);
+
+  ctx.strokeStyle = isMainPos ? '#ff3b1f' : isMainNeg ? '#00d2ff' : '#00ff66';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, 252, 60);
+
+  const polStr = polarityOnLeft > 0 ? '(+)' : '(-)';
+  const tag = isMainNeg ? '1S [B- 0V]' : isMainPos ? '20S [B+ 84V]' : `${seriesId}S ${polStr}`;
+
+  ctx.font = '900 30px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(tag, 128, 33);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  return new THREE.MeshBasicMaterial({
+    map: tex,
+    side: THREE.DoubleSide
+  });
+}
+
+/**
  * Master dictionary of all required PBR Materials
  */
 function createStealthMaterials() {
   const microGrainTex = createMicroGrainTexture(512, 0.28);
-  const corduraTex = createCorduraWeaveTexture(512);
+  const { colorTex: corduraColorTex, bumpTex: corduraBumpTex } = createCorduraWeaveTextures(512);
   const rotorTex = createRotorBrushedTexture(512);
   const motoVinylTex = createMotoVinylBumpTexture(512);
   const mtxDecalTex = createMtx39DecalTexture();
@@ -1008,73 +1178,81 @@ function createStealthMaterials() {
   // 1. MAT_FRAME_RAL9005 (Frame, subframe, 6mm dropout armor plates)
   const MAT_FRAME_RAL9005 = new THREE.MeshPhysicalMaterial({
     name: 'MAT_FRAME_RAL9005',
-    color: 0x111111,
-    roughness: 0.88,
+    color: 0x121316,
+    roughness: 0.84,
     metalness: 0.25,
-    clearcoat: 0.02,
-    roughnessMap: microGrainTex,
+    clearcoat: 0.04,
     bumpMap: microGrainTex,
-    bumpScale: 0.0012
+    bumpScale: 0.0015,
+    roughnessMap: microGrainTex
   });
 
-  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle)
+  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — true 1000D basketweave)
   const MAT_CORDURA_1000D = new THREE.MeshPhysicalMaterial({
     name: 'MAT_CORDURA_1000D',
-    color: 0x0d0d0e,
-    roughness: 0.95,
+    color: 0xffffff,
+    map: corduraColorTex,
+    roughness: 0.92,
     metalness: 0.02,
-    bumpMap: corduraTex,
-    bumpScale: 0.0022,
-    roughnessMap: corduraTex,
+    bumpMap: corduraBumpTex,
+    bumpScale: 0.015,
+    roughnessMap: corduraBumpTex,
+    envMapIntensity: 0.35,
+    sheen: 0.16,
+    sheenRoughness: 0.85,
+    sheenColor: new THREE.Color(0x1f2228),
     transparent: true,
     opacity: 1.0
   });
 
-  // 3. MAT_ANODIZED_BLACK (Fork stanchions, bars, stem, ZOOM calipers, motor covers)
+  // 3. MAT_ANODIZED_BLACK (Fork FOXSID-X2 stanchions, handlebar, stem, ZOOM calipers, motor covers)
   const MAT_ANODIZED_BLACK = new THREE.MeshPhysicalMaterial({
     name: 'MAT_ANODIZED_BLACK',
-    color: 0x0a0a0c,
-    roughness: 0.32,
+    color: 0x0b0c0e,
+    roughness: 0.30,
     metalness: 0.88,
-    clearcoat: 0.12
+    clearcoat: 0.18,
+    clearcoatRoughness: 0.28
   });
 
-  // 4. MAT_RUBBER_KENDA (Kenda 26x2.35 tires, grips)
+  // 4. MAT_RUBBER_KENDA (Tires Kenda K-Rad 26x2.35, handlebar grips)
   const MAT_RUBBER_KENDA = new THREE.MeshPhysicalMaterial({
     name: 'MAT_RUBBER_KENDA',
-    color: 0x151516,
-    roughness: 0.92,
-    metalness: 0.05,
+    color: 0x161719,
+    roughness: 0.90,
+    metalness: 0.04,
     bumpMap: microGrainTex,
-    bumpScale: 0.0015
+    bumpScale: 0.0012
   });
 
-  // 5. MAT_STEEL_ROTOR (180mm brake rotors, spokes, bolts, M14 axle)
+  // 5. MAT_STEEL_ROTOR (180mm brake rotors, spokes, M4/M5/M6 fasteners)
   const MAT_STEEL_ROTOR = new THREE.MeshPhysicalMaterial({
     name: 'MAT_STEEL_ROTOR',
-    color: 0xcfd4d8,
+    color: 0xd2d7dc,
     roughness: 0.22,
     metalness: 0.95,
     map: rotorTex,
-    roughnessMap: rotorTex
+    bumpMap: rotorTex,
+    bumpScale: 0.0008
   });
 
-  // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike saddle)
+  // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike 530mm moto saddle)
   const MAT_MOTO_VINYL = new THREE.MeshPhysicalMaterial({
     name: 'MAT_MOTO_VINYL',
-    color: 0x161618,
-    roughness: 0.82,
-    metalness: 0.04,
+    color: 0x17181b,
+    roughness: 0.78,
+    metalness: 0.05,
     bumpMap: motoVinylTex,
-    bumpScale: 0.002
+    bumpScale: 0.0025
   });
 
-  // Supporting specialty materials
   const MAT_VELCRO_STRAP = new THREE.MeshPhysicalMaterial({
     name: 'MAT_VELCRO_STRAP',
-    color: 0x09090a,
-    roughness: 0.96,
-    metalness: 0.02
+    color: 0x090a0c,
+    roughness: 0.95,
+    metalness: 0.02,
+    bumpMap: corduraBumpTex,
+    bumpScale: 0.003
   });
 
   const MAT_RED_ANODIZED = new THREE.MeshPhysicalMaterial({
@@ -1103,97 +1281,101 @@ function createStealthMaterials() {
     name: 'MAT_RIM_MTX39',
     color: 0xffffff,
     map: mtxDecalTex,
-    roughness: 0.65,
+    roughness: 0.55,
     metalness: 0.45
   });
 
   const MAT_CELL_EVE50E = new THREE.MeshPhysicalMaterial({
     name: 'MAT_CELL_EVE50E',
-    color: 0x4b87a8, // Factory grey-blue EVE INR21700-50E wrap
-    roughness: 0.35,
+    color: 0x3b82a6, // Authentic EVE INR21700-50E cyan-blue PVC wrap
+    roughness: 0.28,
     metalness: 0.15,
-    clearcoat: 0.3,
+    clearcoat: 0.35,
     transparent: true,
     opacity: 1.0
   });
 
   const MAT_WHITE_INSULATOR = new THREE.MeshStandardMaterial({
     name: 'MAT_WHITE_INSULATOR',
-    color: 0xf0f2f5,
-    roughness: 0.7,
-    metalness: 0.05
+    color: 0xf4f6f8,
+    roughness: 0.65,
+    metalness: 0.05,
+    side: THREE.DoubleSide
   });
 
   const MAT_NICKEL_STRIP = new THREE.MeshPhysicalMaterial({
     name: 'MAT_NICKEL_STRIP',
-    color: 0xd8dee6,
-    roughness: 0.18,
+    color: 0xdbe2ea,
+    roughness: 0.20,
     metalness: 0.96
   });
 
   const MAT_COPPER_BUSBAR = new THREE.MeshPhysicalMaterial({
     name: 'MAT_COPPER_BUSBAR',
-    color: 0xd97f45,
+    color: 0xe07a3c,
     roughness: 0.22,
-    metalness: 0.95
+    metalness: 0.95,
+    clearcoat: 0.15
   });
 
   const MAT_PETG_HOLDER = new THREE.MeshPhysicalMaterial({
     name: 'MAT_PETG_HOLDER',
-    color: 0x101114,
-    roughness: 0.55,
+    color: 0x121316,
+    roughness: 0.48,
     metalness: 0.08,
-    clearcoat: 0.15
+    bumpMap: microGrainTex,
+    bumpScale: 0.001
   });
 
   const MAT_EVA_FOAM = new THREE.MeshStandardMaterial({
     name: 'MAT_EVA_FOAM',
-    color: 0x17181b,
-    roughness: 0.96,
-    metalness: 0.01,
-    transparent: true,
-    opacity: 0.92
+    color: 0x151618,
+    roughness: 0.95,
+    metalness: 0.01
   });
 
   const MAT_PVC_SHRINK = new THREE.MeshPhysicalMaterial({
     name: 'MAT_PVC_SHRINK',
-    color: 0x0b3c78,
-    roughness: 0.2,
+    color: 0x0d52b8,
+    roughness: 0.22,
     metalness: 0.05,
     transmission: 0.55,
     transparent: true,
-    opacity: 0.32
+    opacity: 0.22,
+    depthWrite: false
   });
 
-  const MAT_XT90_YELLOW = new THREE.MeshStandardMaterial({
-    name: 'MAT_XT90_YELLOW',
-    color: 0xf2b705,
-    roughness: 0.4,
-    metalness: 0.05
-  });
-
-  const MAT_HEADLIGHT_SMOKE = new THREE.MeshPhysicalMaterial({
-    name: 'MAT_HEADLIGHT_SMOKE',
-    color: 0x22262b,
-    roughness: 0.1,
+  const MAT_SMOKE_LENS = new THREE.MeshPhysicalMaterial({
+    name: 'MAT_SMOKE_LENS',
+    color: 0x22262c,
+    roughness: 0.08,
     metalness: 0.1,
-    transmission: 0.75,
+    transmission: 0.78,
     transparent: true,
-    opacity: 0.65
+    opacity: 0.55
   });
 
-  const MAT_LED_HEADLIGHT = new THREE.MeshStandardMaterial({
-    name: 'MAT_LED_HEADLIGHT',
+  const MAT_HEADLIGHT_LED = new THREE.MeshStandardMaterial({
+    name: 'MAT_HEADLIGHT_LED',
     color: 0xffffff,
-    emissive: 0xd8f0ff,
-    emissiveIntensity: 0.4
+    emissive: new THREE.Color(0xdbeeff),
+    emissiveIntensity: 0.5,
+    roughness: 0.15
   });
 
   const MAT_BRAKE_LED = new THREE.MeshStandardMaterial({
     name: 'MAT_BRAKE_LED',
-    color: 0x550000,
-    emissive: 0xff0000,
-    emissiveIntensity: 0.35
+    color: 0x880000,
+    emissive: new THREE.Color(0xff0000),
+    emissiveIntensity: 0.35,
+    roughness: 0.2
+  });
+
+  const MAT_XT90_YELLOW = new THREE.MeshStandardMaterial({
+    name: 'MAT_XT90_YELLOW',
+    color: 0xf5b800,
+    roughness: 0.35,
+    metalness: 0.05
   });
 
   const MAT_SW900_SCREEN = new THREE.MeshBasicMaterial({
@@ -1201,12 +1383,8 @@ function createStealthMaterials() {
     map: sw900Tex
   });
 
-  const MAT_FOIL_SILVER = new THREE.MeshStandardMaterial({
-    name: 'MAT_FOIL_SILVER',
-    color: 0xe6ebf0,
-    roughness: 0.15,
-    metalness: 0.95
-  });
+  const MAT_FOXSID_DECAL = createFoxsidDecalMaterial();
+  const MAT_KENDA_SIDEWALL = createKendaTireSidewallMaterial();
 
   return {
     MAT_FRAME_RAL9005,
@@ -1227,13 +1405,13 @@ function createStealthMaterials() {
     MAT_PETG_HOLDER,
     MAT_EVA_FOAM,
     MAT_PVC_SHRINK,
-    MAT_XT90_YELLOW,
-    MAT_HEADLIGHT_SMOKE,
-    MAT_LED_HEADLIGHT,
+    MAT_SMOKE_LENS,
+    MAT_HEADLIGHT_LED,
     MAT_BRAKE_LED,
+    MAT_XT90_YELLOW,
     MAT_SW900_SCREEN,
-    MAT_FOIL_SILVER,
-    MAT_FOXSID_DECAL: createFoxsidDecalMaterial()
+    MAT_FOXSID_DECAL,
+    MAT_KENDA_SIDEWALL
   };
 }
 
@@ -1501,11 +1679,11 @@ function buildFrameNode(mats) {
     crankGroup.add(arm);
   }
 
-  // Left & Right Crank Arms (170mm length) + MTB Platform Pedals with steel traction pins
-  // Right crank forward-down, Left crank backward-up (matching reference photo stance!)
+  // Left & Right Crank Arms (170mm length) + Open-Cage CNC MTB Platform Pedals with steel traction pins
+  // Left crank pointing forward horizontally (1:1 as on Reference Photo #1!), Right crank backward
   const crankConfigs = [
-    { side: -1, z: -0.052, dir: new THREE.Vector3(0.155, -0.070, 0) }, // Right side
-    { side: 1, z: 0.052, dir: new THREE.Vector3(-0.155, 0.070, 0) }   // Left side
+    { side: 1, z: 0.052, dir: new THREE.Vector3(0.168, -0.008, 0) },   // Left side (forward horizontal)
+    { side: -1, z: -0.052, dir: new THREE.Vector3(-0.168, 0.008, 0) }  // Right side (rearward horizontal)
   ];
 
   crankConfigs.forEach((cfg) => {
@@ -1514,26 +1692,42 @@ function buildFrameNode(mats) {
     const arm = createBiOvalTubeBetween(pStart, pEnd, 0.015, 0.007, mats.MAT_ANODIZED_BLACK, 20);
     crankGroup.add(arm);
 
-    // Pedal spindle + MTB platform body
+    // Silver crank fixing bolt at BB & pedal thread boss
+    const bbBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.004, 16), mats.MAT_STEEL_ROTOR);
+    bbBolt.rotation.x = Math.PI / 2;
+    bbBolt.position.set(0, 0, cfg.z + cfg.side * 0.006);
+    crankGroup.add(bbBolt);
+
+    // Pedal spindle + Open-Cage CNC MTB Platform Body (no solid slab reflection!)
     const pPedalCenter = pEnd.clone().add(new THREE.Vector3(0, 0, cfg.side * 0.052));
-    const spindle = createCylinderBetween(pEnd, pPedalCenter, 0.006, 0.006, mats.MAT_STEEL_ROTOR, 12);
+    const spindle = createCylinderBetween(pEnd, pPedalCenter, 0.0055, 0.0055, mats.MAT_STEEL_ROTOR, 12);
     crankGroup.add(spindle);
 
-    const pedalBodyGeom = new THREE.BoxGeometry(0.102, 0.016, 0.095);
-    const pedalBody = new THREE.Mesh(pedalBodyGeom, mats.MAT_ANODIZED_BLACK);
-    pedalBody.position.copy(pPedalCenter);
-    pedalBody.castShadow = true;
-    crankGroup.add(pedalBody);
+    const pedalGroup = new THREE.Group();
+    pedalGroup.position.copy(pPedalCenter);
 
-    // Steel traction pins on pedal platform
-    const pinGeom = new THREE.CylinderGeometry(0.0015, 0.0015, 0.022, 6);
-    [-0.04, 0, 0.04].forEach((px) => {
-      [-0.035, 0.035].forEach((pz) => {
+    // Center spindle barrel + front/rear/outer/inner CNC cage bars
+    const centerBarrel = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.014, 0.090), mats.MAT_FRAME_RAL9005);
+    const frontBar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.014, 0.092), mats.MAT_FRAME_RAL9005);
+    frontBar.position.set(0.042, 0, 0);
+    const rearBar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.014, 0.092), mats.MAT_FRAME_RAL9005);
+    rearBar.position.set(-0.042, 0, 0);
+    const outerBar = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.014, 0.012), mats.MAT_FRAME_RAL9005);
+    outerBar.position.set(0, 0, 0.040);
+    const innerBar = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.014, 0.012), mats.MAT_FRAME_RAL9005);
+    innerBar.position.set(0, 0, -0.040);
+    pedalGroup.add(centerBarrel, frontBar, rearBar, outerBar, innerBar);
+
+    // Steel traction pins on open-cage pedal perimeter
+    const pinGeom = new THREE.CylinderGeometry(0.0014, 0.0014, 0.020, 6);
+    [-0.042, 0, 0.042].forEach((px) => {
+      [-0.038, 0.038].forEach((pz) => {
         const pin = new THREE.Mesh(pinGeom, mats.MAT_STEEL_ROTOR);
-        pin.position.set(pPedalCenter.x + px, pPedalCenter.y, pPedalCenter.z + pz);
-        crankGroup.add(pin);
+        pin.position.set(px, 0, pz);
+        pedalGroup.add(pin);
       });
     });
+    crankGroup.add(pedalGroup);
   });
 
   // Chain from Front Chainring (0,0,-0.044) to Rear 16T Freewheel (-0.435, 0.030, -0.056)
@@ -1560,7 +1754,8 @@ function buildFrameNode(mats) {
 }
 
 /**
- * 2. NODE 1: FRONT AIR FORK FOXSID-X2 26" (Single-Crown, 120mm Travel, Mudguard, FOXSID Decals)
+ * 2. NODE 1: FRONT AIR FORK FOXSID 32 26" (Single-Crown, 120mm Travel, Mudguard, 32/XSD/FOXSID Decals)
+ *    1:1 with Reference Photo #4 & #1
  */
 function buildForkNode(mats) {
   const forkGroup = new THREE.Group();
@@ -1569,9 +1764,7 @@ function buildForkNode(mats) {
   // Head Tube axis reference: Top (0.390, 0.565, 0) -> Bottom (0.425, 0.450, 0)
   const pHeadTop = new THREE.Vector3(0.390, 0.565, 0);
   const pHeadBot = new THREE.Vector3(0.425, 0.450, 0);
-  // Downward fork direction along head angle (~73 deg)
   const forkDownDir = pHeadBot.clone().sub(pHeadTop).normalize();
-  // Forward offset perpendicular to steering axis
   const forkFwdDir = new THREE.Vector3(forkDownDir.y, -forkDownDir.x, 0).normalize();
 
   // 2.1 Straight 1 1/8" (28.6mm) Steerer Tube inside Head Tube + extending to stem
@@ -1580,21 +1773,10 @@ function buildForkNode(mats) {
   const steerer = createCylinderBetween(pSteererTop, pSteererBot, 0.0143, 0.0143, mats.MAT_ANODIZED_BLACK, 24);
   forkGroup.add(steerer);
 
-  // 2.2 Cast Matte Black Single Crown with forward offset bosses
-  const pCrownCenter = pHeadBot.clone().addScaledVector(forkDownDir, 0.018).addScaledVector(forkFwdDir, 0.022);
-  const crownBridge = createBiOvalTubeBetween(
-    new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, -0.068),
-    new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, 0.068),
-    0.024,
-    0.018,
-    mats.MAT_FRAME_RAL9005,
-    24
-  );
-  forkGroup.add(crownBridge);
-
-  // Crown steerer clamp boss
+  // 2.2 Cast Matte Black Single Crown with sculpted downward shoulder arms (matching Photo #4)
+  const pCrownCenter = pHeadBot.clone().addScaledVector(forkDownDir, 0.018).addScaledVector(forkFwdDir, 0.020);
   const crownNeck = createBiOvalTubeBetween(
-    pHeadBot.clone().addScaledVector(forkDownDir, 0.016),
+    pHeadBot.clone().addScaledVector(forkDownDir, 0.012),
     pCrownCenter,
     0.022,
     0.022,
@@ -1603,20 +1785,28 @@ function buildForkNode(mats) {
   );
   forkGroup.add(crownNeck);
 
-  // Front Axle Center: (0.565, 0.030, 0) -> Wheel radius 0.335 => tire touches floor y = -0.305..-0.335
+  // Sculpted left & right crown arms sloping slightly down to the stanchion sockets
+  [-1, 1].forEach((side) => {
+    const armEnd = pCrownCenter.clone().addScaledVector(forkDownDir, 0.008);
+    armEnd.z = side * 0.065;
+    const armMesh = createBiOvalTubeBetween(pCrownCenter, armEnd, 0.021, 0.016, mats.MAT_FRAME_RAL9005, 20);
+    forkGroup.add(armMesh);
+  });
+
+  // Front Axle Center: (0.565, 0.030, 0)
   const pFrontAxle = new THREE.Vector3(0.565, 0.030, 0);
 
   // Stanchion spacing: z = ±0.065 (130mm crown center-to-center)
   [-1, 1].forEach((side) => {
     const zLeg = side * 0.065; // side = +1 is Left, side = -1 is Right
-    const pLegCrown = new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, zLeg);
-    const pAxleDrop = new THREE.Vector3(pFrontAxle.x, pFrontAxle.y, side * 0.055);
+    const pLegCrown = new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, zLeg).addScaledVector(forkDownDir, 0.008);
+    const pAxleDrop = new THREE.Vector3(pFrontAxle.x, pFrontAxle.y, side * 0.056);
     const legAxis = pAxleDrop.clone().sub(pLegCrown).normalize();
 
     // Crown leg socket boss
     const crownSocket = createCylinderBetween(
       pLegCrown.clone().addScaledVector(legAxis, -0.016),
-      pLegCrown.clone().addScaledVector(legAxis, 0.022),
+      pLegCrown.clone().addScaledVector(legAxis, 0.024),
       0.021,
       0.020,
       mats.MAT_FRAME_RAL9005,
@@ -1625,30 +1815,30 @@ function buildForkNode(mats) {
     forkGroup.add(crownSocket);
 
     if (side === 1) {
-      // Left leg top: Blue/Black CNC Air Valve Cap (AIR 55-65 PSI)
+      // Left leg top: Black CNC Air Valve Cap (AIR 55-65 PSI) + Blue accent ring (as on Photo #1 & #4)
       const airCap = createCylinderBetween(
         pLegCrown.clone().addScaledVector(legAxis, -0.016),
-        pLegCrown.clone().addScaledVector(legAxis, -0.026),
-        0.014,
-        0.012,
+        pLegCrown.clone().addScaledVector(legAxis, -0.025),
+        0.0145,
+        0.0135,
         mats.MAT_BLUE_ANODIZED,
-        18
+        20
       );
       forkGroup.add(airCap);
     } else {
-      // Right leg top: Red/Black CNC Lockout Dial (LOCKOUT)
+      // Right leg top: Blue Anodized CNC Compression / Lockout Dial (1:1 as on Reference Photo #4!)
       const lockCap = createCylinderBetween(
         pLegCrown.clone().addScaledVector(legAxis, -0.016),
         pLegCrown.clone().addScaledVector(legAxis, -0.025),
-        0.015,
-        0.015,
-        mats.MAT_RED_ANODIZED,
-        18
+        0.0155,
+        0.0155,
+        mats.MAT_BLUE_ANODIZED,
+        20
       );
       forkGroup.add(lockCap);
     }
 
-    // 32mm Black Anodized Stanchions (120mm visible travel + internal overlap)
+    // 32mm Black Anodized Stanchions (120mm visible travel)
     const pStanchionEnd = pLegCrown.clone().addScaledVector(legAxis, 0.165);
     const stanchion = createCylinderBetween(
       pLegCrown,
@@ -1660,15 +1850,13 @@ function buildForkNode(mats) {
     );
     forkGroup.add(stanchion);
 
-    // Red Anodized Sag O-ring on Left Stanchion (1:1 as on reference photo!)
-    if (side === 1) {
-      const sagPos = pLegCrown.clone().addScaledVector(legAxis, 0.032);
-      const sagRingGeom = new THREE.TorusGeometry(0.0168, 0.0022, 12, 24);
-      const sagRing = new THREE.Mesh(sagRingGeom, mats.MAT_RED_ANODIZED);
-      sagRing.position.copy(sagPos);
-      sagRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), legAxis);
-      forkGroup.add(sagRing);
-    }
+    // Red Anodized Sag O-ring on Stanchion (1:1 as on Reference Photo #4!)
+    const sagPos = pLegCrown.clone().addScaledVector(legAxis, side === 1 ? 0.045 : 0.095);
+    const sagRingGeom = new THREE.TorusGeometry(0.0166, 0.0020, 12, 24);
+    const sagRing = new THREE.Mesh(sagRingGeom, mats.MAT_RED_ANODIZED);
+    sagRing.position.copy(sagPos);
+    sagRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), legAxis);
+    forkGroup.add(sagRing);
 
     // Dust Wiper Seal at top of Magnesium Lowers
     const pLowerTop = pLegCrown.clone().addScaledVector(legAxis, 0.142);
@@ -1682,68 +1870,75 @@ function buildForkNode(mats) {
     );
     forkGroup.add(wiper);
 
-    // Red Anodized Trim Ring right under dust wiper (visible in photo!)
-    const trimRing = createCylinderBetween(
+    // Solid 42mm Matte Black Magnesium Lower Leg (base mesh)
+    const pLowerBot = pAxleDrop.clone().addScaledVector(legAxis, 0.012);
+    const lowerLegSolid = createCylinderBetween(
       pLowerTop,
-      pLowerTop.clone().addScaledVector(legAxis, 0.005),
-      0.0218,
-      0.0218,
-      mats.MAT_RED_ANODIZED,
-      24
-    );
-    forkGroup.add(trimRing);
-
-    // 42mm Matte Black Magnesium Lower Leg with vertical white FOXSID Decal
-    const lowerLeg = createCylinderBetween(
-      pLowerTop,
-      pAxleDrop.clone().addScaledVector(legAxis, 0.012),
+      pLowerBot,
       0.021,
       0.0185,
+      mats.MAT_FRAME_RAL9005,
+      32
+    );
+    forkGroup.add(lowerLegSolid);
+
+    // Outer Decal Shell with "32" + "XSD" + "FOXSID AIR FORK" facing outward (1:1 as on Photo #4)
+    const lowerLegDecal = createCylinderBetween(
+      pLowerTop.clone().addScaledVector(legAxis, 0.012),
+      pLowerBot.clone().addScaledVector(legAxis, -0.015),
+      0.0213,
+      0.0188,
       mats.MAT_FOXSID_DECAL,
       32
     );
-    // Orient FOXSID decal to face outward on both legs
-    lowerLeg.rotateY(side === 1 ? 0 : Math.PI);
-    forkGroup.add(lowerLeg);
+    lowerLegDecal.rotateY(side === 1 ? 0 : Math.PI);
+    forkGroup.add(lowerLegDecal);
 
-    // Bottom rebound adjuster / bolt at fork foot
+    // Forward-offset axle dropout lug at the bottom of the lower leg
+    const dropoutLug = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.028, 0.014), mats.MAT_FRAME_RAL9005);
+    dropoutLug.position.set(pAxleDrop.x, pAxleDrop.y, side * 0.056);
+    forkGroup.add(dropoutLug);
+
+    // Bottom Rebound Adjuster Knob (Red Anodized on right leg bottom, 1:1 as on Photo #4!)
     const footBolt = createCylinderBetween(
-      pAxleDrop.clone().addScaledVector(legAxis, 0.012),
-      pAxleDrop.clone().addScaledVector(legAxis, 0.022),
-      0.008,
-      0.008,
+      pLowerBot,
+      pLowerBot.clone().addScaledVector(legAxis, 0.014),
+      0.0075,
+      0.0075,
       side === -1 ? mats.MAT_RED_ANODIZED : mats.MAT_ANODIZED_BLACK,
       16
     );
     forkGroup.add(footBolt);
   });
 
-  // 2.3 Fork Arch (Gorilla) connecting left and right lowers in front of tire
-  const archLeft = new THREE.Vector3(0.492, 0.278, 0.062);
-  const archMid = new THREE.Vector3(0.542, 0.312, 0.0);
-  const archRight = new THREE.Vector3(0.492, 0.278, -0.062);
-  const archCurve = new THREE.CatmullRomCurve3([archLeft, archMid, archRight]);
-  const archGeom = new THREE.TubeGeometry(archCurve, 24, 0.012, 16, false);
+  // 2.3 Fork Arch (Gorilla) connecting left and right lowers in front of tire (matching Photo #4)
+  const archCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.488, 0.275, 0.062),
+    new THREE.Vector3(0.520, 0.328, 0.036),
+    new THREE.Vector3(0.532, 0.340, 0.000),
+    new THREE.Vector3(0.520, 0.328, -0.036),
+    new THREE.Vector3(0.488, 0.275, -0.062)
+  ]);
+  const archGeom = new THREE.TubeGeometry(archCurve, 28, 0.0115, 16, false);
   const archMesh = new THREE.Mesh(archGeom, mats.MAT_FRAME_RAL9005);
   archMesh.castShadow = true;
   forkGroup.add(archMesh);
 
-  // 2.4 Short Black Plastic Mudguard zipped directly under the Fork Arch (1:1 as on photo!)
+  // Brake hose guide boss on left side of fork arch (visible in Reference Photo #4)
+  const hoseGuideBoss = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.008, 10), mats.MAT_STEEL_ROTOR);
+  hoseGuideBoss.rotation.z = Math.PI / 2;
+  hoseGuideBoss.position.set(0.510, 0.305, 0.054);
+  forkGroup.add(hoseGuideBoss);
+
+  // 2.4 Compact Black Plastic Mudguard zipped directly under the Fork Arch
   const mudguardCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.565, 0.318, 0),
-    new THREE.Vector3(0.505, 0.305, 0),
-    new THREE.Vector3(0.435, 0.255, 0)
+    new THREE.Vector3(0.558, 0.322, 0),
+    new THREE.Vector3(0.502, 0.312, 0),
+    new THREE.Vector3(0.440, 0.268, 0)
   ]);
-  const mudguardGeom = new THREE.TubeGeometry(mudguardCurve, 20, 0.044, 16, false);
-  // Flatten tube into curved fender shell
-  const mgPos = mudguardGeom.attributes.position;
-  for (let i = 0; i < mgPos.count; i++) {
-    const y = mgPos.getY(i);
-    mgPos.setY(i, y * 0.99);
-  }
   const fenderShape = new THREE.Shape();
-  fenderShape.absarc(0, 0, 0.044, Math.PI * 0.15, Math.PI * 0.85, false);
-  fenderShape.absarc(0, 0, 0.041, Math.PI * 0.85, Math.PI * 0.15, true);
+  fenderShape.absarc(0, 0, 0.043, Math.PI * 0.16, Math.PI * 0.84, false);
+  fenderShape.absarc(0, 0, 0.040, Math.PI * 0.84, Math.PI * 0.16, true);
   const fenderExtrude = new THREE.ExtrudeGeometry(fenderShape, {
     steps: 18,
     bevelEnabled: false,
@@ -1753,11 +1948,11 @@ function buildForkNode(mats) {
   mudguardMesh.castShadow = true;
   forkGroup.add(mudguardMesh);
 
-  // 2.5 Left Lower Leg Post Mount (PM 160) bosses + CNC Black PM-PM 180mm Adapter + Front ZOOM HB-890E Caliper
-  const pFrontCaliper = new THREE.Vector3(0.508, 0.088, 0.052);
-  const pmAdapterGeom = new THREE.BoxGeometry(0.022, 0.068, 0.014);
+  // 2.5 Left Lower Leg Post Mount (PM 160) bosses + CNC Black F/R-180 Adapter + Front ZOOM HB-890E Caliper
+  const pFrontCaliper = new THREE.Vector3(0.508, 0.088, 0.050);
+  const pmAdapterGeom = new THREE.BoxGeometry(0.018, 0.072, 0.012);
   const pmAdapter = new THREE.Mesh(pmAdapterGeom, mats.MAT_ANODIZED_BLACK);
-  pmAdapter.position.set(0.502, 0.086, 0.056);
+  pmAdapter.position.set(0.500, 0.086, 0.054);
   pmAdapter.rotation.z = -0.32;
   forkGroup.add(pmAdapter);
 
@@ -1770,44 +1965,50 @@ function buildForkNode(mats) {
 }
 
 /**
- * Helper: Builds a 4-piston forged ZOOM HB-890E Hydraulic Brake Caliper with cooling fins
+ * Helper: Builds a 4-piston forged ZOOM HB-890E Hydraulic Brake Caliper (1:1 as on Reference Photo #5)
  */
 function buildZoomCaliperMesh(mats) {
   const calGroup = new THREE.Group();
 
-  // Main forged 4-piston body
-  const bodyGeom = new THREE.BoxGeometry(0.036, 0.076, 0.034);
+  // Main sculpted forged 4-piston body
+  const bodyGeom = new THREE.BoxGeometry(0.034, 0.074, 0.032);
   const body = new THREE.Mesh(bodyGeom, mats.MAT_ANODIZED_BLACK);
   body.castShadow = true;
   calGroup.add(body);
 
-  // Dual machined piston caps (2 per side = 4 pistons)
-  [-0.018, 0.018].forEach((yOff) => {
-    const capGeom = new THREE.CylinderGeometry(0.011, 0.011, 0.037, 18);
-    capGeom.rotateX(Math.PI / 2);
-    const cap = new THREE.Mesh(capGeom, mats.MAT_RED_ANODIZED);
-    cap.position.set(0.002, yOff, 0);
-    calGroup.add(cap);
+  // Dual machined circular piston bores (2 per side = 4 pistons, matching Photo #5!)
+  [-0.016, 0.016].forEach((yOff) => {
+    const boreRing = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.034, 20), mats.MAT_FRAME_RAL9005);
+    boreRing.rotation.x = Math.PI / 2;
+    boreRing.position.set(0.002, yOff, 0);
+    calGroup.add(boreRing);
+
+    const boreCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.0355, 16), mats.MAT_ANODIZED_BLACK);
+    boreCenter.rotation.x = Math.PI / 2;
+    boreCenter.position.set(0.002, yOff, 0);
+    calGroup.add(boreCenter);
   });
 
-  // Top cooling fins on brake pads
-  for (let i = -2; i <= 2; i++) {
-    const finGeom = new THREE.BoxGeometry(0.016, 0.008, 0.002);
-    const fin = new THREE.Mesh(finGeom, mats.MAT_STEEL_ROTOR);
-    fin.position.set(0.016, 0, i * 0.004);
-    calGroup.add(fin);
-  }
+  // Yellow brake pad backing/spacer tab & stainless pad retaining bolt (visible in Photo #5)
+  const yellowPadTab = new THREE.Mesh(new THREE.TorusGeometry(0.010, 0.0022, 8, 16), mats.MAT_XT90_YELLOW);
+  yellowPadTab.position.set(-0.016, -0.012, 0);
+  yellowPadTab.rotation.y = Math.PI / 2;
+  calGroup.add(yellowPadTab);
 
-  // Banjo bolt & bleed nipple
-  const banjo = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.014, 12), mats.MAT_STEEL_ROTOR);
-  banjo.position.set(-0.014, 0.038, 0.008);
-  calGroup.add(banjo);
+  // Silver stainless banjo fitting + black bleed port cap at top of caliper (1:1 as on Photo #5)
+  const banjoCrimp = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0048, 0.016, 12), mats.MAT_STEEL_ROTOR);
+  banjoCrimp.position.set(-0.008, 0.042, 0.006);
+  const banjoBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.010, 12), mats.MAT_STEEL_ROTOR);
+  banjoBolt.rotation.x = Math.PI / 2;
+  banjoBolt.position.set(-0.008, 0.032, 0.014);
+  calGroup.add(banjoCrimp, banjoBolt);
 
   return calGroup;
 }
 
 /**
- * 3. NODE 2: COCKPIT, 740MM RISER BAR, SUR-RON DUAL LED HEADLIGHT, SW900, 20X THROTTLE & ZOOM LEVERS
+ * 3. NODE 2: COCKPIT, 740MM RISER BAR, SUR-RON DUAL LED HEADLIGHT (WITH 4 ALLEN BOLTS & FIGURE-8 BEZEL),
+ *    SW900, TOPTUBE PHONE MOUNT, 20X THROTTLE & ZOOM HB-890E LEVERS (1:1 AS ON PHOTOS #1, #5, #6)
  */
 function buildCockpitNode(mats) {
   const cockpitGroup = new THREE.Group();
@@ -1864,7 +2065,6 @@ function buildCockpitNode(mats) {
     new THREE.Vector3(0.365, 0.658, 0.370)
   ]);
   const barGeom = new THREE.TubeGeometry(barCurve, 64, 0.0125, 20, false);
-  // Thicken center 31.8mm clamp zone
   const bPos = barGeom.attributes.position;
   for (let i = 0; i < bPos.count; i++) {
     const zVal = Math.abs(bPos.getZ(i));
@@ -1881,72 +2081,108 @@ function buildCockpitNode(mats) {
   barMesh.castShadow = true;
   cockpitGroup.add(barMesh);
 
-  // SUR-RON LIGHT BEE X (20W) Dual Rectangular LED Headlight right under stem/bar center (1:1 as on photo!)
+  // SUR-RON LIGHT BEE X (20W) Dual LED Headlight (1:1 with Reference Photo #6 & #1!)
+  // Features die-cast black bezel with 4 silver Allen corner bolts + figure-8 dual reflector cavity
   const headlightGroup = new THREE.Group();
   headlightGroup.name = 'SURRON_DUAL_LED_HEADLIGHT';
-  headlightGroup.position.set(0.452, 0.585, 0);
-  headlightGroup.rotation.z = -0.18;
+  headlightGroup.position.set(0.448, 0.592, 0);
+  headlightGroup.rotation.z = -0.14;
 
-  // Finned CNC Aluminum Housing
-  const hlHousing = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.042, 0.112), mats.MAT_ANODIZED_BLACK);
+  // Die-Cast Aluminum Housing (42mm deep x 46mm tall x 114mm wide)
+  const hlHousing = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.046, 0.114), mats.MAT_ANODIZED_BLACK);
   hlHousing.castShadow = true;
   headlightGroup.add(hlHousing);
+
+  // 4 Silver Socket-Head Allen Bolts in the 4 corners of the front bezel (1:1 as on Reference Photo #6!)
+  [-0.016, 0.016].forEach((by) => {
+    [-0.048, 0.048].forEach((bz) => {
+      const cornerBolt = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0034, 0.0034, 0.005, 12),
+        mats.MAT_STEEL_ROTOR
+      );
+      cornerBolt.rotation.z = Math.PI / 2;
+      cornerBolt.position.set(0.021, by, bz);
+      headlightGroup.add(cornerBolt);
+    });
+  });
 
   // Rear cooling fins
   for (let i = -3; i <= 3; i++) {
     const fin = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.003, 0.108), mats.MAT_ANODIZED_BLACK);
-    fin.position.set(-0.025, i * 0.0055, 0);
+    fin.position.set(-0.024, i * 0.0055, 0);
     headlightGroup.add(fin);
   }
 
-  // Two deep reflector LED eyes in a row (Left & Right)
-  const ledEyes = [];
-  [-0.026, 0.026].forEach((zEye) => {
+  // Dual Figure-8 / Peanut Reflector Eyes (Left = Fluted Flood Lens, Right = Deep Parabolic Spot Cone)
+  [-0.024, 0.024].forEach((zEye, eyeIdx) => {
     const reflector = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.016, 0.008, 0.018, 24, 1, true),
+      new THREE.CylinderGeometry(0.0175, 0.007, 0.018, 24, 1, true),
       mats.MAT_STEEL_ROTOR
     );
     reflector.rotation.z = -Math.PI / 2;
-    reflector.position.set(0.015, 0, zEye);
+    reflector.position.set(0.013, 0, zEye);
     headlightGroup.add(reflector);
 
-    const emitter = new THREE.Mesh(new THREE.SphereGeometry(0.009, 16, 16), mats.MAT_LED_HEADLIGHT);
+    // Chrome bezel ring around each reflector eye
+    const eyeRing = new THREE.Mesh(new THREE.TorusGeometry(0.0175, 0.0018, 10, 24), mats.MAT_STEEL_ROTOR);
+    eyeRing.rotation.y = Math.PI / 2;
+    eyeRing.position.set(0.0215, 0, zEye);
+    headlightGroup.add(eyeRing);
+
+    // Yellow Cree LED die inside reflector
+    const creeDie = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.005, 0.005), mats.MAT_XT90_YELLOW);
+    creeDie.position.set(0.006, 0, zEye);
+    headlightGroup.add(creeDie);
+
+    // Emissive glow core (lights up when user clicks [ТЕСТ ТОРМОЗА И СВЕТА])
+    const emitter = new THREE.Mesh(new THREE.SphereGeometry(0.009, 16, 16), mats.MAT_HEADLIGHT_LED);
     emitter.position.set(0.012, 0, zEye);
     headlightGroup.add(emitter);
-    ledEyes.push(emitter);
+
+    // Vertical fluted flood lens ribs on the left eye (1:1 as on Reference Photo #6!)
+    if (eyeIdx === 0) {
+      for (let f = -2; f <= 2; f++) {
+        const flute = new THREE.Mesh(new THREE.CylinderGeometry(0.0012, 0.0012, 0.028, 8), mats.MAT_SMOKE_LENS);
+        flute.position.set(0.0205, 0, zEye + f * 0.005);
+        headlightGroup.add(flute);
+      }
+    }
   });
 
-  // Light Smoke tinted front polycarbonate lens
-  const smokeLens = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.036, 0.104), mats.MAT_HEADLIGHT_SMOKE);
-  smokeLens.position.set(0.023, 0, 0);
+  // Clear/Light-Smoke front polycarbonate lens cover
+  const smokeLens = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.036, 0.086), mats.MAT_SMOKE_LENS);
+  smokeLens.position.set(0.022, 0, 0);
   headlightGroup.add(smokeLens);
 
-  // Headlight bracket to stem
-  const hlBracket = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.035, 0.048), mats.MAT_ANODIZED_BLACK);
-  hlBracket.position.set(-0.018, 0.022, 0);
+  // Top U-Bracket attaching headlight under the stem (matching Reference Photo #6)
+  const hlBracket = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.028, 0.044), mats.MAT_ANODIZED_BLACK);
+  hlBracket.position.set(-0.012, 0.024, 0);
   headlightGroup.add(hlBracket);
 
   cockpitGroup.add(headlightGroup);
 
-  // SW900 LCD Computer above Stem + 3-button remote on Left
+  // SW900 LCD Computer above Stem
   const sw900Group = new THREE.Group();
-  sw900Group.position.set(0.415, 0.658, 0.0);
+  sw900Group.position.set(0.415, 0.656, 0.0);
   sw900Group.rotation.z = 0.45;
-  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.056, 0.086), mats.MAT_ANODIZED_BLACK);
-  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.048, 0.076), mats.MAT_SW900_SCREEN);
+  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.054, 0.082), mats.MAT_ANODIZED_BLACK);
+  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.046, 0.074), mats.MAT_SW900_SCREEN);
   swScreen.rotation.y = Math.PI / 2;
   swScreen.rotation.x = Math.PI / 2;
-  swScreen.position.set(0.0095, 0, 0);
+  swScreen.position.set(0.0085, 0, 0);
   sw900Group.add(swCase, swScreen);
   cockpitGroup.add(sw900Group);
 
-  // Tactical Smartphone Mount with silicone vibration damper on left inner bar (visible in photo!)
+  // Tactical Smartphone Mount clamped cleanly on front of Toptube behind Head Tube (1:1 as on Reference Photo #1!)
+  const toptubeAngle = Math.atan2(0.545 - 0.415, 0.395 - (-0.135));
   const phoneMount = new THREE.Group();
-  phoneMount.position.set(0.355, 0.565, 0.045);
-  const mountClamp = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.045, 0.042), mats.MAT_ANODIZED_BLACK);
-  const clawTop = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.025, 0.072), mats.MAT_ANODIZED_BLACK);
-  clawTop.position.set(-0.015, 0.035, 0);
-  phoneMount.add(mountClamp, clawTop);
+  phoneMount.position.set(0.325, 0.532, 0.0);
+  phoneMount.rotation.z = toptubeAngle;
+  const mountClamp = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.036, 0.040), mats.MAT_VELCRO_STRAP);
+  mountClamp.position.set(0, -0.004, 0);
+  const phoneCradle = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.010, 0.062), mats.MAT_ANODIZED_BLACK);
+  phoneCradle.position.set(0, 0.022, 0);
+  phoneMount.add(mountClamp, phoneCradle);
   cockpitGroup.add(phoneMount);
 
   // Left & Right Ribbed Rubber Grips
@@ -1968,105 +2204,125 @@ function buildCockpitNode(mats) {
   );
   cockpitGroup.add(leftGrip, rightGrip);
 
-  // Right Side Half-Twist Throttle 20X with white/blue indicator ring (1:1 as on photo!)
+  // Right Side Half-Twist Throttle 20X
   const throttleBody = createCylinderBetween(
     new THREE.Vector3(0.382, 0.654, -0.220),
     new THREE.Vector3(0.374, 0.656, -0.275),
-    0.022,
-    0.020,
+    0.021,
+    0.019,
     mats.MAT_ANODIZED_BLACK,
     24
   );
   const throttleRing = createCylinderBetween(
     new THREE.Vector3(0.380, 0.655, -0.232),
-    new THREE.Vector3(0.378, 0.655, -0.246),
-    0.0235,
-    0.0235,
-    mats.MAT_WHITE_INSULATOR,
+    new THREE.Vector3(0.378, 0.655, -0.242),
+    0.022,
+    0.022,
+    mats.MAT_STEEL_ROTOR,
     24
   );
-  const throttleAccent = createCylinderBetween(
-    new THREE.Vector3(0.382, 0.654, -0.225),
-    new THREE.Vector3(0.380, 0.655, -0.232),
-    0.0232,
-    0.0232,
-    mats.MAT_BLUE_ANODIZED,
-    24
-  );
-  cockpitGroup.add(throttleBody, throttleRing, throttleAccent);
+  cockpitGroup.add(throttleBody, throttleRing);
 
   // Left Side 2-in-1 Switch Block (Headlight toggle + Red 105 dB Moto Horn Button)
-  const switchBlock = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.042, 0.026), mats.MAT_ANODIZED_BLACK);
+  const switchBlock = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.038, 0.024), mats.MAT_ANODIZED_BLACK);
   switchBlock.position.set(0.380, 0.655, 0.232);
-  const redHornBtn = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.014), mats.MAT_RED_ANODIZED);
-  redHornBtn.position.set(0.364, 0.648, 0.232);
+  const redHornBtn = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.010, 0.012), mats.MAT_RED_ANODIZED);
+  redHornBtn.position.set(0.365, 0.648, 0.232);
   cockpitGroup.add(switchBlock, redHornBtn);
 
-  // ZOOM HB-890E Hydraulic Brake Levers with mineral oil reservoirs & braided hoses
+  // ZOOM HB-890E Hydraulic Brake Levers with mineral oil reservoirs & Red Julet E-Brake Cutoff Plugs (Photo #5)
   [-1, 1].forEach((side) => {
     const zBase = side * 0.205;
     const leverGroup = new THREE.Group();
     leverGroup.position.set(0.386, 0.652, zBase);
 
-    // Mineral oil reservoir master cylinder
-    const reservoir = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.026, 0.045), mats.MAT_ANODIZED_BLACK);
-    reservoir.position.set(0.018, 0.006, -side * 0.018);
+    // Split handlebar clamp + horizontal mineral oil master cylinder reservoir
+    const reservoir = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.024, 0.048), mats.MAT_ANODIZED_BLACK);
+    reservoir.position.set(0.018, 0.005, -side * 0.018);
     leverGroup.add(reservoir);
 
-    // Ergonomic 2-finger CNC brake blade
+    // 2 silver Torx reservoir cap screws (1:1 as on Reference Photo #5)
+    [-0.012, 0.012].forEach((dz) => {
+      const capScrew = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.003, 8), mats.MAT_STEEL_ROTOR);
+      capScrew.position.set(0.018, 0.018, -side * 0.018 + dz);
+      leverGroup.add(capScrew);
+    });
+
+    // Red waterproof Julet 2-pin e-brake power cutoff connector lead (1:1 as on Photo #5!)
+    const juletBody = createCylinderBetween(
+      new THREE.Vector3(0.020, -0.004, -side * 0.042),
+      new THREE.Vector3(0.022, -0.008, -side * 0.068),
+      0.0042,
+      0.0042,
+      mats.MAT_ANODIZED_BLACK,
+      10
+    );
+    const juletRedTip = createCylinderBetween(
+      new THREE.Vector3(0.022, -0.008, -side * 0.068),
+      new THREE.Vector3(0.023, -0.010, -side * 0.075),
+      0.0044,
+      0.0044,
+      mats.MAT_RED_ANODIZED,
+      10
+    );
+    leverGroup.add(juletBody, juletRedTip);
+
+    // Ergonomic 2-finger CNC brake blade with ball tip
     const bladeCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.024, -0.005, -side * 0.025),
       new THREE.Vector3(0.048, -0.018, side * 0.035),
       new THREE.Vector3(0.042, -0.024, side * 0.095)
     ]);
-    const bladeGeom = new THREE.TubeGeometry(bladeCurve, 16, 0.0055, 10, false);
+    const bladeGeom = new THREE.TubeGeometry(bladeCurve, 16, 0.0052, 10, false);
     const blade = new THREE.Mesh(bladeGeom, mats.MAT_ANODIZED_BLACK);
-    leverGroup.add(blade);
+    const ballEnd = new THREE.Mesh(new THREE.SphereGeometry(0.007, 10, 10), mats.MAT_ANODIZED_BLACK);
+    ballEnd.position.set(0.042, -0.024, side * 0.095);
+    leverGroup.add(blade, ballEnd);
 
     cockpitGroup.add(leverGroup);
   });
 
-  // Braided Hydraulic Brake Hoses descending down fork & frame
+  // Braided Hydraulic Brake Hoses descending down fork & frame (matching graceful front arcs in Photo #1)
   const frontHoseCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.405, 0.645, 0.185),
-    new THREE.Vector3(0.465, 0.540, 0.095),
-    new THREE.Vector3(0.470, 0.390, 0.072),
-    new THREE.Vector3(0.495, 0.220, 0.068),
-    new THREE.Vector3(0.505, 0.105, 0.056)
+    new THREE.Vector3(0.405, 0.645, 0.165),
+    new THREE.Vector3(0.478, 0.545, 0.085),
+    new THREE.Vector3(0.495, 0.365, 0.064),
+    new THREE.Vector3(0.502, 0.220, 0.062),
+    new THREE.Vector3(0.505, 0.115, 0.056)
   ]);
-  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(frontHoseCurve, 32, 0.0032, 8, false), mats.MAT_RUBBER_KENDA));
+  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(frontHoseCurve, 32, 0.0028, 8, false), mats.MAT_RUBBER_KENDA));
 
   const rearHoseCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.405, 0.645, -0.185),
-    new THREE.Vector3(0.455, 0.535, -0.065),
+    new THREE.Vector3(0.405, 0.645, -0.165),
+    new THREE.Vector3(0.468, 0.540, -0.055),
     new THREE.Vector3(0.395, 0.455, 0.022),
     new THREE.Vector3(0.015, 0.015, 0.025),
     new THREE.Vector3(-0.425, 0.055, 0.070)
   ]);
-  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(rearHoseCurve, 36, 0.0032, 8, false), mats.MAT_RUBBER_KENDA));
+  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(rearHoseCurve, 36, 0.0028, 8, false), mats.MAT_RUBBER_KENDA));
 
   return cockpitGroup;
 }
 
 /**
  * Helper: Builds a perforated ventilated 180mm stainless steel brake rotor (R = 0.090m)
+ * Supports red anodized inner spider (as on Front Wheel in Reference Photo #1) or black/steel spider
  */
-function buildBrakeRotor180mm(mats) {
+function buildBrakeRotor180mm(mats, useRedSpider = false) {
   const rotorGroup = new THREE.Group();
   const outerR = 0.090;
-  const innerTrackR = 0.073;
+  const innerTrackR = 0.072;
 
-  // Outer friction ring with ventilation holes
+  // Outer friction ring with wave-style ventilation slots (matching Reference Photo #5)
   const ringShape = new THREE.Shape();
   ringShape.absarc(0, 0, outerR, 0, Math.PI * 2, false);
   const innerHole = new THREE.Path();
   innerHole.absarc(0, 0, innerTrackR, 0, Math.PI * 2, true);
   ringShape.holes.push(innerHole);
 
-  // Add 24 ventilation perforations in the friction track
   for (let i = 0; i < 24; i++) {
     const ang = (i / 24) * Math.PI * 2;
-    const rMid = (outerR + innerTrackR) * 0.5;
+    const rMid = (outerR + innerTrackR) * 0.5 + (i % 2 === 0 ? 0.002 : -0.002);
     const vent = new THREE.Path();
     vent.absarc(Math.cos(ang) * rMid, Math.sin(ang) * rMid, 0.0032, 0, Math.PI * 2, true);
     ringShape.holes.push(vent);
@@ -2077,29 +2333,30 @@ function buildBrakeRotor180mm(mats) {
   const frictionRing = new THREE.Mesh(rotorGeom, mats.MAT_STEEL_ROTOR);
   rotorGroup.add(frictionRing);
 
-  // 6 Spider Arms + 6-bolt ISO hub mount (BCD 44mm)
+  const spiderMat = useRedSpider ? mats.MAT_RED_ANODIZED : mats.MAT_STEEL_ROTOR;
+
+  // 6 Tangential Spider Arms + 6-bolt ISO hub mount (BCD 44mm)
   for (let i = 0; i < 6; i++) {
     const a1 = (i / 6) * Math.PI * 2;
-    const a2 = a1 + 0.28;
+    const a2 = a1 + 0.34;
     const arm = createCylinderBetween(
       new THREE.Vector3(Math.cos(a1) * 0.024, Math.sin(a1) * 0.024, 0),
       new THREE.Vector3(Math.cos(a2) * innerTrackR, Math.sin(a2) * innerTrackR, 0),
-      0.004,
-      0.0035,
-      mats.MAT_STEEL_ROTOR,
+      0.0045,
+      0.0038,
+      spiderMat,
       8
     );
     arm.scale.z = 0.35;
     rotorGroup.add(arm);
 
-    // Torx T25 rotor bolt
-    const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.006, 10), mats.MAT_STEEL_ROTOR);
+    const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.006, 10), mats.MAT_STEEL_ROTOR);
     bolt.rotation.x = Math.PI / 2;
     bolt.position.set(Math.cos(a1) * 0.022, Math.sin(a1) * 0.022, 0.002);
     rotorGroup.add(bolt);
   }
 
-  const hubRing = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.0024, 24), mats.MAT_STEEL_ROTOR);
+  const hubRing = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.0024, 24), spiderMat);
   hubRing.rotation.x = Math.PI / 2;
   rotorGroup.add(hubRing);
 
@@ -2107,71 +2364,70 @@ function buildBrakeRotor180mm(mats) {
 }
 
 /**
- * Helper: Builds a 26" Wheel on SunRingle MTX39 Rim + Kenda 26x2.35" Tire with 72-step 3D Instanced Knobs
+ * Helper: Builds a 26" Wheel on Stealth Black MTX39 Rim + KENDA K-RAD K905 (26x2.30/2.35") Tire
+ * with 5-Row Checkerboard Tread (440 3D blocks per wheel!), Yellow KENDA Sidewall Logo & Red Valve Cap
+ * (1:1 with Reference Photos #1 & #3!)
  */
 function buildWheelBase26(mats) {
   const wheelGroup = new THREE.Group();
 
-  // Outer tire radius = 0.335m (670mm diameter), balloon width = 59mm (tube radius = 0.0295m)
-  // Torus major radius R_carcass = 0.335 - 0.0295 = 0.3055m
-  const R_carcass = 0.302;
+  const R_carcass = 0.303;
   const r_balloon = 0.0295;
 
-  // 1. Tire Carcass (Kenda 26x2.35")
-  const carcassGeom = new THREE.TorusGeometry(R_carcass, r_balloon, 28, 96);
+  // 1. Tire Carcass (Kenda K-Rad K905 26x2.35")
+  const carcassGeom = new THREE.TorusGeometry(R_carcass, r_balloon, 32, 96);
   const carcassMesh = new THREE.Mesh(carcassGeom, mats.MAT_RUBBER_KENDA);
   carcassMesh.castShadow = true;
   carcassMesh.receiveShadow = true;
   wheelGroup.add(carcassMesh);
 
-  // 2. Real 3D Instanced Tread Knobs (72 steps around circumference: dual center + aggressive side lugs!)
-  const steps = 72;
-  const knobGeom = new THREE.BoxGeometry(0.011, 0.0065, 0.012);
-  // 4 knobs per step (2 center blocks + 2 angled shoulder blocks) = 288 3D lugs per wheel
-  const instancedKnobs = new THREE.InstancedMesh(knobGeom, mats.MAT_RUBBER_KENDA, steps * 4);
+  // 2. KENDA K-RAD K905 5-Row Checkerboard 3D Tread Pattern (Reference Photo #3!)
+  // 88 circumferential steps x 5 staggered rows across the tire profile = 440 checkered K-Rad lugs per tire!
+  const steps = 88;
+  const rowsPhi = [-0.64, -0.32, 0.0, 0.32, 0.64]; // 5 rows from right shoulder across crown to left shoulder
+  const knobGeom = new THREE.BoxGeometry(0.0125, 0.0048, 0.0115);
+  const instancedKnobs = new THREE.InstancedMesh(knobGeom, mats.MAT_RUBBER_KENDA, steps * rowsPhi.length);
   instancedKnobs.castShadow = true;
 
   const dummy = new THREE.Object3D();
   let idx = 0;
 
   for (let i = 0; i < steps; i++) {
-    const theta = (i / steps) * Math.PI * 2;
-    const stagger = (i % 2) * 0.003;
+    const baseTheta = (i / steps) * Math.PI * 2;
 
-    // Dual Center Knobs (left & right of centerline)
-    [-1, 1].forEach((side) => {
-      const phi = side * 0.24; // angular offset on tire cross-section
-      const rPos = R_carcass + (r_balloon + 0.0022) * Math.cos(phi);
-      const zPos = (r_balloon + 0.0022) * Math.sin(phi);
-
-      dummy.position.set(Math.cos(theta) * rPos, Math.sin(theta) * rPos, zPos);
-      dummy.rotation.set(0, 0, theta - Math.PI / 2);
-      dummy.rotateX(phi);
-      dummy.scale.set(1.15, 1.0, 0.95);
-      dummy.updateMatrix();
-      instancedKnobs.setMatrixAt(idx++, dummy.matrix);
-    });
-
-    // Aggressive Cornering Side Lugs
-    [-1, 1].forEach((side) => {
-      const phi = side * 0.68;
-      const rPos = R_carcass + (r_balloon + 0.0025) * Math.cos(phi);
-      const zPos = (r_balloon + 0.0025) * Math.sin(phi) + side * stagger;
+    for (let rIdx = 0; rIdx < rowsPhi.length; rIdx++) {
+      const phi = rowsPhi[rIdx];
+      // Checkerboard stagger: odd rows shift by half a block pitch around the circumference
+      const theta = baseTheta + ((rIdx % 2) * (Math.PI / steps));
+      const rPos = R_carcass + (r_balloon + 0.0016) * Math.cos(phi);
+      const zPos = (r_balloon + 0.0016) * Math.sin(phi);
 
       dummy.position.set(Math.cos(theta) * rPos, Math.sin(theta) * rPos, zPos);
       dummy.rotation.set(0, 0, theta - Math.PI / 2);
       dummy.rotateX(phi);
-      dummy.rotateY(side * 0.28);
-      dummy.scale.set(1.3, 1.25, 1.1);
+      // Outer shoulder blocks wrap slightly down the sidewall (K-Rad U-blocks)
+      if (Math.abs(rIdx - 2) === 2) {
+        dummy.scale.set(1.05, 1.25, 1.15);
+      } else {
+        dummy.scale.set(1.12, 1.0, 1.02);
+      }
       dummy.updateMatrix();
       instancedKnobs.setMatrixAt(idx++, dummy.matrix);
-    });
+    }
   }
   instancedKnobs.instanceMatrix.needsUpdate = true;
   wheelGroup.add(instancedKnobs);
 
-  // 3. SunRingle / PowerCircle MTX39 Double-Wall Eyeleted Moto Rim (39mm wide, 24mm profile height)
-  // Rim outer radius ~ 0.279m, inner spoke bed radius ~ 0.255m
+  // 3. Yellow & White "KENDA" Sidewall Hot-Patch Logo Ring at 6 o'clock on both sides (1:1 as on Photo #1!)
+  const sidewallRingGeom = new THREE.RingGeometry(0.280, 0.304, 64);
+  [-0.0292, 0.0292].forEach((zSide) => {
+    const logoRing = new THREE.Mesh(sidewallRingGeom, mats.MAT_KENDA_SIDEWALL);
+    logoRing.position.z = zSide;
+    if (zSide < 0) logoRing.rotation.y = Math.PI;
+    wheelGroup.add(logoRing);
+  });
+
+  // 4. SunRingle / PowerCircle MTX39 Double-Wall Eyeleted Moto Rim (39mm wide, 24mm profile height)
   const rimProfile = [
     new THREE.Vector2(0.255, -0.011),
     new THREE.Vector2(0.264, -0.0195),
@@ -2183,15 +2439,43 @@ function buildWheelBase26(mats) {
   ];
   const rimLatheGeom = new THREE.LatheGeometry(rimProfile, 64);
   rimLatheGeom.rotateX(Math.PI / 2);
-  const rimMesh = new THREE.Mesh(rimLatheGeom, mats.MAT_RIM_MTX39);
+  const rimMesh = new THREE.Mesh(rimLatheGeom, mats.MAT_ANODIZED_BLACK);
   rimMesh.castShadow = true;
   wheelGroup.add(rimMesh);
+
+  // Subtle MTX39 Rim Spec Decals on left & right rim sidewalls
+  const decalGeom = new THREE.RingGeometry(0.257, 0.276, 64);
+  [-0.0198, 0.0198].forEach((zSide) => {
+    const decalMesh = new THREE.Mesh(decalGeom, mats.MAT_RIM_MTX39);
+    decalMesh.position.z = zSide;
+    if (zSide < 0) decalMesh.rotation.y = Math.PI;
+    wheelGroup.add(decalMesh);
+  });
+
+  // 5. Red Anodized Schrader Valve Stem & Cap at 6 o'clock (pointing radially inward, 1:1 as on Photo #1!)
+  const valveStem = createCylinderBetween(
+    new THREE.Vector3(0, -0.255, 0),
+    new THREE.Vector3(0, -0.236, 0),
+    0.0026,
+    0.0026,
+    mats.MAT_ANODIZED_BLACK,
+    10
+  );
+  const redValveCap = createCylinderBetween(
+    new THREE.Vector3(0, -0.236, 0),
+    new THREE.Vector3(0, -0.226, 0),
+    0.0032,
+    0.0030,
+    mats.MAT_RED_ANODIZED,
+    10
+  );
+  wheelGroup.add(valveStem, redValveCap);
 
   return wheelGroup;
 }
 
 /**
- * 4. NODE 3A: FRONT WHEEL 26" MTX39 (36x 14G 3-Cross Spokes, Disc Hub, 180mm Rotor)
+ * 4. NODE 3A: FRONT WHEEL 26" MTX39 (36x 14G 3-Cross Spokes, Disc Hub, 180mm Rotor with Red Spider)
  */
 function buildFrontWheelNode(mats) {
   const frontWheel = buildWheelBase26(mats);
@@ -2209,7 +2493,6 @@ function buildFrontWheelNode(mats) {
   );
   frontWheel.add(hubBody);
 
-  // Hub Flanges
   [-0.032, 0.032].forEach((zFlange) => {
     const flange = createCylinderBetween(
       new THREE.Vector3(0, 0, zFlange - 0.002),
@@ -2222,7 +2505,6 @@ function buildFrontWheelNode(mats) {
     frontWheel.add(flange);
   });
 
-  // Solid axle + black axle nuts
   const axle = createCylinderBetween(
     new THREE.Vector3(0, 0, -0.072),
     new THREE.Vector3(0, 0, 0.072),
@@ -2233,14 +2515,14 @@ function buildFrontWheelNode(mats) {
   );
   frontWheel.add(axle);
 
-  // 36 Black 14G Spokes in 3-Cross pattern with Brass Nipples
+  // 36 Black 14G Spokes in 3-Cross pattern with Silver/Brass Nipples
   const R_rim = 0.255;
   const R_hub = 0.029;
   for (let i = 0; i < 36; i++) {
     const side = i % 2 === 0 ? 1 : -1;
     const crossDir = i % 4 < 2 ? 1 : -1;
     const rimAngle = (i / 36) * Math.PI * 2;
-    const hubAngle = rimAngle + crossDir * 0.95; // 3-cross tangential angle
+    const hubAngle = rimAngle + crossDir * 0.95;
 
     const pHub = new THREE.Vector3(Math.cos(hubAngle) * R_hub, Math.sin(hubAngle) * R_hub, side * 0.032);
     const pRim = new THREE.Vector3(Math.cos(rimAngle) * R_rim, Math.sin(rimAngle) * R_rim, side * 0.003);
@@ -2248,14 +2530,13 @@ function buildFrontWheelNode(mats) {
     const spoke = createCylinderBetween(pHub, pRim, 0.0011, 0.0011, mats.MAT_ANODIZED_BLACK, 6);
     frontWheel.add(spoke);
 
-    // Brass spoke nipple at rim bed
     const pNippleStart = pRim.clone().lerp(pHub, 0.055);
-    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0022, 0.0022, mats.MAT_BRASS_NIPPLE, 6);
+    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0022, 0.0022, mats.MAT_STEEL_ROTOR, 6);
     frontWheel.add(nipple);
   }
 
-  // Front 180mm Perforated Brake Rotor on Left Side (z = +0.044)
-  const frontRotor = buildBrakeRotor180mm(mats);
+  // Front 180mm Perforated Brake Rotor on Left Side (z = +0.044) with Red Anodized Spider (as on Photo #1!)
+  const frontRotor = buildBrakeRotor180mm(mats, true);
   frontRotor.position.set(0, 0, 0.044);
   frontWheel.add(frontRotor);
 
@@ -2295,7 +2576,6 @@ function buildRearWheelNode(mats) {
     );
     rearWheel.add(cover);
 
-    // 18 shiny stainless M4 hex socket bolts around motor cover perimeter
     const boltRadius = R_motor * 0.87;
     for (let b = 0; b < 18; b++) {
       const ang = (b / 18) * Math.PI * 2;
@@ -2320,7 +2600,7 @@ function buildRearWheelNode(mats) {
     const side = i % 2 === 0 ? 1 : -1;
     const crossDir = i % 4 < 2 ? 1 : -1;
     const rimAngle = (i / 36) * Math.PI * 2;
-    const hubAngle = rimAngle + crossDir * 0.26; // 1-cross / radial-tangential lace for large 245mm DD motor
+    const hubAngle = rimAngle + crossDir * 0.26;
 
     const pHub = new THREE.Vector3(Math.cos(hubAngle) * R_flange, Math.sin(hubAngle) * R_flange, side * 0.031);
     const pRim = new THREE.Vector3(Math.cos(rimAngle) * R_rim, Math.sin(rimAngle) * R_rim, side * 0.003);
@@ -2329,7 +2609,7 @@ function buildRearWheelNode(mats) {
     rearWheel.add(spoke);
 
     const pNippleStart = pRim.clone().lerp(pHub, 0.12);
-    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0028, 0.0028, mats.MAT_BRASS_NIPPLE, 8);
+    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0028, 0.0028, mats.MAT_STEEL_ROTOR, 8);
     rearWheel.add(nipple);
   }
 
@@ -2337,7 +2617,6 @@ function buildRearWheelNode(mats) {
   const m14Axle = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.010, 0.185), mats.MAT_STEEL_ROTOR);
   rearWheel.add(m14Axle);
 
-  // Heavy-duty M14 flange nuts with lock washers
   [-0.082, 0.082].forEach((zNut) => {
     const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.012, 6), mats.MAT_STEEL_ROTOR);
     nut.rotation.x = Math.PI / 2;
@@ -2357,7 +2636,7 @@ function buildRearWheelNode(mats) {
   rearWheel.add(freewheel);
 
   // Rear 180mm Perforated Brake Rotor on Left Side (z = +0.052)
-  const rearRotor = buildBrakeRotor180mm(mats);
+  const rearRotor = buildBrakeRotor180mm(mats, false);
   rearRotor.position.set(0, 0, 0.052);
   rearWheel.add(rearRotor);
 
@@ -2372,8 +2651,6 @@ function buildRearDropoutBrakeNode(mats) {
   const dropoutGroup = new THREE.Group();
   dropoutGroup.name = 'NODE_04_REAR_DROPOUT_6MM_ZOOM';
 
-  // Rear Axle is at (-0.435, 0.030, 0). Left frame dropout is at z = +0.0675.
-  // Outer 6mm monolithic steel plate sits at z = +0.070..+0.076.
   const axX = -0.435;
   const axY = 0.030;
 
@@ -2381,23 +2658,19 @@ function buildRearDropoutBrakeNode(mats) {
   const plateShape = new THREE.Shape();
   plateShape.moveTo(axX + 0.032, axY - 0.022);
   plateShape.lineTo(axX + 0.005, axY - 0.022);
-  // Open 10mm wide x 14mm deep M14 axle slot at bottom
   plateShape.lineTo(axX + 0.005, axY + 0.007);
   plateShape.lineTo(axX - 0.005, axY + 0.007);
   plateShape.lineTo(axX - 0.005, axY - 0.022);
   plateShape.lineTo(axX - 0.028, axY - 0.022);
   plateShape.lineTo(axX - 0.034, axY + 0.035);
-  // Rear IS Ear #1
   plateShape.lineTo(axX - 0.022, axY + 0.082);
   plateShape.lineTo(axX - 0.006, axY + 0.084);
   plateShape.lineTo(axX + 0.002, axY + 0.056);
-  // Front IS Ear #2 (51mm spacing from Ear #1)
   plateShape.lineTo(axX + 0.024, axY + 0.066);
   plateShape.lineTo(axX + 0.038, axY + 0.062);
   plateShape.lineTo(axX + 0.032, axY + 0.020);
   plateShape.closePath();
 
-  // 6mm mounting bolt holes in IS ears
   const earHole1 = new THREE.Path();
   earHole1.absarc(axX - 0.014, axY + 0.074, 0.0032, 0, Math.PI * 2, true);
   plateShape.holes.push(earHole1);
@@ -2418,7 +2691,6 @@ function buildRearDropoutBrakeNode(mats) {
   leftArmorPlate.castShadow = true;
   dropoutGroup.add(leftArmorPlate);
 
-  // Right-side 6mm steel torque plate (at z = -0.076)
   const rightPlateGeom = plateGeom.clone();
   rightPlateGeom.translate(0, 0, -0.146);
   const rightArmorPlate = new THREE.Mesh(rightPlateGeom, mats.MAT_FRAME_RAL9005);
@@ -2439,77 +2711,134 @@ function buildRearDropoutBrakeNode(mats) {
   return dropoutGroup;
 }
 
+
 // --- [3/5] POWERTRAIN, 20S7P 140x 21700 BATTERY, BMS, CONTROLLER & SADDLE ---
 // ============================================================================
 // STEALTH SUR-RON 72V 3000W — NODE 5 (CORDURA 1000D BAG + 20S7P 140x EVE 50E
-// HEXAGONAL BATTERY + BISIDA 120A BMS), NODE 6 (60A SIN CONTROLLER + 3D PETG
-// WIRING BOX WITH 105 dB HORN & DC-DC), NODE 7 (SUR-RON MOTO SADDLE + SUBFRAME)
+// SERPENTINE BUSBAR BATTERY + BISIDA 120A BMS), NODE 6 (60A FINNED CONTROLLER +
+// STEPPED 3D PETG WIRING BOX WITH 105 dB HORN & DC-DC), NODE 7 (SUR-RON MOTO
+// SADDLE + 2-BOLT STEEL SUBFRAME + REAR TAIL FENDER WITH LED BRAKE LIGHT)
 // ============================================================================
 
 /**
+ * Helper: Creates a rounded polygon THREE.Shape from an array of 2D vertices
+ */
+function createRoundedPolygonShape(pts, radius = 0.018) {
+  const shape = new THREE.Shape();
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const prev = pts[(i - 1 + n) % n];
+    const curr = pts[i];
+    const next = pts[(i + 1) % n];
+
+    const v1 = prev.clone().sub(curr).normalize();
+    const v2 = next.clone().sub(curr).normalize();
+
+    const pStart = curr.clone().addScaledVector(v1, radius);
+    const pEnd = curr.clone().addScaledVector(v2, radius);
+
+    if (i === 0) {
+      shape.moveTo(pStart.x, pStart.y);
+    } else {
+      shape.lineTo(pStart.x, pStart.y);
+    }
+    shape.quadraticCurveTo(curr.x, curr.y, pEnd.x, pEnd.y);
+  }
+  shape.closePath();
+  return shape;
+}
+
+/**
  * Compute exact 2D coordinates for all 140 21700 cells (EVE INR21700-50E)
- * arranged in a hexagonal honeycomb matrix along the Downtube:
+ * arranged in a true 60-degree hexagonal honeycomb matrix along the Downtube & Seat Tube:
  * - Pitch between cell centers in a row: dU = 0.0227m (22.7mm)
  * - Row-to-row pitch: dV = 0.01966m (19.66mm)
- * - Rows 1, 2, 3, 4 (bottom to mid): 21 cells per row (3 parallel groups 7P per row = 84 cells)
- * - Rows 5, 6, 7, 8 (upper triangle): 14 cells per row (2 parallel groups 7P per row = 56 cells)
- * - TOTAL = 84 + 56 = 140 cells, grouped strictly into 20 series sections (1S..20S of 7 cells each)
+ * - Each row r steps by +0.5 * dU along uAxis so the rear edge parallels the Seat Tube (34.8mm clearance)
+ * - Rows 1..4 (bottom to mid): 21 cells per row (3 parallel groups 7P per row = 84 cells)
+ * - Rows 5..8 (upper triangle): 14 cells per row (2 parallel groups 7P per row = 56 cells)
+ * - TOTAL = 84 + 56 = 140 cells, grouped into 20 contiguous serpentine series sections (1S..20S of 7P)
  */
 function generate140CellsLayout() {
-  // Downtube inner edge vector: from (0.015, 0.015) to (0.415, 0.465)
   const pDown0 = new THREE.Vector2(0.015, 0.015);
   const pDown1 = new THREE.Vector2(0.415, 0.465);
-  const uAxis = pDown1.clone().sub(pDown0).normalize(); // along downtube (~48.3 deg)
-  const vAxis = new THREE.Vector2(-uAxis.y, uAxis.x);   // inward normal into frame triangle
+  const uAxis = pDown1.clone().sub(pDown0).normalize(); // along downtube (~48.37 deg)
+  const vAxis = new THREE.Vector2(-uAxis.y, uAxis.x);   // inward normal (~138.37 deg)
 
   const dU = 0.0227;   // 22.7mm cell pitch
   const dV = 0.01966;  // 19.66mm hexagonal row pitch
 
-  // Base origin shifted inside the 15mm EVA foam cocoon above BB & downtube
-  const origin = pDown0.clone()
-    .addScaledVector(uAxis, 0.048)
-    .addScaledVector(vAxis, 0.036);
+  // Base origin inside the 15mm EVA foam cocoon above BB & along Seat Tube
+  const origin = new THREE.Vector2(0.012, 0.068);
 
   const rowCounts = [21, 21, 21, 21, 14, 14, 14, 14]; // Total = 140 cells
   const cells = [];
-  let seriesIndex = 0; // 0..19 -> 1S..20S
+  const groupMeta = []; // Metadata for each of the 20 series sections (1S..20S)
+  let seriesCounter = 0;
 
   for (let r = 0; r < rowCounts.length; r++) {
     const countInRow = rowCounts[r];
     const groupsInRow = countInRow / 7; // 3 groups for rows 0..3, 2 groups for rows 4..7
-    const hexStagger = (r % 2) * (dU * 0.5);
-    // Shift upper rows slightly forward along uAxis so they nest cleanly in the upper triangle
-    const rowStartShift = r >= 4 ? (r - 3) * dU * 0.85 : (r * dU * 0.12);
 
-    for (let g = 0; g < groupsInRow; g++) {
-      const currentSeriesId = seriesIndex + 1; // 1..20
-      const polarity = currentSeriesId % 2 === 1 ? 1 : -1; // Alternating series polarity
+    // True 60-deg hexagonal row step along Seat Tube
+    const rowStartU = r * (0.5 * dU);
 
+    // Serpentine row direction: even rows (r=0,2,4,6) go rear->front (g=0..G-1),
+    // odd rows (r=1,3,5,7) go front->rear (g=G-1..0) so every s -> s+1 is physically adjacent!
+    const groupOrder = [];
+    if (r % 2 === 0) {
+      for (let g = 0; g < groupsInRow; g++) groupOrder.push(g);
+    } else {
+      for (let g = groupsInRow - 1; g >= 0; g--) groupOrder.push(g);
+    }
+
+    for (let idxInOrder = 0; idxInOrder < groupOrder.length; idxInOrder++) {
+      const g = groupOrder[idxInOrder];
+      seriesCounter++;
+      const currentSeriesId = seriesCounter; // 1..20
+      // Alternating polarity on +Z (Left side):
+      // Odd series (1S, 3S, ..., 19S) -> Negative (-1) on +Z (Left), Positive (+1) on -Z (Right)
+      // Even series (2S, 4S, ..., 20S) -> Positive (+1) on +Z (Left), Negative (-1) on -Z (Right)
+      const polarityOnLeft = currentSeriesId % 2 === 1 ? -1 : 1;
+
+      const groupCells = [];
       for (let c = 0; c < 7; c++) {
         const colIdx = g * 7 + c;
-        const uDist = rowStartShift + hexStagger + colIdx * dU;
+        const uDist = rowStartU + colIdx * dU;
         const vDist = r * dV;
 
         const pos2D = origin.clone()
           .addScaledVector(uAxis, uDist)
           .addScaledVector(vAxis, vDist);
 
-        cells.push({
+        const cellObj = {
           cellGlobalIndex: cells.length + 1,
           row: r + 1,
+          blockCol: g,
           col: colIdx + 1,
           seriesId: currentSeriesId, // 1S..20S
           parallelIndex: c + 1,      // 1P..7P
-          polarity,
+          polarity: polarityOnLeft,  // +1 means Pos on +Z (Left), -1 means Neg on +Z (Left)
           x: pos2D.x,
           y: pos2D.y
-        });
+        };
+        cells.push(cellObj);
+        groupCells.push(cellObj);
       }
-      seriesIndex++;
+
+      const cx = groupCells.reduce((acc, item) => acc + item.x, 0) / 7;
+      const cy = groupCells.reduce((acc, item) => acc + item.y, 0) / 7;
+      groupMeta.push({
+        seriesId: currentSeriesId,
+        row: r,
+        blockCol: g,
+        polarityOnLeft,
+        cells: groupCells,
+        center: new THREE.Vector2(cx, cy)
+      });
     }
   }
 
-  return { cells, uAxis, vAxis };
+  return { cells, groupMeta, uAxis, vAxis };
 }
 
 /**
@@ -2519,33 +2848,29 @@ function buildBatterySystemNode(mats) {
   const batteryRoot = new THREE.Group();
   batteryRoot.name = 'NODE_05_BATTERY_20S7P_SYSTEM';
 
-  // Inner Triangle Contour (560 x 490 x 360 mm, 70mm head-tube bridge, width 82mm: z = -0.041..+0.041)
+  // Exact Inner Triangle Contour matching Reference Photo #1 & #2
   const bagPts = [
-    new THREE.Vector2(0.008, 0.032),  // Bottom near BB
-    new THREE.Vector2(0.392, 0.458),  // Lower head tube corner
-    new THREE.Vector2(0.374, 0.525),  // Upper head tube corner (70mm front bridge)
-    new THREE.Vector2(-0.118, 0.400)  // Top seat tube corner
+    new THREE.Vector2(0.008, 0.030),  // Bottom vertex at BB
+    new THREE.Vector2(0.390, 0.456),  // Lower head tube corner
+    new THREE.Vector2(0.370, 0.528),  // Upper head tube corner (70mm front bridge)
+    new THREE.Vector2(-0.120, 0.402)  // Seat tube upper corner under saddle nose
   ];
 
-  const bagShape = new THREE.Shape();
-  bagShape.moveTo(bagPts[0].x, bagPts[0].y);
-  bagShape.lineTo(bagPts[1].x, bagPts[1].y);
-  bagShape.lineTo(bagPts[2].x, bagPts[2].y);
-  bagShape.lineTo(bagPts[3].x, bagPts[3].y);
-  bagShape.closePath();
+  const bagShape = createRoundedPolygonShape(bagPts, 0.018);
 
-  // 1.1 Central Cordura Base + EVA 15mm Damper Cocoon + Velcro 45mm Straps
+  // 1.1 Central Cordura Base + EVA 15mm Damper Cocoon + Authentic Velcro Straps
   const corduraCenterGroup = new THREE.Group();
   corduraCenterGroup.name = 'CORDURA_BAG_CENTER';
 
-  // Perimeter Cordura rim band (width 74mm, z = -0.037..+0.037)
-  const bagRimShape = bagShape.clone();
-  const innerCutPath = new THREE.Shape();
-  innerCutPath.moveTo(0.020, 0.056);
-  innerCutPath.lineTo(0.372, 0.456);
-  innerCutPath.lineTo(0.356, 0.508);
-  innerCutPath.lineTo(-0.102, 0.384);
-  innerCutPath.closePath();
+  const innerCutPts = [
+    new THREE.Vector2(0.018, 0.056),
+    new THREE.Vector2(0.372, 0.456),
+    new THREE.Vector2(0.354, 0.508),
+    new THREE.Vector2(-0.104, 0.384)
+  ];
+  const innerCutPath = createRoundedPolygonShape(innerCutPts, 0.012);
+
+  const bagRimShape = createRoundedPolygonShape(bagPts, 0.018);
   bagRimShape.holes.push(innerCutPath);
 
   const rimExtrude = new THREE.ExtrudeGeometry(bagRimShape, {
@@ -2553,10 +2878,12 @@ function buildBatterySystemNode(mats) {
     bevelEnabled: true,
     bevelSize: 0.003,
     bevelThickness: 0.003,
-    bevelSegments: 2
+    bevelSegments: 3
   });
   rimExtrude.translate(0, 0, -0.039);
   const corduraRimMesh = new THREE.Mesh(rimExtrude, mats.MAT_CORDURA_1000D);
+  corduraRimMesh.castShadow = true;
+  corduraRimMesh.receiveShadow = true;
   corduraCenterGroup.add(corduraRimMesh);
 
   // Internal 15mm Black EVA Foam Damper Cocoon around perimeter
@@ -2567,80 +2894,119 @@ function buildBatterySystemNode(mats) {
   evaExtrude.translate(0, 0, -0.036);
   const evaCocoonMesh = new THREE.Mesh(evaExtrude, mats.MAT_EVA_FOAM);
   evaCocoonMesh.scale.set(0.96, 0.96, 1.0);
-  evaCocoonMesh.position.set(0.006, 0.012, 0);
+  evaCocoonMesh.position.set(0.005, 0.010, 0);
   corduraCenterGroup.add(evaCocoonMesh);
 
-  // 45mm Wide Matte Black Velcro Straps wrapping Toptube, Downtube, and Seat Tube (1:1 as on photo!)
-  const strapWidth = 0.045;
-  // Toptube straps (3 straps)
-  [0.25, 0.52, 0.78].forEach((t) => {
+  // 45mm Wide Matte Black Velcro Straps in exact Reference Photo #1 positions:
+  const strapWidth = 0.042;
+  // Toptube straps (2 straps between front phone mount and moto-saddle nose, 1:1 as on photo #1)
+  [0.44, 0.66].forEach((t) => {
     const p1 = new THREE.Vector3(-0.135, 0.415, 0).lerp(new THREE.Vector3(0.395, 0.545, 0), t);
-    const p2 = p1.clone().add(new THREE.Vector3(0.011, 0.0027, 0).normalize().multiplyScalar(strapWidth));
-    const strap = createBiOvalTubeBetween(p1, p2, 0.022, 0.043, mats.MAT_VELCRO_STRAP, 20);
+    const dir = new THREE.Vector3(0.530, 0.130, 0).normalize();
+    const p2 = p1.clone().addScaledVector(dir, strapWidth);
+    const strap = createBiOvalTubeBetween(p1, p2, 0.022, 0.043, mats.MAT_VELCRO_STRAP, 24);
     corduraCenterGroup.add(strap);
   });
 
-  // Seat tube straps (2 straps)
-  [0.35, 0.70].forEach((t) => {
+  // Seat tube straps (2 straps: upper-mid and lower-mid on Seat Tube, 1:1 as on photo #1)
+  [0.24, 0.68].forEach((t) => {
     const p1 = new THREE.Vector3(0, 0, 0).lerp(new THREE.Vector3(-0.145, 0.435, 0), t);
-    const p2 = p1.clone().add(new THREE.Vector3(-0.145, 0.435, 0).normalize().multiplyScalar(strapWidth));
-    const strap = createBiOvalTubeBetween(p1, p2, 0.022, 0.042, mats.MAT_VELCRO_STRAP, 20);
+    const dir = new THREE.Vector3(-0.145, 0.435, 0).normalize();
+    const p2 = p1.clone().addScaledVector(dir, strapWidth);
+    const strap = createBiOvalTubeBetween(p1, p2, 0.021, 0.042, mats.MAT_VELCRO_STRAP, 24);
     corduraCenterGroup.add(strap);
   });
 
   batteryRoot.add(corduraCenterGroup);
 
-  // 1.2 Left & Right Removable Side Covers on Waterproof Zippers (z = +0.039 and z = -0.039)
-  const leftCoverGroup = new THREE.Group();
-  leftCoverGroup.name = 'EXPLODE_CORDURA_LEFT_COVER';
-  const coverGeomL = new THREE.ExtrudeGeometry(bagShape, {
-    depth: 0.004,
-    bevelEnabled: true,
-    bevelSize: 0.004,
-    bevelThickness: 0.003,
-    bevelSegments: 3
-  });
-  coverGeomL.translate(0, 0, 0.037);
-  const leftCoverMesh = new THREE.Mesh(coverGeomL, mats.MAT_CORDURA_1000D);
-  leftCoverMesh.castShadow = true;
-  leftCoverGroup.add(leftCoverMesh);
+  // Helper to build detailed Cordura Side Cover with 3D perimeter piping (кедер) + waterproof zipper + puller tab
+  function buildDetailedCorduraSideCover(sideSign, name) {
+    const group = new THREE.Group();
+    group.name = name;
 
-  // Diagonal reinforced sewing seam & waterproof zipper ridge on Left Side Cover (matching photo!)
-  const zipLineL = createCylinderBetween(
-    new THREE.Vector3(-0.112, 0.365, 0.0435),
-    new THREE.Vector3(0.372, 0.465, 0.0435),
-    0.0035,
-    0.0035,
-    mats.MAT_VELCRO_STRAP,
-    12
-  );
-  leftCoverGroup.add(zipLineL);
-  batteryRoot.add(leftCoverGroup);
+    const coverGeom = new THREE.ExtrudeGeometry(bagShape, {
+      depth: 0.004,
+      bevelEnabled: true,
+      bevelSize: 0.004,
+      bevelThickness: 0.003,
+      bevelSegments: 4
+    });
+    coverGeom.translate(0, 0, sideSign > 0 ? 0.037 : -0.041);
+    const coverMesh = new THREE.Mesh(coverGeom, mats.MAT_CORDURA_1000D);
+    coverMesh.castShadow = true;
+    coverMesh.receiveShadow = true;
+    group.add(coverMesh);
 
-  const rightCoverGroup = new THREE.Group();
-  rightCoverGroup.name = 'EXPLODE_CORDURA_RIGHT_COVER';
-  const coverGeomR = new THREE.ExtrudeGeometry(bagShape, {
-    depth: 0.004,
-    bevelEnabled: true,
-    bevelSize: 0.004,
-    bevelThickness: 0.003,
-    bevelSegments: 3
-  });
-  coverGeomR.translate(0, 0, -0.041);
-  const rightCoverMesh = new THREE.Mesh(coverGeomR, mats.MAT_CORDURA_1000D);
-  rightCoverMesh.castShadow = true;
-  rightCoverGroup.add(rightCoverMesh);
+    // 3D Perimeter Cordura Piping / Welt Seam (окантовочный кедер Ø5.5 мм around the entire triangle border)
+    const zPiping = sideSign * 0.0415;
+    for (let i = 0; i < bagPts.length; i++) {
+      const pA = bagPts[i];
+      const pB = bagPts[(i + 1) % bagPts.length];
+      const pipeSeg = createCylinderBetween(
+        new THREE.Vector3(pA.x, pA.y, zPiping),
+        new THREE.Vector3(pB.x, pB.y, zPiping),
+        0.0032,
+        0.0032,
+        mats.MAT_VELCRO_STRAP,
+        12
+      );
+      group.add(pipeSeg);
 
-  const zipLineR = createCylinderBetween(
-    new THREE.Vector3(-0.112, 0.365, -0.0435),
-    new THREE.Vector3(0.372, 0.465, -0.0435),
-    0.0035,
-    0.0035,
-    mats.MAT_VELCRO_STRAP,
-    12
-  );
-  rightCoverGroup.add(zipLineR);
-  batteryRoot.add(rightCoverGroup);
+      // Rounded piping corner joint
+      const cornerSphere = new THREE.Mesh(new THREE.SphereGeometry(0.0034, 12, 12), mats.MAT_VELCRO_STRAP);
+      cornerSphere.position.set(pA.x, pA.y, zPiping);
+      group.add(cornerSphere);
+    }
+
+    // Waterproof Reverse-Coil Zipper Track parallel to Toptube (28mm below upper edge, 1:1 as on Photo #1 & #2)
+    const zZip = sideSign * 0.0432;
+    const zipRear = new THREE.Vector3(-0.102, 0.376, zZip);
+    const zipMid = new THREE.Vector3(0.145, 0.440, zZip);
+    const zipFront = new THREE.Vector3(0.352, 0.490, zZip);
+
+    // Upper & lower waterproof zipper tape lips
+    [-0.0022, 0.0022].forEach((dy) => {
+      const lip1 = createCylinderBetween(
+        new THREE.Vector3(zipRear.x, zipRear.y + dy, zZip),
+        new THREE.Vector3(zipMid.x, zipMid.y + dy, zZip),
+        0.0016,
+        0.0016,
+        mats.MAT_VELCRO_STRAP,
+        10
+      );
+      const lip2 = createCylinderBetween(
+        new THREE.Vector3(zipMid.x, zipMid.y + dy, zZip),
+        new THREE.Vector3(zipFront.x, zipFront.y + dy, zZip),
+        0.0016,
+        0.0016,
+        mats.MAT_VELCRO_STRAP,
+        10
+      );
+      group.add(lip1, lip2);
+    });
+
+    // Metal Zipper Slider + Tactical Cord Puller at front-top corner (1:1 as on Reference Photo #1)
+    const sliderBody = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.008, 0.005), mats.MAT_ANODIZED_BLACK);
+    sliderBody.position.set(0.335, 0.485, zZip + sideSign * 0.002);
+    sliderBody.rotation.z = 0.25;
+    group.add(sliderBody);
+
+    const pullerTab = createCylinderBetween(
+      new THREE.Vector3(0.335, 0.485, zZip + sideSign * 0.003),
+      new THREE.Vector3(0.318, 0.456, zZip + sideSign * 0.005),
+      0.0018,
+      0.0032,
+      mats.MAT_ANODIZED_BLACK,
+      10
+    );
+    group.add(pullerTab);
+
+    return group;
+  }
+
+  const leftCoverGroup = buildDetailedCorduraSideCover(1, 'EXPLODE_CORDURA_LEFT_COVER');
+  const rightCoverGroup = buildDetailedCorduraSideCover(-1, 'EXPLODE_CORDURA_RIGHT_COVER');
+  batteryRoot.add(leftCoverGroup, rightCoverGroup);
 
   // 1.3 Semi-Transparent 3-Layer Blue Reinforced PVC Heat-Shrink Sleeve over Honeycomb Core
   const pvcExtrude = new THREE.ExtrudeGeometry(innerCutPath, {
@@ -2655,19 +3021,23 @@ function buildBatterySystemNode(mats) {
   corduraCenterGroup.add(pvcSleeveMesh);
 
   // 1.4 140 Cylindrical Cells Li-ion 21700 EVE INR21700-50E (OD 21.2mm -> R=0.0106m, Length 70.5mm along Z)
-  // Grouped strictly into 20 Series Groups (1S..20S of 7 parallel cells 7P each)
-  const { cells, uAxis, vAxis } = generate140CellsLayout();
+  // Grouped into 20 Contiguous Serpentine Series Groups (1S..20S of 7 parallel cells 7P each)
+  const { cells, groupMeta, uAxis } = generate140CellsLayout();
   const cellsMasterGroup = new THREE.Group();
   cellsMasterGroup.name = 'CELLS_20S7P_140_ARRAY';
 
   const seriesGroups = [];
   for (let s = 1; s <= 20; s++) {
+    const meta = groupMeta[s - 1];
     const sGroup = new THREE.Group();
     sGroup.name = `BATTERY_SECTION_${s}S`;
     sGroup.userData = {
       seriesId: s,
       code: `${s}S7P`,
+      row: meta.row + 1,
+      polarityOnLeft: meta.polarityOnLeft,
       voltage: 4.20,
+      cumVoltage: (s * 4.20).toFixed(1),
       capacityAh: 35.0,
       cellModel: 'EVE INR21700-50E',
       bmsChannel: `CH-${String(s).padStart(2, '0')}`,
@@ -2678,12 +3048,18 @@ function buildBatterySystemNode(mats) {
   }
 
   // Shared geometries for the 140 cells
-  const cellBodyGeom = new THREE.CylinderGeometry(0.0106, 0.0106, 0.0705, 20);
+  const cellBodyGeom = new THREE.CylinderGeometry(0.0106, 0.0106, 0.0705, 24);
   cellBodyGeom.rotateX(Math.PI / 2); // Align along Z axis
 
-  const insRingGeom = new THREE.RingGeometry(0.0045, 0.0102, 18);
-  const posTermGeom = new THREE.CylinderGeometry(0.0045, 0.0045, 0.0012, 16);
+  const insRingGeom = new THREE.RingGeometry(0.0042, 0.0103, 20);
+  const posTermGeom = new THREE.CylinderGeometry(0.0044, 0.0044, 0.0014, 16);
   posTermGeom.rotateX(Math.PI / 2);
+  const negTermGeom = new THREE.CylinderGeometry(0.0082, 0.0082, 0.0006, 16);
+  negTermGeom.rotateX(Math.PI / 2);
+
+  // Spot weld dimple geometry
+  const weldDotGeom = new THREE.CylinderGeometry(0.0009, 0.0009, 0.0008, 8);
+  weldDotGeom.rotateX(Math.PI / 2);
 
   // Left & Right 3D-Printed PETG Honeycomb Holders (Explodable along ±Z by ±0.14m)
   const holderLeftGroup = new THREE.Group();
@@ -2699,7 +3075,6 @@ function buildBatterySystemNode(mats) {
 
   cells.forEach((cell, idx) => {
     const sGroup = seriesGroups[cell.seriesId - 1];
-    // Clone material per series group so X-Ray hover can highlight 1 group and fade the other 19!
     if (!sGroup.userData.cellMat) {
       sGroup.userData.cellMat = mats.MAT_CELL_EVE50E.clone();
       sGroup.userData.busMat = mats.MAT_COPPER_BUSBAR.clone();
@@ -2711,16 +3086,40 @@ function buildBatterySystemNode(mats) {
     cellMesh.userData = { seriesId: cell.seriesId, cellIndex: cell.cellGlobalIndex };
     sGroup.add(cellMesh);
 
-    // White insulation ring + steel button on positive terminal end (z = ±0.0353)
+    // Positive end: White barley-paper insulator ring + raised steel button cap
+    // Negative end: Flat nickel-plated steel circular bottom
     const posZ = cell.polarity === 1 ? 0.0354 : -0.0354;
+    const negZ = -posZ;
+
     const insRing = new THREE.Mesh(insRingGeom, mats.MAT_WHITE_INSULATOR);
     insRing.position.set(cell.x, cell.y, posZ);
-    if (cell.polarity === -1) insRing.rotation.y = Math.PI;
+    insRing.userData = { seriesId: cell.seriesId };
     sGroup.add(insRing);
 
-    const termBtn = new THREE.Mesh(posTermGeom, mats.MAT_STEEL_ROTOR);
-    termBtn.position.set(cell.x, cell.y, posZ);
-    sGroup.add(termBtn);
+    const posBtn = new THREE.Mesh(posTermGeom, mats.MAT_STEEL_ROTOR);
+    posBtn.position.set(cell.x, cell.y, posZ);
+    posBtn.userData = { seriesId: cell.seriesId };
+    sGroup.add(posBtn);
+
+    const negFlat = new THREE.Mesh(negTermGeom, mats.MAT_STEEL_ROTOR);
+    negFlat.position.set(cell.x, cell.y, negZ);
+    negFlat.userData = { seriesId: cell.seriesId };
+    sGroup.add(negFlat);
+
+    // 4 Spot-Weld Dimples on both +Z and -Z terminals of every cell
+    [-0.0365, 0.0365].forEach((wz) => {
+      [
+        [-0.0022, -0.0018],
+        [0.0022, -0.0018],
+        [-0.0022, 0.0018],
+        [0.0022, 0.0018]
+      ].forEach(([dx, dy]) => {
+        const dot = new THREE.Mesh(weldDotGeom, sGroup.userData.busMat);
+        dot.position.set(cell.x + dx, cell.y + dy, wz);
+        dot.userData = { seriesId: cell.seriesId };
+        sGroup.add(dot);
+      });
+    });
 
     // Populate Left & Right PETG Honeycomb Hex Sockets
     dummy.position.set(cell.x, cell.y, 0.0295);
@@ -2738,7 +3137,7 @@ function buildBatterySystemNode(mats) {
   holderLeftGroup.add(instancedHolderL);
   holderRightGroup.add(instancedHolderR);
 
-  // Add outer PETG frame rails around the 140 hex sockets
+  // Outer PETG frame rails around the 140 hex sockets
   const holderPerimGeomL = new THREE.ExtrudeGeometry(bagRimShape, { depth: 0.010, bevelEnabled: false });
   holderPerimGeomL.scale(0.92, 0.92, 1);
   holderPerimGeomL.translate(0.010, 0.022, 0.024);
@@ -2750,52 +3149,161 @@ function buildBatterySystemNode(mats) {
 
   batteryRoot.add(holderLeftGroup, holderRightGroup);
 
-  // 1.5 Pure Nickel Strips (0.15 x 8 mm) with Spot-Weld Dimples + Soldered Tinned Copper Busbars (1.5-2.5 mm²)
-  // on both ends of each 7P parallel section (z = ±0.036)
+  // 1.5 PARALLEL 7P NICKEL STRIPS + SOLDERED COPPER BUSBARS + SERPENTINE SERIES BRIDGES (1S -> 2S -> ... -> 20S)
+  const labelPlaneGeom = new THREE.PlaneGeometry(0.032, 0.0085);
+
   for (let s = 1; s <= 20; s++) {
     const sGroup = seriesGroups[s - 1];
-    const groupCells = cells.filter((c) => c.seriesId === s);
+    const meta = groupMeta[s - 1];
+    const groupCells = meta.cells;
     const firstCell = groupCells[0];
     const lastCell = groupCells[groupCells.length - 1];
+    const angle = Math.atan2(lastCell.y - firstCell.y, lastCell.x - firstCell.x);
 
+    // Parallel 7P Nickel Strip (0.15 x 9mm) + Tinned Copper Busbar (2.5 mm²) on both +Z and -Z
     [-0.036, 0.036].forEach((zEnd) => {
       const pStart = new THREE.Vector3(firstCell.x, firstCell.y, zEnd);
       const pEnd = new THREE.Vector3(lastCell.x, lastCell.y, zEnd);
-      const stripLen = pStart.distanceTo(pEnd) + 0.016;
+      const stripLen = pStart.distanceTo(pEnd) + 0.017;
       const stripCenter = pStart.clone().add(pEnd).multiplyScalar(0.5);
-      const angle = Math.atan2(lastCell.y - firstCell.y, lastCell.x - firstCell.x);
 
-      // 0.15 x 8mm Pure Nickel Strip
-      const niGeom = new THREE.BoxGeometry(stripLen, 0.008, 0.0006);
+      // Pure Nickel Strip (0.15 x 9mm)
+      const niGeom = new THREE.BoxGeometry(stripLen, 0.009, 0.0006);
       const niStrip = new THREE.Mesh(niGeom, sGroup.userData.niMat);
       niStrip.position.copy(stripCenter);
       niStrip.rotation.z = angle;
       niStrip.userData = { seriesId: s };
       sGroup.add(niStrip);
 
-      // Tinned Copper Busbar (2.5 mm²) soldered atop the nickel strip for 80A-120A continuous current
-      const cuGeom = new THREE.BoxGeometry(stripLen * 0.94, 0.0032, 0.0014);
+      // Soldered Tinned Copper Spine (2.5 mm²) along the 7P group
+      const cuGeom = new THREE.BoxGeometry(stripLen * 0.92, 0.0036, 0.0014);
       const cuBus = new THREE.Mesh(cuGeom, sGroup.userData.busMat);
-      cuBus.position.set(stripCenter.x, stripCenter.y, zEnd + Math.sign(zEnd) * 0.0008);
+      cuBus.position.set(stripCenter.x, stripCenter.y, zEnd + Math.sign(zEnd) * 0.0007);
       cuBus.rotation.z = angle;
       cuBus.userData = { seriesId: s };
       sGroup.add(cuBus);
+
+      // Crisp 3D Section Badge ("1S [B-]", "2S (+)", ..., "20S [B+]") on each group
+      const sidePolarity = zEnd > 0 ? meta.polarityOnLeft : -meta.polarityOnLeft;
+      const badgeMat = createBatterySeriesLabelMaterial(s, sidePolarity);
+      const badgeMesh = new THREE.Mesh(labelPlaneGeom, badgeMat);
+      badgeMesh.position.set(stripCenter.x, stripCenter.y, zEnd + Math.sign(zEnd) * 0.0018);
+      badgeMesh.rotation.z = angle;
+      if (zEnd < 0) badgeMesh.rotation.y = Math.PI;
+      badgeMesh.userData = { seriesId: s };
+      sGroup.add(badgeMesh);
     });
+
+    // SERPENTINE SERIES CONNECTIONS: Connect Section s -> Section (s + 1)
+    // Odd s (1S->2S, 3S->4S, ..., 19S->20S) connects on -Z (Right side)
+    // Even s (2S->3S, 4S->5S, ..., 18S->19S) connects on +Z (Left side)
+    if (s < 20) {
+      const nextMeta = groupMeta[s];
+      const zBridge = s % 2 === 1 ? -0.0363 : 0.0363;
+
+      if (meta.row === nextMeta.row) {
+        // Horizontal in-row series transition (e.g. 1S->2S, 2S->3S, 4S->5S, etc.):
+        // Connect the adjacent ends of group s and group s+1 with a wide Nickel + Copper bridge!
+        let cellA = groupCells[groupCells.length - 1];
+        let cellB = nextMeta.cells[0];
+        if (cellA.x > cellB.x) {
+          cellA = groupCells[0];
+          cellB = nextMeta.cells[nextMeta.cells.length - 1];
+        }
+        const pA = new THREE.Vector3(cellA.x, cellA.y, zBridge);
+        const pB = new THREE.Vector3(cellB.x, cellB.y, zBridge);
+        const bridgeCenter = pA.clone().add(pB).multiplyScalar(0.5);
+        const bridgeLen = pA.distanceTo(pB) + 0.016;
+
+        const niBridge = new THREE.Mesh(
+          new THREE.BoxGeometry(bridgeLen, 0.012, 0.0008),
+          sGroup.userData.niMat
+        );
+        niBridge.position.copy(bridgeCenter);
+        niBridge.rotation.z = angle;
+        niBridge.userData = { seriesId: s };
+        sGroup.add(niBridge);
+
+        const cuBridge = new THREE.Mesh(
+          new THREE.BoxGeometry(bridgeLen * 0.9, 0.0055, 0.0018),
+          sGroup.userData.busMat
+        );
+        cuBridge.position.set(bridgeCenter.x, bridgeCenter.y, zBridge + Math.sign(zBridge) * 0.0009);
+        cuBridge.rotation.z = angle;
+        cuBridge.userData = { seriesId: s };
+        sGroup.add(cuBridge);
+      } else {
+        // Vertical row-to-row turnaround transition (e.g. 3S->4S, 6S->7S, 9S->10S, 12S->13S, 14S->15S, 16S->17S, 18S->19S):
+        // Connect all 7 cells of group s directly across to the 7 adjacent cells of group s+1!
+        for (let c = 0; c < 7; c++) {
+          const cA = groupCells[c];
+          const cB = nextMeta.cells[c];
+          const pA = new THREE.Vector3(cA.x, cA.y, zBridge);
+          const pB = new THREE.Vector3(cB.x, cB.y, zBridge);
+          const mid = pA.clone().add(pB).multiplyScalar(0.5);
+          const len = pA.distanceTo(pB) + 0.012;
+          const crossAngle = Math.atan2(cB.y - cA.y, cB.x - cA.x);
+
+          const niCross = new THREE.Mesh(
+            new THREE.BoxGeometry(len, 0.0075, 0.0007),
+            sGroup.userData.niMat
+          );
+          niCross.position.copy(mid);
+          niCross.rotation.z = crossAngle;
+          niCross.userData = { seriesId: s };
+          sGroup.add(niCross);
+
+          // Heavy copper cross-link on every odd parallel pair (c = 0, 2, 4, 6) for 120A current sharing
+          if (c % 2 === 0) {
+            const cuCross = new THREE.Mesh(
+              new THREE.BoxGeometry(len * 0.88, 0.0034, 0.0016),
+              sGroup.userData.busMat
+            );
+            cuCross.position.set(mid.x, mid.y, zBridge + Math.sign(zBridge) * 0.0009);
+            cuCross.rotation.z = crossAngle;
+            cuCross.userData = { seriesId: s };
+            sGroup.add(cuCross);
+          }
+        }
+      }
+    }
   }
+
+  // Main B- (0V at 1S on +Z) and Main B+ (84V at 20S on +Z) Heavy Copper Terminal Collector Bars
+  const group1S = seriesGroups[0];
+  const cell1S_0 = groupMeta[0].cells[0];
+  const bMinusCollector = new THREE.Mesh(
+    new THREE.BoxGeometry(0.024, 0.014, 0.003),
+    mats.MAT_COPPER_BUSBAR
+  );
+  bMinusCollector.position.set(cell1S_0.x - 0.008, cell1S_0.y + 0.006, 0.0375);
+  bMinusCollector.rotation.z = 0.84;
+  group1S.add(bMinusCollector);
+
+  const group20S = seriesGroups[19];
+  const cell20S_0 = groupMeta[19].cells[0];
+  const bPlusCollector = new THREE.Mesh(
+    new THREE.BoxGeometry(0.024, 0.014, 0.003),
+    mats.MAT_COPPER_BUSBAR
+  );
+  bPlusCollector.position.set(cell20S_0.x - 0.008, cell20S_0.y + 0.006, 0.0375);
+  bPlusCollector.rotation.z = 0.84;
+  group20S.add(bPlusCollector);
 
   batteryRoot.add(cellsMasterGroup);
 
   // 1.6 Bisida BMS 20S 120A Li-ion in Finned Aluminum Heatsink in upper 48mm gap under Toptube
+  // + Full Power Cable Harness (B-, C-, B+ 84V) + 21 Balance Sense Leads (B0..B20) + XT90-S Anti-Spark
   const bmsGroup = new THREE.Group();
   bmsGroup.name = 'EXPLODE_BISIDA_BMS_120A';
 
-  // Upper triangle clearance under Toptube: center around (0.140, 0.435, 0), tilted along Toptube
   const toptubeAngle = Math.atan2(0.545 - 0.415, 0.395 - (-0.135));
+  const bmsPos = new THREE.Vector3(0.095, 0.435, 0);
   const bmsCore = new THREE.Group();
-  bmsCore.position.set(0.145, 0.432, 0);
+  bmsCore.position.copy(bmsPos);
   bmsCore.rotation.z = toptubeAngle;
 
-  // Finned Aluminum Heatsink Body (145 x 22 x 66 mm)
+  // Finned Aluminum Heatsink Body (145 x 20 x 64 mm)
   const bmsPlate = new THREE.Mesh(new THREE.BoxGeometry(0.145, 0.018, 0.064), mats.MAT_ANODIZED_BLACK);
   bmsCore.add(bmsPlate);
 
@@ -2805,305 +3313,412 @@ function buildBatterySystemNode(mats) {
     bmsCore.add(fin);
   }
 
-  // Thick 6AWG Silicone B- (Blue) and C-/P- (Black) Power Leads + 21-wire Balance Harness + NTC Sensor
-  for (let w = 0; w < 21; w++) {
-    const t = w / 20;
-    const wireStart = new THREE.Vector3(-0.055 + t * 0.11, -0.009, 0.030);
-    const wireEnd = new THREE.Vector3(-0.065 + t * 0.13, -0.055 - (w % 3) * 0.018, 0.035);
-    const bWire = createCylinderBetween(wireStart, wireEnd, 0.0009, 0.0009, mats.MAT_RED_ANODIZED, 6);
-    bmsCore.add(bWire);
-  }
+  // White 21-pin JST-XH Balance Connector Header on BMS front edge
+  const jstHeader = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.007, 0.009), mats.MAT_WHITE_INSULATOR);
+  jstHeader.position.set(0.010, -0.008, 0.033);
+  bmsCore.add(jstHeader);
 
-  // Teardrop NTC Thermistor glued into center of honeycomb
-  const ntcWire = createCylinderBetween(
-    new THREE.Vector3(0.01, -0.009, 0),
-    new THREE.Vector3(0.02, -0.110, 0),
-    0.0014,
-    0.0014,
-    mats.MAT_ANODIZED_BLACK,
-    8
-  );
-  const ntcBead = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 12, 12), mats.MAT_ANODIZED_BLACK);
-  ntcBead.position.set(0.02, -0.110, 0);
-  bmsCore.add(ntcWire, ntcBead);
-
-  // Rear pocket near Seat Tube: Amass XT90-S Anti-Spark Yellow Connector with black stripe + GX16 Charge Port
-  const xt90Housing = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.022, 0.012), mats.MAT_XT90_YELLOW);
-  xt90Housing.position.set(-0.115, -0.035, 0.012);
-  const xt90AntiSparkBand = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.023, 0.013), mats.MAT_ANODIZED_BLACK);
-  xt90AntiSparkBand.position.set(-0.106, -0.035, 0.012);
-  bmsCore.add(xt90Housing, xt90AntiSparkBand);
+  // Solder pads B- and C- on BMS left end
+  const padBMinus = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.004, 0.022), mats.MAT_COPPER_BUSBAR);
+  padBMinus.position.set(-0.064, -0.008, 0.016);
+  const padCMinus = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.004, 0.022), mats.MAT_COPPER_BUSBAR);
+  padCMinus.position.set(-0.064, -0.008, -0.016);
+  bmsCore.add(padBMinus, padCMinus);
 
   bmsGroup.add(bmsCore);
+
+  // Rear pocket near Seat Tube: Amass XT90-S Anti-Spark Yellow Connector + GX16-3 Charge Port
+  const xt90Pos = new THREE.Vector3(-0.085, 0.365, 0.015);
+  const xt90Housing = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.022, 0.014), mats.MAT_XT90_YELLOW);
+  xt90Housing.position.copy(xt90Pos);
+  const xt90AntiSparkBand = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.023, 0.015), mats.MAT_ANODIZED_BLACK);
+  xt90AntiSparkBand.position.set(xt90Pos.x + 0.009, xt90Pos.y, xt90Pos.z);
+  bmsGroup.add(xt90Housing, xt90AntiSparkBand);
+
+  // Heavy 6AWG Power Cables showing exact electrical connections:
+  // 1) B- (Blue 6AWG): from 1S (-) Collector at bottom-rear up along Seat Tube channel to BMS B- pad
+  const pBMinusStart = new THREE.Vector3(cell1S_0.x - 0.010, cell1S_0.y + 0.006, 0.037);
+  const pBMinusMid = new THREE.Vector3(-0.055, 0.255, 0.035);
+  const pBMinusEnd = new THREE.Vector3(0.032, 0.415, 0.018);
+  bmsGroup.add(
+    createCylinderBetween(pBMinusStart, pBMinusMid, 0.0036, 0.0036, mats.MAT_BLUE_ANODIZED, 12),
+    createCylinderBetween(pBMinusMid, pBMinusEnd, 0.0036, 0.0036, mats.MAT_BLUE_ANODIZED, 12)
+  );
+
+  // 2) C- (Black 6AWG): from BMS C- pad to Amass XT90-S Negative pin
+  const pCMinusStart = new THREE.Vector3(0.032, 0.415, -0.016);
+  const pCMinusEnd = new THREE.Vector3(xt90Pos.x + 0.010, xt90Pos.y - 0.005, xt90Pos.z);
+  bmsGroup.add(
+    createCylinderBetween(pCMinusStart, pCMinusEnd, 0.0036, 0.0036, mats.MAT_ANODIZED_BLACK, 12)
+  );
+
+  // 3) B+ 84V (Red 6AWG): from 20S (+) Collector directly to Amass XT90-S Positive pin
+  const pBPlusStart = new THREE.Vector3(cell20S_0.x - 0.008, cell20S_0.y + 0.006, 0.037);
+  const pBPlusEnd = new THREE.Vector3(xt90Pos.x + 0.010, xt90Pos.y + 0.006, xt90Pos.z);
+  bmsGroup.add(
+    createCylinderBetween(pBPlusStart, pBPlusEnd, 0.0038, 0.0038, mats.MAT_RED_ANODIZED, 12)
+  );
+
+  // 4) 21 Balance Sense Wires (B0..B20) routed from every single series section 1S..20S to BMS JST header!
+  for (let s = 1; s <= 20; s++) {
+    const meta = groupMeta[s - 1];
+    const t = s / 20;
+    const jstPinPos = new THREE.Vector3(
+      bmsPos.x - 0.032 + t * 0.082,
+      bmsPos.y - 0.010 + t * 0.020,
+      s % 2 === 1 ? -0.034 : 0.034
+    );
+    const tapZ = s % 2 === 1 ? -0.0365 : 0.0365;
+    const tapCell = meta.cells[Math.min(3, meta.cells.length - 1)];
+    const tapPos = new THREE.Vector3(tapCell.x, tapCell.y, tapZ);
+
+    const wireMat = s === 20 ? mats.MAT_XT90_YELLOW : mats.MAT_RED_ANODIZED;
+    const senseWire = createCylinderBetween(jstPinPos, tapPos, 0.0008, 0.0008, wireMat, 6);
+    bmsGroup.add(senseWire);
+
+    // Solder dot on the busbar balance tap
+    const tapDot = new THREE.Mesh(new THREE.SphereGeometry(0.0018, 8, 8), mats.MAT_STEEL_ROTOR);
+    tapDot.position.copy(tapPos);
+    bmsGroup.add(tapDot);
+  }
+
+  // B0 (Black balance ground lead) to 1S (-)
+  bmsGroup.add(
+    createCylinderBetween(
+      new THREE.Vector3(bmsPos.x - 0.036, bmsPos.y - 0.012, 0.034),
+      pBMinusStart,
+      0.0009,
+      0.0009,
+      mats.MAT_ANODIZED_BLACK,
+      6
+    )
+  );
+
+  // Teardrop NTC Thermistor glued into center of honeycomb (Row 4 center)
+  const ntcStart = new THREE.Vector3(bmsPos.x + 0.02, bmsPos.y - 0.01, 0);
+  const ntcEnd = new THREE.Vector3(0.145, 0.275, 0);
+  const ntcWire = createCylinderBetween(ntcStart, ntcEnd, 0.0012, 0.0012, mats.MAT_ANODIZED_BLACK, 8);
+  const ntcBead = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 12, 12), mats.MAT_ANODIZED_BLACK);
+  ntcBead.position.copy(ntcEnd);
+  bmsGroup.add(ntcWire, ntcBead);
+
   batteryRoot.add(bmsGroup);
 
   return {
     batteryRoot,
-    seriesGroups,
     leftCoverGroup,
     rightCoverGroup,
     holderLeftGroup,
     holderRightGroup,
     bmsGroup,
-    pvcSleeveMesh,
-    corduraCenterGroup
+    seriesGroups,
+    corduraCenterGroup,
+    pvcSleeveMesh
   };
 }
 
 /**
- * 2. NODE 6: LOWER UNDER-TUBE MODULE (60A 18-MOSFET SINE CONTROLLER + 3D-PRINTED PETG WIRING BOX
- *    WITH ACOUSTIC GILLS, DC-DC 12V 10A CONVERTER & HIDDEN 105 dB HORN)
- *    Strictly mounted OUTSIDE UNDER the Downtube (1:1 as on reference photo!)
+ * 2. NODE 6: UNDER-DOWNTUBE MODULE (60A FINNED CONTROLLER + STEPPED 3D-PRINTED PETG BOX WITH 105 dB HORN)
+ * Strictly outside & underneath the Downtube (1:1 as on Reference Photo #1 & #2)
  */
 function buildUnderTubeModuleNode(mats) {
   const underTubeRoot = new THREE.Group();
-  underTubeRoot.name = 'NODE_06_CONTROLLER_60A_AND_3DBOX';
+  underTubeRoot.name = 'NODE_06_UNDER_DOWNTUBE_ESC_AND_BOX';
 
-  // Downtube centerline goes from (0.015, 0.015, 0) to (0.415, 0.465, 0)
-  const pDown0 = new THREE.Vector3(0.015, 0.015, 0);
-  const pDown1 = new THREE.Vector3(0.415, 0.465, 0);
-  const downAxis = pDown1.clone().sub(pDown0).normalize();
-  const downAngle = Math.atan2(downAxis.y, downAxis.x);
-  // Outward/downward normal under the downtube: (+Y_x, -X_y)
-  const downNormal = new THREE.Vector3(downAxis.y, -downAxis.x, 0).normalize();
+  const pBB = new THREE.Vector3(0.015, 0.015, 0);
+  const pHT = new THREE.Vector3(0.415, 0.465, 0);
+  const downDir = pHT.clone().sub(pBB).normalize();
+  const downAngle = Math.atan2(downDir.y, downDir.x); // ~48.37 deg
+  const downNormalOut = new THREE.Vector3(downDir.y, -downDir.x, 0); // outward normal below downtube
 
-  // Group A (Explodable): 72V 60A (18 MOSFET) Finned Aluminum Controller + 3D Box Outer Cover
-  const controllerAndLidGroup = new THREE.Group();
-  controllerAndLidGroup.name = 'EXPLODE_CONTROLLER_60A_AND_LID';
+  // 2.1 Explodable Group: Sine-Wave Controller 72V 60A (18 MOSFET) + 3D Box Outer Lid
+  const controllerAndCoverGroup = new THREE.Group();
+  controllerAndCoverGroup.name = 'EXPLODE_CONTROLLER_60A_AND_COVER';
 
-  // 2.1 Sine Controller 72V 60A (18 MOSFET) hanging on 3 heavy-duty black straps in upper/middle under-tube
-  const ctrlPos = pDown0.clone().lerp(pDown1, 0.64).addScaledVector(downNormal, 0.048);
-  const ctrlLocal = new THREE.Group();
-  ctrlLocal.position.copy(ctrlPos);
-  ctrlLocal.rotation.z = downAngle;
+  // Upper half under Downtube: Long Black Anodized Finned Controller (length 235mm, width 84mm, height 48mm)
+  const ctrlCenter = pBB.clone()
+    .addScaledVector(downDir, 0.415)
+    .addScaledVector(downNormalOut, 0.044);
 
-  // Main extruded matte black aluminum body (215mm long x 52mm tall x 86mm wide)
-  const ctrlBody = new THREE.Mesh(new THREE.BoxGeometry(0.215, 0.046, 0.086), mats.MAT_FRAME_RAL9005);
-  ctrlBody.castShadow = true;
-  ctrlLocal.add(ctrlBody);
+  const ctrlGroup = new THREE.Group();
+  ctrlGroup.position.copy(ctrlCenter);
+  ctrlGroup.rotation.z = downAngle;
 
-  // Longitudinal airflow cooling fins open to oncoming wind
-  for (let f = -4; f <= 4; f++) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.212, 0.010, 0.0035), mats.MAT_ANODIZED_BLACK);
-    fin.position.set(0, -0.026, f * 0.009);
-    ctrlLocal.add(fin);
+  // Main extruded aluminum core
+  const ctrlCore = new THREE.Mesh(new THREE.BoxGeometry(0.235, 0.042, 0.082), mats.MAT_ANODIZED_BLACK);
+  ctrlCore.castShadow = true;
+  ctrlGroup.add(ctrlCore);
+
+  // Longitudinal wind-tunnel cooling ribs on sides and bottom (1:1 as on Reference Photo #1)
+  for (let r = -3; r <= 3; r++) {
+    const bottomRib = new THREE.Mesh(new THREE.BoxGeometry(0.228, 0.007, 0.004), mats.MAT_ANODIZED_BLACK);
+    bottomRib.position.set(0, -0.023, r * 0.011);
+    ctrlGroup.add(bottomRib);
   }
-
-  // 3 heavy-duty 35mm black Velcro mounting straps wrapping around controller AND downtube (1:1 as on photo!)
-  [-0.075, 0.0, 0.075].forEach((xOff) => {
-    const strapGeom = new THREE.BoxGeometry(0.032, 0.105, 0.092);
-    const strap = new THREE.Mesh(strapGeom, mats.MAT_VELCRO_STRAP);
-    strap.position.set(xOff, 0.024, 0);
-    ctrlLocal.add(strap);
+  [-0.042, 0.042].forEach((sideZ) => {
+    for (let s = -2; s <= 2; s++) {
+      const sideRib = new THREE.Mesh(new THREE.BoxGeometry(0.228, 0.0035, 0.004), mats.MAT_ANODIZED_BLACK);
+      sideRib.position.set(0, s * 0.007, sideZ);
+      ctrlGroup.add(sideRib);
+    }
   });
 
-  controllerAndLidGroup.add(ctrlLocal);
+  // Top & bottom cast end-caps with 4 stainless M3 Allen bolts (visible in Reference Photo #2!)
+  [-0.119, 0.119].forEach((endX) => {
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.046, 0.086), mats.MAT_FRAME_RAL9005);
+    cap.position.set(endX, 0, 0);
+    ctrlGroup.add(cap);
+  });
+  [-0.08, 0.0, 0.08].forEach((bx) => {
+    [-0.0435, 0.0435].forEach((bz) => {
+      const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, 0.003, 10), mats.MAT_STEEL_ROTOR);
+      screw.position.set(bx, 0.012, bz);
+      screw.rotation.x = Math.PI / 2;
+      ctrlGroup.add(screw);
+    });
+  });
 
-  // 2.2 Faceted Matte Black 3D-Printed PETG Sealed Wiring Box right below Controller near BB (1:1 as on photo!)
-  const boxPos = pDown0.clone().lerp(pDown1, 0.23).addScaledVector(downNormal, 0.052);
-  const boxLidLocal = new THREE.Group();
-  boxLidLocal.position.copy(boxPos);
-  boxLidLocal.rotation.z = downAngle;
+  controllerAndCoverGroup.add(ctrlGroup);
 
-  // Outer faceted aerodynamic PETG shell with backward-slanted acoustic gill slits ("scales")
-  const lidMain = new THREE.Mesh(new THREE.BoxGeometry(0.175, 0.064, 0.084), mats.MAT_PETG_HOLDER);
-  lidMain.castShadow = true;
-  boxLidLocal.add(lidMain);
+  // 2 Wide 45mm Black Straps holding the 60A Controller to the Downtube (1:1 as on Photo #1)
+  [0.33, 0.50].forEach((t) => {
+    const pTube = pBB.clone().lerp(pHT, t);
+    const pWrapCenter = pTube.clone().addScaledVector(downNormalOut, 0.020);
+    const pWrapEnd = pWrapCenter.clone().addScaledVector(downDir, 0.036);
+    const strap = createBiOvalTubeBetween(pWrapCenter, pWrapEnd, 0.046, 0.046, mats.MAT_VELCRO_STRAP, 24);
+    underTubeRoot.add(strap);
+  });
 
-  // Chamfered lower nose near BB
-  const noseBevel = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.048, 0.080), mats.MAT_PETG_HOLDER);
-  noseBevel.position.set(-0.082, 0.006, 0);
-  noseBevel.rotation.z = 0.38;
-  boxLidLocal.add(noseBevel);
+  // 2.2 Lower Stepped 3D-Printed PETG Wiring Enclosure (1:1 as on Reference Photo #1 & #2)
+  // Abuts the bottom endcap of the controller with a stepped flange collar and extends to the BB
+  const boxCenter = pBB.clone()
+    .addScaledVector(downDir, 0.165)
+    .addScaledVector(downNormalOut, 0.048);
 
-  // Slanted Acoustic Gill Louvers ("scales") on lower & side walls for the hidden 105 dB horn
+  // Fixed inner base of the 3D PETG box (stays on frame during Exploded View to reveal internals!)
+  const boxBaseGroup = new THREE.Group();
+  boxBaseGroup.name = 'PETG_WIRING_BOX_INTERNAL_BASE';
+  boxBaseGroup.position.copy(boxCenter);
+  boxBaseGroup.rotation.z = downAngle;
+
+  const baseTray = new THREE.Mesh(new THREE.BoxGeometry(0.245, 0.018, 0.084), mats.MAT_PETG_HOLDER);
+  baseTray.position.set(0, 0.018, 0);
+  boxBaseGroup.add(baseTray);
+
+  // Stepped upper collar overlapping the lower end of the 60A controller (1:1 as on Photo #1 & #2!)
+  const steppedCollar = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.062, 0.092), mats.MAT_PETG_HOLDER);
+  steppedCollar.position.set(0.118, -0.002, 0);
+  boxBaseGroup.add(steppedCollar);
+
+  // Strap around lower 3D PETG box & Downtube
+  const pBoxStrapTube = pBB.clone().lerp(pHT, 0.16);
+  const pBoxStrapCenter = pBoxStrapTube.clone().addScaledVector(downNormalOut, 0.022);
+  const pBoxStrapEnd = pBoxStrapCenter.clone().addScaledVector(downDir, 0.036);
+  underTubeRoot.add(
+    createBiOvalTubeBetween(pBoxStrapCenter, pBoxStrapEnd, 0.048, 0.047, mats.MAT_VELCRO_STRAP, 24)
+  );
+
+  // INTERNAL COMPONENTS INSIDE 3D PETG BOX:
+  // 1) DC-DC Buck Converter (36V-120V -> 12V 10A)
+  const dcdcBody = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.022, 0.056), mats.MAT_ANODIZED_BLACK);
+  dcdcBody.position.set(0.058, 0.001, 0);
+  boxBaseGroup.add(dcdcBody);
+  const dcdcSticker = new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.002, 0.036), mats.MAT_BLUE_ANODIZED);
+  dcdcSticker.position.set(0.058, -0.011, 0);
+  boxBaseGroup.add(dcdcSticker);
+
+  // 2) High-Current 3-Phase Ceramic Terminal Block (Yellow/Green/Blue phase nuts)
+  const phaseBlock = new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.020, 0.048), mats.MAT_XT90_YELLOW);
+  phaseBlock.position.set(-0.012, 0.002, 0);
+  boxBaseGroup.add(phaseBlock);
+  [-0.014, 0, 0.014].forEach((pz, idx) => {
+    const studMat = idx === 0 ? mats.MAT_XT90_YELLOW : idx === 1 ? mats.MAT_BLUE_ANODIZED : mats.MAT_COPPER_BUSBAR;
+    const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.008, 6), studMat);
+    nut.position.set(-0.012, -0.010, pz);
+    boxBaseGroup.add(nut);
+  });
+
+  // 3) Hidden 105 dB (12V) Motorcycle Disc Horn on spring bracket opposite acoustic gills
+  const hornDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.022, 24), mats.MAT_ANODIZED_BLACK);
+  hornDisc.position.set(-0.078, -0.002, 0);
+  boxBaseGroup.add(hornDisc);
+  const hornCenterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.024, 16), mats.MAT_RED_ANODIZED);
+  hornCenterRing.position.set(-0.078, -0.002, 0);
+  boxBaseGroup.add(hornCenterRing);
+
+  underTubeRoot.add(boxBaseGroup);
+
+  // Outer Faceted & Ribbed 3D-Printed PETG Box Cover with Acoustic Gills (explodes with controller)
+  const boxLidGroup = new THREE.Group();
+  boxLidGroup.position.copy(boxCenter);
+  boxLidGroup.rotation.z = downAngle;
+
+  const lidShell = new THREE.Mesh(new THREE.BoxGeometry(0.245, 0.044, 0.088), mats.MAT_PETG_HOLDER);
+  lidShell.position.set(0, -0.008, 0);
+  lidShell.castShadow = true;
+  boxLidGroup.add(lidShell);
+
+  // Longitudinal stiffening ribs on the sides of the 3D-printed box (1:1 as on Photo #1)
+  [-0.045, 0.045].forEach((sz) => {
+    for (let r = -2; r <= 2; r++) {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.232, 0.003, 0.003), mats.MAT_FRAME_RAL9005);
+      rib.position.set(0, -0.008 + r * 0.007, sz);
+      boxLidGroup.add(rib);
+    }
+  });
+
+  // Rearward-slanted acoustic gill louvers ("чешуя/жабры") opposite the 105 dB horn
   for (let g = 0; g < 6; g++) {
-    const gill = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.028, 0.088), mats.MAT_ANODIZED_BLACK);
-    gill.position.set(-0.035 + g * 0.014, -0.014, 0);
+    const gill = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.018, 0.091), mats.MAT_ANODIZED_BLACK);
+    gill.position.set(-0.098 + g * 0.010, -0.018, 0);
     gill.rotation.z = -0.45;
-    boxLidLocal.add(gill);
+    boxLidGroup.add(gill);
   }
 
-  controllerAndLidGroup.add(boxLidLocal);
-  underTubeRoot.add(controllerAndLidGroup);
-
-  // 2.3 Internal Fixed Tray of 3D Box (Revealed when Controller + Lid explode downward-forward!):
-  //     - DC-DC Step-Down Converter (36-120V -> 12V 10A)
-  //     - Heavy-duty 3-Phase Yellow Ceramic/Phenolic Terminal Block (U / V / W)
-  //     - Round 105 dB (12V) Motorcycle Horn on spring bracket facing the acoustic gills!
-  const boxInternals = new THREE.Group();
-  boxInternals.name = '3DBOX_INTERNAL_COMPONENTS';
-  boxInternals.position.copy(boxPos);
-  boxInternals.rotation.z = downAngle;
-
-  // Internal mounting baseplate attached to Downtube
-  const baseTray = new THREE.Mesh(new THREE.BoxGeometry(0.165, 0.010, 0.074), mats.MAT_PETG_HOLDER);
-  baseTray.position.set(0, 0.024, 0);
-  boxInternals.add(baseTray);
-
-  // DC-DC Converter 36-120V -> 12V 10A (ribbed silver/black module)
-  const dcdcModule = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.022, 0.046), mats.MAT_STEEL_ROTOR);
-  dcdcModule.position.set(0.042, 0.008, 0);
-  boxInternals.add(dcdcModule);
-
-  // 3-Phase High-Current Terminal Block (Yellow W20 block with 3 M5 brass studs: Blue/Green/Yellow)
-  const phaseBlock = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.018, 0.052), mats.MAT_XT90_YELLOW);
-  phaseBlock.position.set(-0.008, 0.010, 0);
-  boxInternals.add(phaseBlock);
-
-  // Hidden Round 105 dB (12V) Moto Horn mounted on spring steel bracket opposite acoustic gills
-  const hornDisc = createCylinderBetween(
-    new THREE.Vector3(-0.052, -0.004, -0.014),
-    new THREE.Vector3(-0.052, -0.004, 0.014),
-    0.031,
-    0.031,
-    mats.MAT_ANODIZED_BLACK,
-    24
-  );
-  const hornCenter = createCylinderBetween(
-    new THREE.Vector3(-0.052, -0.004, -0.016),
-    new THREE.Vector3(-0.052, -0.004, 0.016),
-    0.012,
-    0.012,
-    mats.MAT_RED_ANODIZED,
-    18
-  );
-  boxInternals.add(hornDisc, hornCenter);
-
-  underTubeRoot.add(boxInternals);
+  controllerAndCoverGroup.add(boxLidGroup);
+  underTubeRoot.add(controllerAndCoverGroup);
 
   return {
     underTubeRoot,
-    controllerAndLidGroup,
-    boxInternals
+    controllerAndCoverGroup,
+    controllerAndLidGroup: controllerAndCoverGroup,
+    boxBaseGroup
   };
 }
 
 /**
- * 3. NODE 7: LONG SUR-RON / PITBIKE MOTO SADDLE (530MM) + WELDED STEEL SUBFRAME
- *    + SHORT REAR FENDER WITH INTEGRATED RED LED BRAKE LIGHT
+ * 3. NODE 7: LONG MOTO SADDLE (SUR-RON / PITBIKE 530 MM) + WELDED STEEL SUBFRAME
+ * WITH 2-BOLT FRONT BRACKET + SEPARATE REAR TAIL FENDER WITH LED BRAKE LIGHT (1:1 AS ON PHOTO #1)
  */
 function buildMotoSaddleAndSubframeNode(mats) {
-  const saddleSystemRoot = new THREE.Group();
-  saddleSystemRoot.name = 'NODE_07_MOTO_SADDLE_AND_SUBFRAME';
+  const saddleRoot = new THREE.Group();
+  saddleRoot.name = 'NODE_07_MOTO_SADDLE_AND_SUBFRAME';
 
-  // 3.1 Welded Steel Subframe (16-20mm Matte Black Tubes, 2mm wall)
-  // Explodes by (-0.05, +0.12, 0)
+  // 3.1 Welded Steel Subframe (18mm black matte steel tubes + 2-bolt front gusset bracket, 1:1 as on Photo #1)
   const subframeGroup = new THREE.Group();
   subframeGroup.name = 'EXPLODE_STEEL_SUBFRAME';
 
-  // Front support post inserting into Seat Tube top (-0.145, 0.435, 0)
-  const frontPost = createCylinderBetween(
-    new THREE.Vector3(-0.145, 0.415, 0),
-    new THREE.Vector3(-0.155, 0.468, 0),
-    0.0135,
-    0.0135,
-    mats.MAT_FRAME_RAL9005,
-    20
-  );
-  subframeGroup.add(frontPost);
+  // Front 2-bolt mounting bracket at Seat Tube top (-0.145, 0.435, 0) visible in Reference Photo #1
+  const bracketGeom = new THREE.BoxGeometry(0.048, 0.042, 0.044);
+  const frontBracket = new THREE.Mesh(bracketGeom, mats.MAT_FRAME_RAL9005);
+  frontBracket.position.set(-0.152, 0.432, 0);
+  frontBracket.rotation.z = -0.28;
+  subframeGroup.add(frontBracket);
 
-  // Upper twin longitudinal subframe rails under saddle pan + Two inclined rear struts
-  // descending from saddle tail to bolt onto frame seatstays with M6 bolts (1:1 as on photo!)
+  // Two silver Allen bolts M6 on the side of the front subframe bracket (1:1 as on Photo #1!)
+  [
+    [-0.146, 0.440],
+    [-0.160, 0.422]
+  ].forEach(([bx, by]) => {
+    [-0.023, 0.023].forEach((bz) => {
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.004, 12), mats.MAT_STEEL_ROTOR);
+      bolt.position.set(bx, by, bz);
+      bolt.rotation.x = Math.PI / 2;
+      subframeGroup.add(bolt);
+    });
+  });
+
+  // Left & Right upper subframe rails under the saddle pan + diagonal struts to Seatstays
   [-1, 1].forEach((side) => {
-    const zRail = side * 0.042;
-    const zStayBolt = side * 0.038;
+    const zFront = side * 0.020;
+    const zRear = side * 0.036;
+    const zStay = side * 0.042;
 
-    // Upper support rail under seat pan
+    // Upper rail under saddle base
     const upperRail = createCylinderBetween(
-      new THREE.Vector3(-0.145, 0.462, side * 0.022),
-      new THREE.Vector3(-0.525, 0.565, zRail),
+      new THREE.Vector3(-0.145, 0.445, zFront),
+      new THREE.Vector3(-0.485, 0.565, zRear),
       0.009,
-      0.009,
+      0.008,
       mats.MAT_FRAME_RAL9005,
       16
     );
     subframeGroup.add(upperRail);
 
-    // Inclined rear strut descending from tail (-0.485, 0.548) to seatstay mount (-0.255, 0.250)
+    // Main diagonal support strut from Seatstay (-0.275, 0.250, zStay) up to Rear Subframe (-0.435, 0.540, zRear)
+    // and front-diagonal brace from Seat Tube bracket (-0.155, 0.422, zFront) to Seatstay (-0.245, 0.285, zStay)
     const rearStrut = createCylinderBetween(
-      new THREE.Vector3(-0.485, 0.548, zRail),
-      new THREE.Vector3(-0.255, 0.250, zStayBolt),
-      0.009,
-      0.009,
+      new THREE.Vector3(-0.430, 0.538, zRear),
+      new THREE.Vector3(-0.275, 0.252, zStay),
+      0.0085,
+      0.0085,
       mats.MAT_FRAME_RAL9005,
       16
     );
-    subframeGroup.add(rearStrut);
-
-    // M6 Stainless Bolt at seatstay bracket
-    const m6Bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.016, 10), mats.MAT_STEEL_ROTOR);
-    m6Bolt.rotation.x = Math.PI / 2;
-    m6Bolt.position.set(-0.255, 0.250, zStayBolt + side * 0.006);
-    subframeGroup.add(m6Bolt);
-  });
-
-  // Cross-braces between left and right subframe rails
-  [-0.26, -0.45].forEach((xBrace) => {
-    const yBrace = xBrace === -0.26 ? 0.492 : 0.542;
-    const brace = createCylinderBetween(
-      new THREE.Vector3(xBrace, yBrace, -0.036),
-      new THREE.Vector3(xBrace, yBrace, 0.036),
+    const frontBrace = createCylinderBetween(
+      new THREE.Vector3(-0.155, 0.422, zFront),
+      new THREE.Vector3(-0.235, 0.295, zStay),
       0.008,
       0.008,
       mats.MAT_FRAME_RAL9005,
-      12
+      16
     );
-    subframeGroup.add(brace);
+    subframeGroup.add(rearStrut, frontBrace);
+
+    // M6 Stainless Bolt at Seatstay junction
+    const stayBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.006, 12), mats.MAT_STEEL_ROTOR);
+    stayBolt.position.set(-0.275, 0.252, zStay + side * 0.005);
+    stayBolt.rotation.x = Math.PI / 2;
+    subframeGroup.add(stayBolt);
   });
 
-  saddleSystemRoot.add(subframeGroup);
+  // Cross-bridges between left and right subframe rails
+  [-0.26, -0.42].forEach((cx, idx) => {
+    const cy = idx === 0 ? 0.482 : 0.538;
+    const bridge = createCylinderBetween(
+      new THREE.Vector3(cx, cy, -0.032),
+      new THREE.Vector3(cx, cy, 0.032),
+      0.007,
+      0.007,
+      mats.MAT_FRAME_RAL9005,
+      12
+    );
+    subframeGroup.add(bridge);
+  });
 
-  // 3.2 Long Two-Seater Sur-Ron / Pitbike Moto Saddle (Length 530mm) + Rear Fender with LED Brake Light
-  // Explodes upward-backward by (-0.10, +0.24, 0)
+  saddleRoot.add(subframeGroup);
+
+  // 3.2 Explodable Moto-Saddle (530mm length) + Separate Rear Pitbike Tail Fender + LED Brake Light
   const saddleAndFenderGroup = new THREE.Group();
-  saddleAndFenderGroup.name = 'EXPLODE_MOTO_SADDLE_530MM';
+  saddleAndFenderGroup.name = 'EXPLODE_MOTO_SADDLE_AND_FENDER';
 
-  // Side silhouette profile of the 530mm Sur-Ron saddle (from x = -0.055 nose to x = -0.585 tail):
-  // - Smooth 45mm nose flush with Cordura bag over top of seat tube
-  // - U-shaped bottom channel (40x70mm) seating deeply onto seat tube top (-0.145, 0.435)
-  // - Deep 75-80mm anatomical rider pocket in center
-  // - Sleek narrow 55mm upward-swept tail at rear
+  // Exact Side Profile of the 530mm Sur-Ron / Pitbike Saddle matching Reference Photo #1:
+  // Front nose starts over Toptube at x = +0.015 (flush behind Toptube straps),
+  // dips into an ergonomic rider dish at x = -0.18, and sweeps up to the rear tail at x = -0.515!
   const saddleSideShape = new THREE.Shape();
-  saddleSideShape.moveTo(-0.055, 0.448); // Front nose tip flush with Cordura bag
-  saddleSideShape.quadraticCurveTo(-0.095, 0.495, -0.165, 0.505); // Front rise (45mm)
-  saddleSideShape.bezierCurveTo(-0.255, 0.515, -0.340, 0.545, -0.445, 0.585); // Deep anatomical dish (75-80mm)
-  saddleSideShape.quadraticCurveTo(-0.525, 0.612, -0.585, 0.625); // Upward swept narrow tail
-  saddleSideShape.lineTo(-0.570, 0.572); // Bottom rear tail edge (55mm thickness)
-  saddleSideShape.quadraticCurveTo(-0.430, 0.525, -0.260, 0.468); // Bottom base pan
-  // U-shaped 40x70mm bottom slot saddle channel over Seat Tube top (-0.145, 0.435)
-  saddleSideShape.lineTo(-0.180, 0.465);
-  saddleSideShape.lineTo(-0.175, 0.432);
-  saddleSideShape.lineTo(-0.115, 0.432);
-  saddleSideShape.lineTo(-0.108, 0.452);
-  saddleSideShape.lineTo(-0.055, 0.448);
+  saddleSideShape.moveTo(0.015, 0.482); // Front nose tip over toptube
+  saddleSideShape.quadraticCurveTo(-0.060, 0.506, -0.155, 0.504); // Concave rider dish (75-80mm cushion)
+  saddleSideShape.bezierCurveTo(-0.265, 0.502, -0.385, 0.555, -0.505, 0.598); // Upward swept moto tail
+  saddleSideShape.quadraticCurveTo(-0.522, 0.598, -0.518, 0.568); // Rounded rear tail tip
+  saddleSideShape.quadraticCurveTo(-0.385, 0.522, -0.220, 0.448); // Lower molded plastic base pan
+  // U-channel slot (40 x 70 mm) seating over Seat Tube top (-0.145, 0.435)
+  saddleSideShape.lineTo(-0.175, 0.442);
+  saddleSideShape.lineTo(-0.115, 0.442);
+  saddleSideShape.quadraticCurveTo(-0.045, 0.456, 0.015, 0.472);
   saddleSideShape.closePath();
 
   const saddleGeom = new THREE.ExtrudeGeometry(saddleSideShape, {
-    steps: 2,
-    depth: 0.148,
+    depth: 0.132,
     bevelEnabled: true,
+    bevelSize: 0.016,
     bevelThickness: 0.018,
-    bevelSize: 0.014,
-    bevelSegments: 8
+    bevelSegments: 6
   });
-  saddleGeom.translate(0, 0, -0.074);
+  saddleGeom.translate(0, 0, -0.066);
 
-  // Sculpt anatomical 3D width taper (narrow nose 86mm -> wide rider mid 165mm -> sharp tail 68mm)
+  // Taper width along X (narrower 76mm nose at front, wide 146mm anatomical middle, sleek 82mm tail)
   const sPos = saddleGeom.attributes.position;
   for (let i = 0; i < sPos.count; i++) {
-    const x = sPos.getX(i);
-    const y = sPos.getY(i);
-    const z = sPos.getZ(i);
-
-    // Normalized longitudinal parameter t from nose (-0.055, t=0) to tail (-0.585, t=1)
-    const t = Math.max(0, Math.min(1, (-0.055 - x) / 0.530));
-    // Width profile curve: narrow at nose, wide at mid-rear (t~0.48), narrow pointed tail (t=1.0)
-    const widthScale = 0.55 + Math.sin(t * Math.PI) * 0.58 * (1.0 - t * 0.32);
-    // Round the top crown of the foam cushion
-    const crownDrop = (z * z) * 1.45;
-    sPos.setZ(i, z * widthScale);
-    sPos.setY(i, y - crownDrop);
+    const vx = sPos.getX(i);
+    const vy = sPos.getY(i);
+    const vz = sPos.getZ(i);
+    // Normalized longitudinal coordinate t: 0 at nose (+0.015) -> 1 at tail (-0.520)
+    const t = Math.max(0, Math.min(1, (0.015 - vx) / 0.535));
+    const widthProfile = 0.54 + 0.52 * Math.sin(Math.pow(t, 0.75) * Math.PI * 0.88);
+    // Round the top crown of the cushion across Z
+    const archDrop = (vz * vz) * 1.6;
+    sPos.setZ(i, vz * widthProfile);
+    sPos.setY(i, vy - archDrop);
   }
   saddleGeom.computeVertexNormals();
 
@@ -3112,38 +3727,61 @@ function buildMotoSaddleAndSubframeNode(mats) {
   saddleMesh.receiveShadow = true;
   saddleAndFenderGroup.add(saddleMesh);
 
-  // Short Black Pitbike Tail Fender + Integrated Red LED Brake Light right under saddle tail tip
-  const rearFenderCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-0.480, 0.545, 0),
-    new THREE.Vector3(-0.565, 0.565, 0),
-    new THREE.Vector3(-0.635, 0.555, 0)
-  ]);
-  const rearFenderGeom = new THREE.TubeGeometry(rearFenderCurve, 16, 0.032, 12, false);
-  const rfPos = rearFenderGeom.attributes.position;
-  for (let i = 0; i < rfPos.count; i++) {
-    rfPos.setY(i, rfPos.getY(i) * 0.985);
+  // Separate Rear Pitbike / Sur-Ron Plastic Tail Fender extending from under the saddle tail
+  // (x = -0.475 to -0.715, y = 0.560 to 0.618 — 1:1 as on Reference Photo #1!)
+  const fenderShape = new THREE.Shape();
+  fenderShape.moveTo(-0.465, 0.562);
+  fenderShape.quadraticCurveTo(-0.585, 0.596, -0.710, 0.618); // Upper sleek line
+  fenderShape.lineTo(-0.715, 0.608);                          // Sharp rear tip
+  fenderShape.quadraticCurveTo(-0.595, 0.570, -0.475, 0.542); // Tapered lower edge
+  fenderShape.closePath();
+
+  const tailFenderGeom = new THREE.ExtrudeGeometry(fenderShape, {
+    depth: 0.082,
+    bevelEnabled: true,
+    bevelSize: 0.004,
+    bevelThickness: 0.004,
+    bevelSegments: 3
+  });
+  tailFenderGeom.translate(0, 0, -0.041);
+
+  // Taper rear fender toward the pointed tail tip
+  const fPos = tailFenderGeom.attributes.position;
+  for (let i = 0; i < fPos.count; i++) {
+    const fx = fPos.getX(i);
+    const fz = fPos.getZ(i);
+    const ft = Math.max(0, Math.min(1, (-0.465 - fx) / 0.250));
+    fPos.setZ(i, fz * (1.0 - ft * 0.42));
   }
-  rearFenderGeom.computeVertexNormals();
-  const rearFender = new THREE.Mesh(rearFenderGeom, mats.MAT_PETG_HOLDER);
-  rearFender.scale.set(1, 0.25, 1.3);
-  rearFender.position.set(0, 0.422, 0);
-  saddleAndFenderGroup.add(rearFender);
+  tailFenderGeom.computeVertexNormals();
 
-  // Integrated Red LED Stop-Light bar under rear tail tip (-0.575, 0.558, 0)
-  const brakeLightHousing = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.018, 0.068), mats.MAT_ANODIZED_BLACK);
-  brakeLightHousing.position.set(-0.572, 0.558, 0);
-  brakeLightHousing.rotation.z = 0.22;
+  const rearFenderMesh = new THREE.Mesh(tailFenderGeom, mats.MAT_ANODIZED_BLACK);
+  rearFenderMesh.castShadow = true;
+  saddleAndFenderGroup.add(rearFenderMesh);
 
-  const brakeLightLens = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.013, 0.060), mats.MAT_BRAKE_LED);
-  brakeLightLens.position.set(-0.583, 0.556, 0);
-  brakeLightLens.rotation.z = 0.22;
+  // Integrated Red LED Brake Light tucked under the junction of the saddle tail & rear fender
+  const brakeLightHousing = new THREE.Mesh(
+    new THREE.BoxGeometry(0.022, 0.016, 0.064),
+    mats.MAT_ANODIZED_BLACK
+  );
+  brakeLightHousing.position.set(-0.525, 0.556, 0);
+  brakeLightHousing.rotation.z = -0.22;
+  saddleAndFenderGroup.add(brakeLightHousing);
+
+  const brakeLightLens = new THREE.Mesh(
+    new THREE.BoxGeometry(0.008, 0.012, 0.056),
+    mats.MAT_BRAKE_LED
+  );
   brakeLightLens.name = 'REAR_LED_BRAKE_LIGHT';
+  brakeLightLens.position.set(-0.535, 0.554, 0);
+  brakeLightLens.rotation.z = -0.22;
+  saddleAndFenderGroup.add(brakeLightLens);
 
-  saddleAndFenderGroup.add(brakeLightHousing, brakeLightLens);
-  saddleSystemRoot.add(saddleAndFenderGroup);
+  saddleRoot.add(saddleAndFenderGroup);
 
   return {
-    saddleSystemRoot,
+    saddleSystemRoot: saddleRoot,
+    saddleRoot,
     subframeGroup,
     saddleAndFenderGroup,
     brakeLightLens
@@ -3365,8 +4003,128 @@ const ENGINEERING_MODALS = {
         </tr>
       </table>
     `
+  },
+
+  battery: {
+    title: 'СХЕМА СБОРКИ И РАСПАЙКИ АКБ 20S7P (140× 21700 EVE 50E) + BISIDA BMS 120A',
+    html: `
+      <p><strong>Полная топология соединений «Змейкой» (Serpentine 20S7P):</strong> 140 ячеек <code>EVE INR21700-50E</code> уложены в 8 гексагональных рядов вдоль нижней трубы (ряды 1–4 по <strong>21 банке = 3 группы 7P</strong>, ряды 5–8 по <strong>14 банок = 2 группы 7P</strong>). Нечетные переходы (<code>1S→2S</code>, <code>3S→4S</code>, ..., <code>19S→20S</code>) выполняются на <strong>Правой стороне (-Z)</strong>, четные (<code>2S→3S</code>, <code>4S→5S</code>, ..., <code>18S→19S</code>) — на <strong>Левой стороне (+Z)</strong>.</p>
+
+      <div class="svg-blueprint-box">
+        <svg width="760" height="340" viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg">
+          <rect width="760" height="340" fill="#07080a"/>
+          <!-- BMS Top Block -->
+          <rect x="190" y="12" width="290" height="38" fill="#141820" stroke="#FF5500" stroke-width="2"/>
+          <text x="335" y="28" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">BISIDA BMS 20S 120A (ПОД ВЕРХНЕЙ ТРУБОЙ)</text>
+          <text x="335" y="43" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Пятаки: [B- к 1S(-)] • [C- к XT90(-)] • Разъем 21-pin JST (B0..B20)</text>
+
+          <!-- XT90-S Rear Pocket -->
+          <rect x="20" y="12" width="145" height="38" fill="#241e08" stroke="#f5b800" stroke-width="2"/>
+          <text x="92" y="28" fill="#f5b800" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">AMASS XT90-S (84V)</text>
+          <text x="92" y="43" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">[+] от 20S • [-] от BMS C-</text>
+
+          <!-- 8 Rows Serpentine Diagram -->
+          <!-- Row 8 (Top, 2 groups): 20S <- 19S -->
+          <rect x="80" y="66" width="150" height="24" fill="#3a1010" stroke="#ff3b1f" stroke-width="2"/>
+          <text x="155" y="82" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">20S (7P) [+B+ 84V на +Z]</text>
+          <rect x="250" y="66" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="82" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">19S (7P) [19S→20S на -Z]</text>
+
+          <!-- Row 7 (2 groups): 17S -> 18S -->
+          <rect x="80" y="98" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="155" y="114" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">17S (7P) [17S→18S на -Z]</text>
+          <rect x="250" y="98" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="114" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">18S (7P) [18S→19S на +Z]</text>
+
+          <!-- Row 6 (2 groups): 16S <- 15S -->
+          <rect x="80" y="130" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="155" y="146" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">16S (7P) [16S→17S на +Z]</text>
+          <rect x="250" y="130" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="146" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">15S (7P) [15S→16S на -Z]</text>
+
+          <!-- Row 5 (2 groups): 13S -> 14S -->
+          <rect x="80" y="162" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="155" y="178" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">13S (7P) [13S→14S на -Z]</text>
+          <rect x="250" y="162" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="178" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">14S (7P) [14S→15S на +Z]</text>
+
+          <!-- Row 4 (3 groups): 12S <- 11S <- 10S -->
+          <rect x="80" y="196" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="155" y="212" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">12S (7P) [12S→13S на +Z]</text>
+          <rect x="250" y="196" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="212" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">11S (7P) [11S→12S на -Z]</text>
+          <rect x="420" y="196" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="495" y="212" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">10S (7P) [10S→11S на +Z]</text>
+
+          <!-- Row 3 (3 groups): 7S -> 8S -> 9S -->
+          <rect x="80" y="228" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="155" y="244" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">7S (7P) [7S→8S на -Z]</text>
+          <rect x="250" y="228" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="244" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">8S (7P) [8S→9S на +Z]</text>
+          <rect x="420" y="228" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="495" y="244" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">9S (7P) [9S→10S на -Z]</text>
+
+          <!-- Row 2 (3 groups): 6S <- 5S <- 4S -->
+          <rect x="80" y="260" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="155" y="276" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">6S (7P) [6S→7S на +Z]</text>
+          <rect x="250" y="260" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="276" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">5S (7P) [5S→6S на -Z]</text>
+          <rect x="420" y="260" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="495" y="276" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">4S (7P) [4S→5S на +Z]</text>
+
+          <!-- Row 1 (Bottom along Downtube, 3 groups): 1S -> 2S -> 3S -->
+          <rect x="80" y="292" width="150" height="26" fill="#08243c" stroke="#00D2FF" stroke-width="2"/>
+          <text x="155" y="309" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">1S (7P) [-B- 0V на +Z]</text>
+          <rect x="250" y="292" width="150" height="26" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="309" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">2S (7P) [2S→3S на +Z]</text>
+          <rect x="420" y="292" width="150" height="26" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="495" y="309" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">3S (7P) [3S→4S на -Z]</text>
+
+          <!-- Power Cables Routing -->
+          <path d="M 80 305 L 42 305 L 42 56 L 210 56 L 210 50" fill="none" stroke="#00D2FF" stroke-width="3.5"/>
+          <text x="32" y="185" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" transform="rotate(-90 32 185)" text-anchor="middle">СИНИЙ 6AWG B- (ОТ 1S К BMS B-)</text>
+          <line x1="115" y1="66" x2="115" y2="50" stroke="#ff3b1f" stroke-width="3.5"/>
+          <line x1="190" y1="30" x2="165" y2="30" stroke="#ffffff" stroke-width="3"/>
+
+          <!-- Legend Box -->
+          <rect x="585" y="66" width="160" height="252" fill="#0e1116" stroke="#2c3340" stroke-width="1"/>
+          <text x="665" y="88" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПРАВИЛА СВАРКИ</text>
+          <text x="595" y="112" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5">● Зеленые блоки:</text>
+          <text x="595" y="126" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Переход на ЛЕВОЙ (+Z)</text>
+          <text x="595" y="150" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5">● Синие блоки:</text>
+          <text x="595" y="164" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Переход на ПРАВОЙ (-Z)</text>
+          <text x="595" y="190" fill="#f5b800" font-family="JetBrains Mono" font-size="9.5">● Никель + Медь:</text>
+          <text x="595" y="204" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Лента 0.15×9 мм +</text>
+          <text x="595" y="218" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">медная шина 2.5 мм²</text>
+          <text x="595" y="244" fill="#ff3b1f" font-family="JetBrains Mono" font-size="9.5">● Балансировка:</text>
+          <text x="595" y="258" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">B0 (черный) -> 1S(-)</text>
+          <text x="595" y="272" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">B1..B19 -> плюсы 1S..19S</text>
+          <text x="595" y="286" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">B20 -> плюс 20S (84V)</text>
+        </svg>
+      </div>
+
+      <table class="spec-table">
+        <tr>
+          <th>Узел коммутации АКБ</th>
+          <th>Как соединять (Пошаговая инструкция)</th>
+        </tr>
+        <tr>
+          <td>1. Параллели 7P (внутри секций 1S..20S)</td>
+          <td>В каждой группе <strong>7 банок</strong> стоят одинаковой полярностью и сварены с обоих торцов (<code>+Z</code> и <code>-Z</code>) чистой никелевой лентой <strong>0.15 × 9 мм</strong> (по 4 точки сварки на контакт) с напаянной центральной медной жилой <strong>2.5 мм²</strong>.</td>
+        </tr>
+        <tr>
+          <td>2. Последовательная «Змейка» (1S → 20S)</td>
+          <td>Группы чередуются по полярности: <code>1S(-)</code> на левой стороне -> на правой стороне <code>1S(+)</code> переходит широкой медно-никелевой шиной в <code>2S(-)</code> -> на левой стороне <code>2S(+)</code> переходит в <code>3S(-)</code> -> на правой стороне <code>3S(+)</code> поднимается на 2-й ряд в <code>4S(-)</code> и т.д. до <code>20S(+)</code>.</td>
+        </tr>
+        <tr>
+          <td>3. Силовые выводы (B-, C-, B+) и BMS</td>
+          <td>От минуса <code>1S</code> (внизу у каретки) синий кабель <strong>6AWG</strong> идет вверх к пятаку <code>B-</code> платы <strong>Bisida BMS 120A</strong>. С пятака <code>C-</code> BMS черный кабель <strong>6AWG</strong> идет на минус разъема <strong>Amass XT90-S</strong>, а красный кабель <strong>6AWG (B+ 84V)</strong> идет с <code>20S(+)</code> (8-й ряд у подседела) прямо на плюс <strong>XT90-S</strong>.</td>
+        </tr>
+      </table>
+    `
   }
 };
+
 
 // --- [5/5] MAIN WEBGL SCENE, GSAP EXPLODED VIEW & X-RAY RAYCASTER ---
 // ============================================================================
@@ -3782,21 +4540,29 @@ function setXRayMode(enable) {
     btnXRay.classList.add('active-green');
     xrayPassport.classList.add('visible');
 
-    // Make Cordura 1000D bag & EVA foam transparent glass so all 140 cells are visible inside
-    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 0.12, duration: 0.6 });
-    gsap.to(mats.MAT_EVA_FOAM, { opacity: 0.10, duration: 0.6 });
+    // Hide outer Cordura side covers & PETG honeycomb shells so all 140 cells,
+    // 1S..20S badges, serpentine copper/nickel busbars, and 21 balance wires are 100% clear!
+    mats.MAT_CORDURA_1000D.depthWrite = false;
+    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 0.10, duration: 0.5 });
+    batterySys.leftCoverGroup.visible = false;
+    batterySys.rightCoverGroup.visible = false;
     batterySys.holderLeftGroup.visible = false;
     batterySys.holderRightGroup.visible = false;
 
+    // Show all 20 sections (140 cells) at full opacity on entry; hovering any section highlights it!
+    resetAllBatterySeriesMaterials();
+    xrayGroupTitle.textContent = '20S7P (140× 21700): НАВЕДИТЕ НА СЕКЦИЮ 1S..20S';
+
     // Fly camera smoothly to frame triangle
-    flyCameraTo(new THREE.Vector3(0.14, 0.30, 0.72), new THREE.Vector3(0.14, 0.28, 0.0));
-    highlightBatterySeriesGroup(1); // Highlight 1S by default on entry
+    flyCameraTo(new THREE.Vector3(0.14, 0.28, 0.68), new THREE.Vector3(0.14, 0.27, 0.0));
   } else {
     btnXRay.classList.remove('active-green');
     xrayPassport.classList.remove('visible');
 
-    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.6 });
-    gsap.to(mats.MAT_EVA_FOAM, { opacity: 0.92, duration: 0.6 });
+    mats.MAT_CORDURA_1000D.depthWrite = true;
+    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.5 });
+    batterySys.leftCoverGroup.visible = true;
+    batterySys.rightCoverGroup.visible = true;
     batterySys.holderLeftGroup.visible = true;
     batterySys.holderRightGroup.visible = true;
     resetAllBatterySeriesMaterials();
@@ -3804,10 +4570,11 @@ function setXRayMode(enable) {
 }
 
 function resetAllBatterySeriesMaterials() {
+  if (hoveredSeriesId === null) return;
   hoveredSeriesId = null;
   batterySys.seriesGroups.forEach((sGroup) => {
     const { cellMat, busMat, niMat } = sGroup.userData;
-    cellMat.color.setHex(0x4b87a8);
+    cellMat.color.setHex(0x3b82a6);
     cellMat.emissive.setHex(0x000000);
     cellMat.emissiveIntensity = 0;
     cellMat.opacity = 1.0;
@@ -3825,7 +4592,7 @@ function highlightBatterySeriesGroup(seriesId) {
 
   batterySys.seriesGroups.forEach((sGroup) => {
     const s = sGroup.userData.seriesId;
-    const { cellMat, busMat, niMat } = sGroup.userData;
+    const { cellMat, busMat, niMat, row, polarityOnLeft } = sGroup.userData;
 
     if (s === seriesId) {
       // Selected 7P group and its copper-nickel busbar flash neon!
@@ -3839,17 +4606,17 @@ function highlightBatterySeriesGroup(seriesId) {
       niMat.emissive.setHex(0x00ff66);
       niMat.emissiveIntensity = 1.1;
 
-      // Update UI Telemetry Passport
-      xrayGroupTitle.textContent = `СЕКЦИЯ АКБ: ГРУППА ${s}S (ЯЧЕЙКИ #${(s - 1) * 7 + 1}..#${s * 7})`;
-      xrayGroupCfg.textContent = `${s}S / 7P ПАРАЛЛЕЛЬ`;
+      const polSideStr = polarityOnLeft > 0 ? '+Z ПЛЮС / -Z МИНУС' : '+Z МИНУС / -Z ПЛЮС';
+      xrayGroupTitle.textContent = `СЕКЦИЯ ${s}S (РЯД #${row}, ЯЧЕЙКИ #${(s - 1) * 7 + 1}..#${s * 7})`;
+      xrayGroupCfg.textContent = `${s}S7P (${polSideStr})`;
       xrayGroupVolt.textContent = `4.20 V (∑ ${(s * 4.2).toFixed(1)}V)`;
       xrayGroupTemp.textContent = `NTC ${sGroup.userData.ntcTemp}°C / Cu 2.5мм²`;
     } else {
-      // Other 133 cells fade into transparent glass (opacity: 0.12)
-      cellMat.color.setHex(0x4b87a8);
+      // Other 133 cells fade into semi-transparent glass (opacity: 0.16)
+      cellMat.color.setHex(0x3b82a6);
       cellMat.emissive.setHex(0x000000);
       cellMat.emissiveIntensity = 0.0;
-      cellMat.opacity = 0.12;
+      cellMat.opacity = 0.16;
 
       busMat.emissive.setHex(0x000000);
       busMat.emissiveIntensity = 0.0;
@@ -3886,6 +4653,7 @@ window.addEventListener('pointermove', (e) => {
       return;
     }
   }
+  resetAllBatterySeriesMaterials();
   document.body.style.cursor = 'default';
 });
 
@@ -3902,14 +4670,14 @@ btnLights.addEventListener('click', () => {
   if (isLightsAndBrakeOn) {
     btnLights.classList.add('active-orange');
     // Sur-Ron Dual LED eyes ignite bright white/cyan
-    mats.MAT_LED_HEADLIGHT.emissiveIntensity = 4.5;
+    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 4.5;
     // Rear LED Brake Light flashes bright red (emissive: 0xff0000, emissiveIntensity: 4.0)
     mats.MAT_BRAKE_LED.emissive.setHex(0xff0000);
     mats.MAT_BRAKE_LED.emissiveIntensity = 4.0;
     rearBrakePointLight.intensity = 3.5;
   } else {
     btnLights.classList.remove('active-orange');
-    mats.MAT_LED_HEADLIGHT.emissiveIntensity = 0.4;
+    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 0.5;
     mats.MAT_BRAKE_LED.emissiveIntensity = 0.35;
     rearBrakePointLight.intensity = 0.0;
   }
@@ -3999,8 +4767,14 @@ document.querySelectorAll('.blueprint-btn').forEach((btn) => {
   });
 });
 
-// 3D Hotspots anchored to the 4 key engineering nodes in 3D space
+// 3D Hotspots anchored to the 5 key engineering nodes in 3D space
 const HOTSPOT_DEFS = [
+  {
+    id: 'battery',
+    label: '[ АКБ 20S7P (140× 21700) + СХЕМА ]',
+    parent: batterySys.corduraCenterGroup,
+    localPos: new THREE.Vector3(0.14, 0.28, 0.045)
+  },
   {
     id: 'saddle',
     label: '[ МОТО-СЕДЛО + ПОДРАМНИК ]',
@@ -4064,6 +4838,17 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// Support optional URL query params (?mode=xray or ?mode=explode)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('mode') === 'xray') {
+  setXRayMode(true);
+  camera.position.set(0.14, 0.30, 0.56);
+  controls.target.set(0.13, 0.28, 0.0);
+  controls.update();
+} else if (urlParams.get('mode') === 'explode') {
+  applyExplodeFactor(1.0, false);
+}
 
 function animate() {
   requestAnimationFrame(animate);

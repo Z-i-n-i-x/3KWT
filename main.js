@@ -430,21 +430,29 @@ function setXRayMode(enable) {
     btnXRay.classList.add('active-green');
     xrayPassport.classList.add('visible');
 
-    // Make Cordura 1000D bag & EVA foam transparent glass so all 140 cells are visible inside
-    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 0.12, duration: 0.6 });
-    gsap.to(mats.MAT_EVA_FOAM, { opacity: 0.10, duration: 0.6 });
+    // Hide outer Cordura side covers & PETG honeycomb shells so all 140 cells,
+    // 1S..20S badges, serpentine copper/nickel busbars, and 21 balance wires are 100% clear!
+    mats.MAT_CORDURA_1000D.depthWrite = false;
+    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 0.10, duration: 0.5 });
+    batterySys.leftCoverGroup.visible = false;
+    batterySys.rightCoverGroup.visible = false;
     batterySys.holderLeftGroup.visible = false;
     batterySys.holderRightGroup.visible = false;
 
+    // Show all 20 sections (140 cells) at full opacity on entry; hovering any section highlights it!
+    resetAllBatterySeriesMaterials();
+    xrayGroupTitle.textContent = '20S7P (140× 21700): НАВЕДИТЕ НА СЕКЦИЮ 1S..20S';
+
     // Fly camera smoothly to frame triangle
-    flyCameraTo(new THREE.Vector3(0.14, 0.30, 0.72), new THREE.Vector3(0.14, 0.28, 0.0));
-    highlightBatterySeriesGroup(1); // Highlight 1S by default on entry
+    flyCameraTo(new THREE.Vector3(0.14, 0.28, 0.68), new THREE.Vector3(0.14, 0.27, 0.0));
   } else {
     btnXRay.classList.remove('active-green');
     xrayPassport.classList.remove('visible');
 
-    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.6 });
-    gsap.to(mats.MAT_EVA_FOAM, { opacity: 0.92, duration: 0.6 });
+    mats.MAT_CORDURA_1000D.depthWrite = true;
+    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.5 });
+    batterySys.leftCoverGroup.visible = true;
+    batterySys.rightCoverGroup.visible = true;
     batterySys.holderLeftGroup.visible = true;
     batterySys.holderRightGroup.visible = true;
     resetAllBatterySeriesMaterials();
@@ -452,10 +460,11 @@ function setXRayMode(enable) {
 }
 
 function resetAllBatterySeriesMaterials() {
+  if (hoveredSeriesId === null) return;
   hoveredSeriesId = null;
   batterySys.seriesGroups.forEach((sGroup) => {
     const { cellMat, busMat, niMat } = sGroup.userData;
-    cellMat.color.setHex(0x4b87a8);
+    cellMat.color.setHex(0x3b82a6);
     cellMat.emissive.setHex(0x000000);
     cellMat.emissiveIntensity = 0;
     cellMat.opacity = 1.0;
@@ -473,7 +482,7 @@ function highlightBatterySeriesGroup(seriesId) {
 
   batterySys.seriesGroups.forEach((sGroup) => {
     const s = sGroup.userData.seriesId;
-    const { cellMat, busMat, niMat } = sGroup.userData;
+    const { cellMat, busMat, niMat, row, polarityOnLeft } = sGroup.userData;
 
     if (s === seriesId) {
       // Selected 7P group and its copper-nickel busbar flash neon!
@@ -487,17 +496,17 @@ function highlightBatterySeriesGroup(seriesId) {
       niMat.emissive.setHex(0x00ff66);
       niMat.emissiveIntensity = 1.1;
 
-      // Update UI Telemetry Passport
-      xrayGroupTitle.textContent = `СЕКЦИЯ АКБ: ГРУППА ${s}S (ЯЧЕЙКИ #${(s - 1) * 7 + 1}..#${s * 7})`;
-      xrayGroupCfg.textContent = `${s}S / 7P ПАРАЛЛЕЛЬ`;
+      const polSideStr = polarityOnLeft > 0 ? '+Z ПЛЮС / -Z МИНУС' : '+Z МИНУС / -Z ПЛЮС';
+      xrayGroupTitle.textContent = `СЕКЦИЯ ${s}S (РЯД #${row}, ЯЧЕЙКИ #${(s - 1) * 7 + 1}..#${s * 7})`;
+      xrayGroupCfg.textContent = `${s}S7P (${polSideStr})`;
       xrayGroupVolt.textContent = `4.20 V (∑ ${(s * 4.2).toFixed(1)}V)`;
       xrayGroupTemp.textContent = `NTC ${sGroup.userData.ntcTemp}°C / Cu 2.5мм²`;
     } else {
-      // Other 133 cells fade into transparent glass (opacity: 0.12)
-      cellMat.color.setHex(0x4b87a8);
+      // Other 133 cells fade into semi-transparent glass (opacity: 0.16)
+      cellMat.color.setHex(0x3b82a6);
       cellMat.emissive.setHex(0x000000);
       cellMat.emissiveIntensity = 0.0;
-      cellMat.opacity = 0.12;
+      cellMat.opacity = 0.16;
 
       busMat.emissive.setHex(0x000000);
       busMat.emissiveIntensity = 0.0;
@@ -534,6 +543,7 @@ window.addEventListener('pointermove', (e) => {
       return;
     }
   }
+  resetAllBatterySeriesMaterials();
   document.body.style.cursor = 'default';
 });
 
@@ -550,14 +560,14 @@ btnLights.addEventListener('click', () => {
   if (isLightsAndBrakeOn) {
     btnLights.classList.add('active-orange');
     // Sur-Ron Dual LED eyes ignite bright white/cyan
-    mats.MAT_LED_HEADLIGHT.emissiveIntensity = 4.5;
+    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 4.5;
     // Rear LED Brake Light flashes bright red (emissive: 0xff0000, emissiveIntensity: 4.0)
     mats.MAT_BRAKE_LED.emissive.setHex(0xff0000);
     mats.MAT_BRAKE_LED.emissiveIntensity = 4.0;
     rearBrakePointLight.intensity = 3.5;
   } else {
     btnLights.classList.remove('active-orange');
-    mats.MAT_LED_HEADLIGHT.emissiveIntensity = 0.4;
+    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 0.5;
     mats.MAT_BRAKE_LED.emissiveIntensity = 0.35;
     rearBrakePointLight.intensity = 0.0;
   }
@@ -647,8 +657,14 @@ document.querySelectorAll('.blueprint-btn').forEach((btn) => {
   });
 });
 
-// 3D Hotspots anchored to the 4 key engineering nodes in 3D space
+// 3D Hotspots anchored to the 5 key engineering nodes in 3D space
 const HOTSPOT_DEFS = [
+  {
+    id: 'battery',
+    label: '[ АКБ 20S7P (140× 21700) + СХЕМА ]',
+    parent: batterySys.corduraCenterGroup,
+    localPos: new THREE.Vector3(0.14, 0.28, 0.045)
+  },
   {
     id: 'saddle',
     label: '[ МОТО-СЕДЛО + ПОДРАМНИК ]',
@@ -712,6 +728,17 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// Support optional URL query params (?mode=xray or ?mode=explode)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('mode') === 'xray') {
+  setXRayMode(true);
+  camera.position.set(0.14, 0.30, 0.56);
+  controls.target.set(0.13, 0.28, 0.0);
+  controls.update();
+} else if (urlParams.get('mode') === 'explode') {
+  applyExplodeFactor(1.0, false);
+}
 
 function animate() {
   requestAnimationFrame(animate);

@@ -262,11 +262,11 @@ export function buildFrameNode(mats) {
     crankGroup.add(arm);
   }
 
-  // Left & Right Crank Arms (170mm length) + MTB Platform Pedals with steel traction pins
-  // Right crank forward-down, Left crank backward-up (matching reference photo stance!)
+  // Left & Right Crank Arms (170mm length) + Open-Cage CNC MTB Platform Pedals with steel traction pins
+  // Left crank pointing forward horizontally (1:1 as on Reference Photo #1!), Right crank backward
   const crankConfigs = [
-    { side: -1, z: -0.052, dir: new THREE.Vector3(0.155, -0.070, 0) }, // Right side
-    { side: 1, z: 0.052, dir: new THREE.Vector3(-0.155, 0.070, 0) }   // Left side
+    { side: 1, z: 0.052, dir: new THREE.Vector3(0.168, -0.008, 0) },   // Left side (forward horizontal)
+    { side: -1, z: -0.052, dir: new THREE.Vector3(-0.168, 0.008, 0) }  // Right side (rearward horizontal)
   ];
 
   crankConfigs.forEach((cfg) => {
@@ -275,26 +275,42 @@ export function buildFrameNode(mats) {
     const arm = createBiOvalTubeBetween(pStart, pEnd, 0.015, 0.007, mats.MAT_ANODIZED_BLACK, 20);
     crankGroup.add(arm);
 
-    // Pedal spindle + MTB platform body
+    // Silver crank fixing bolt at BB & pedal thread boss
+    const bbBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.004, 16), mats.MAT_STEEL_ROTOR);
+    bbBolt.rotation.x = Math.PI / 2;
+    bbBolt.position.set(0, 0, cfg.z + cfg.side * 0.006);
+    crankGroup.add(bbBolt);
+
+    // Pedal spindle + Open-Cage CNC MTB Platform Body (no solid slab reflection!)
     const pPedalCenter = pEnd.clone().add(new THREE.Vector3(0, 0, cfg.side * 0.052));
-    const spindle = createCylinderBetween(pEnd, pPedalCenter, 0.006, 0.006, mats.MAT_STEEL_ROTOR, 12);
+    const spindle = createCylinderBetween(pEnd, pPedalCenter, 0.0055, 0.0055, mats.MAT_STEEL_ROTOR, 12);
     crankGroup.add(spindle);
 
-    const pedalBodyGeom = new THREE.BoxGeometry(0.102, 0.016, 0.095);
-    const pedalBody = new THREE.Mesh(pedalBodyGeom, mats.MAT_ANODIZED_BLACK);
-    pedalBody.position.copy(pPedalCenter);
-    pedalBody.castShadow = true;
-    crankGroup.add(pedalBody);
+    const pedalGroup = new THREE.Group();
+    pedalGroup.position.copy(pPedalCenter);
 
-    // Steel traction pins on pedal platform
-    const pinGeom = new THREE.CylinderGeometry(0.0015, 0.0015, 0.022, 6);
-    [-0.04, 0, 0.04].forEach((px) => {
-      [-0.035, 0.035].forEach((pz) => {
+    // Center spindle barrel + front/rear/outer/inner CNC cage bars
+    const centerBarrel = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.014, 0.090), mats.MAT_FRAME_RAL9005);
+    const frontBar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.014, 0.092), mats.MAT_FRAME_RAL9005);
+    frontBar.position.set(0.042, 0, 0);
+    const rearBar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.014, 0.092), mats.MAT_FRAME_RAL9005);
+    rearBar.position.set(-0.042, 0, 0);
+    const outerBar = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.014, 0.012), mats.MAT_FRAME_RAL9005);
+    outerBar.position.set(0, 0, 0.040);
+    const innerBar = new THREE.Mesh(new THREE.BoxGeometry(0.096, 0.014, 0.012), mats.MAT_FRAME_RAL9005);
+    innerBar.position.set(0, 0, -0.040);
+    pedalGroup.add(centerBarrel, frontBar, rearBar, outerBar, innerBar);
+
+    // Steel traction pins on open-cage pedal perimeter
+    const pinGeom = new THREE.CylinderGeometry(0.0014, 0.0014, 0.020, 6);
+    [-0.042, 0, 0.042].forEach((px) => {
+      [-0.038, 0.038].forEach((pz) => {
         const pin = new THREE.Mesh(pinGeom, mats.MAT_STEEL_ROTOR);
-        pin.position.set(pPedalCenter.x + px, pPedalCenter.y, pPedalCenter.z + pz);
-        crankGroup.add(pin);
+        pin.position.set(px, 0, pz);
+        pedalGroup.add(pin);
       });
     });
+    crankGroup.add(pedalGroup);
   });
 
   // Chain from Front Chainring (0,0,-0.044) to Rear 16T Freewheel (-0.435, 0.030, -0.056)
@@ -321,7 +337,8 @@ export function buildFrameNode(mats) {
 }
 
 /**
- * 2. NODE 1: FRONT AIR FORK FOXSID-X2 26" (Single-Crown, 120mm Travel, Mudguard, FOXSID Decals)
+ * 2. NODE 1: FRONT AIR FORK FOXSID 32 26" (Single-Crown, 120mm Travel, Mudguard, 32/XSD/FOXSID Decals)
+ *    1:1 with Reference Photo #4 & #1
  */
 export function buildForkNode(mats) {
   const forkGroup = new THREE.Group();
@@ -330,9 +347,7 @@ export function buildForkNode(mats) {
   // Head Tube axis reference: Top (0.390, 0.565, 0) -> Bottom (0.425, 0.450, 0)
   const pHeadTop = new THREE.Vector3(0.390, 0.565, 0);
   const pHeadBot = new THREE.Vector3(0.425, 0.450, 0);
-  // Downward fork direction along head angle (~73 deg)
   const forkDownDir = pHeadBot.clone().sub(pHeadTop).normalize();
-  // Forward offset perpendicular to steering axis
   const forkFwdDir = new THREE.Vector3(forkDownDir.y, -forkDownDir.x, 0).normalize();
 
   // 2.1 Straight 1 1/8" (28.6mm) Steerer Tube inside Head Tube + extending to stem
@@ -341,21 +356,10 @@ export function buildForkNode(mats) {
   const steerer = createCylinderBetween(pSteererTop, pSteererBot, 0.0143, 0.0143, mats.MAT_ANODIZED_BLACK, 24);
   forkGroup.add(steerer);
 
-  // 2.2 Cast Matte Black Single Crown with forward offset bosses
-  const pCrownCenter = pHeadBot.clone().addScaledVector(forkDownDir, 0.018).addScaledVector(forkFwdDir, 0.022);
-  const crownBridge = createBiOvalTubeBetween(
-    new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, -0.068),
-    new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, 0.068),
-    0.024,
-    0.018,
-    mats.MAT_FRAME_RAL9005,
-    24
-  );
-  forkGroup.add(crownBridge);
-
-  // Crown steerer clamp boss
+  // 2.2 Cast Matte Black Single Crown with sculpted downward shoulder arms (matching Photo #4)
+  const pCrownCenter = pHeadBot.clone().addScaledVector(forkDownDir, 0.018).addScaledVector(forkFwdDir, 0.020);
   const crownNeck = createBiOvalTubeBetween(
-    pHeadBot.clone().addScaledVector(forkDownDir, 0.016),
+    pHeadBot.clone().addScaledVector(forkDownDir, 0.012),
     pCrownCenter,
     0.022,
     0.022,
@@ -364,20 +368,28 @@ export function buildForkNode(mats) {
   );
   forkGroup.add(crownNeck);
 
-  // Front Axle Center: (0.565, 0.030, 0) -> Wheel radius 0.335 => tire touches floor y = -0.305..-0.335
+  // Sculpted left & right crown arms sloping slightly down to the stanchion sockets
+  [-1, 1].forEach((side) => {
+    const armEnd = pCrownCenter.clone().addScaledVector(forkDownDir, 0.008);
+    armEnd.z = side * 0.065;
+    const armMesh = createBiOvalTubeBetween(pCrownCenter, armEnd, 0.021, 0.016, mats.MAT_FRAME_RAL9005, 20);
+    forkGroup.add(armMesh);
+  });
+
+  // Front Axle Center: (0.565, 0.030, 0)
   const pFrontAxle = new THREE.Vector3(0.565, 0.030, 0);
 
   // Stanchion spacing: z = ±0.065 (130mm crown center-to-center)
   [-1, 1].forEach((side) => {
     const zLeg = side * 0.065; // side = +1 is Left, side = -1 is Right
-    const pLegCrown = new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, zLeg);
-    const pAxleDrop = new THREE.Vector3(pFrontAxle.x, pFrontAxle.y, side * 0.055);
+    const pLegCrown = new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, zLeg).addScaledVector(forkDownDir, 0.008);
+    const pAxleDrop = new THREE.Vector3(pFrontAxle.x, pFrontAxle.y, side * 0.056);
     const legAxis = pAxleDrop.clone().sub(pLegCrown).normalize();
 
     // Crown leg socket boss
     const crownSocket = createCylinderBetween(
       pLegCrown.clone().addScaledVector(legAxis, -0.016),
-      pLegCrown.clone().addScaledVector(legAxis, 0.022),
+      pLegCrown.clone().addScaledVector(legAxis, 0.024),
       0.021,
       0.020,
       mats.MAT_FRAME_RAL9005,
@@ -386,30 +398,30 @@ export function buildForkNode(mats) {
     forkGroup.add(crownSocket);
 
     if (side === 1) {
-      // Left leg top: Blue/Black CNC Air Valve Cap (AIR 55-65 PSI)
+      // Left leg top: Black CNC Air Valve Cap (AIR 55-65 PSI) + Blue accent ring (as on Photo #1 & #4)
       const airCap = createCylinderBetween(
         pLegCrown.clone().addScaledVector(legAxis, -0.016),
-        pLegCrown.clone().addScaledVector(legAxis, -0.026),
-        0.014,
-        0.012,
+        pLegCrown.clone().addScaledVector(legAxis, -0.025),
+        0.0145,
+        0.0135,
         mats.MAT_BLUE_ANODIZED,
-        18
+        20
       );
       forkGroup.add(airCap);
     } else {
-      // Right leg top: Red/Black CNC Lockout Dial (LOCKOUT)
+      // Right leg top: Blue Anodized CNC Compression / Lockout Dial (1:1 as on Reference Photo #4!)
       const lockCap = createCylinderBetween(
         pLegCrown.clone().addScaledVector(legAxis, -0.016),
         pLegCrown.clone().addScaledVector(legAxis, -0.025),
-        0.015,
-        0.015,
-        mats.MAT_RED_ANODIZED,
-        18
+        0.0155,
+        0.0155,
+        mats.MAT_BLUE_ANODIZED,
+        20
       );
       forkGroup.add(lockCap);
     }
 
-    // 32mm Black Anodized Stanchions (120mm visible travel + internal overlap)
+    // 32mm Black Anodized Stanchions (120mm visible travel)
     const pStanchionEnd = pLegCrown.clone().addScaledVector(legAxis, 0.165);
     const stanchion = createCylinderBetween(
       pLegCrown,
@@ -421,15 +433,13 @@ export function buildForkNode(mats) {
     );
     forkGroup.add(stanchion);
 
-    // Red Anodized Sag O-ring on Left Stanchion (1:1 as on reference photo!)
-    if (side === 1) {
-      const sagPos = pLegCrown.clone().addScaledVector(legAxis, 0.032);
-      const sagRingGeom = new THREE.TorusGeometry(0.0168, 0.0022, 12, 24);
-      const sagRing = new THREE.Mesh(sagRingGeom, mats.MAT_RED_ANODIZED);
-      sagRing.position.copy(sagPos);
-      sagRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), legAxis);
-      forkGroup.add(sagRing);
-    }
+    // Red Anodized Sag O-ring on Stanchion (1:1 as on Reference Photo #4!)
+    const sagPos = pLegCrown.clone().addScaledVector(legAxis, side === 1 ? 0.045 : 0.095);
+    const sagRingGeom = new THREE.TorusGeometry(0.0166, 0.0020, 12, 24);
+    const sagRing = new THREE.Mesh(sagRingGeom, mats.MAT_RED_ANODIZED);
+    sagRing.position.copy(sagPos);
+    sagRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), legAxis);
+    forkGroup.add(sagRing);
 
     // Dust Wiper Seal at top of Magnesium Lowers
     const pLowerTop = pLegCrown.clone().addScaledVector(legAxis, 0.142);
@@ -443,68 +453,75 @@ export function buildForkNode(mats) {
     );
     forkGroup.add(wiper);
 
-    // Red Anodized Trim Ring right under dust wiper (visible in photo!)
-    const trimRing = createCylinderBetween(
+    // Solid 42mm Matte Black Magnesium Lower Leg (base mesh)
+    const pLowerBot = pAxleDrop.clone().addScaledVector(legAxis, 0.012);
+    const lowerLegSolid = createCylinderBetween(
       pLowerTop,
-      pLowerTop.clone().addScaledVector(legAxis, 0.005),
-      0.0218,
-      0.0218,
-      mats.MAT_RED_ANODIZED,
-      24
-    );
-    forkGroup.add(trimRing);
-
-    // 42mm Matte Black Magnesium Lower Leg with vertical white FOXSID Decal
-    const lowerLeg = createCylinderBetween(
-      pLowerTop,
-      pAxleDrop.clone().addScaledVector(legAxis, 0.012),
+      pLowerBot,
       0.021,
       0.0185,
+      mats.MAT_FRAME_RAL9005,
+      32
+    );
+    forkGroup.add(lowerLegSolid);
+
+    // Outer Decal Shell with "32" + "XSD" + "FOXSID AIR FORK" facing outward (1:1 as on Photo #4)
+    const lowerLegDecal = createCylinderBetween(
+      pLowerTop.clone().addScaledVector(legAxis, 0.012),
+      pLowerBot.clone().addScaledVector(legAxis, -0.015),
+      0.0213,
+      0.0188,
       mats.MAT_FOXSID_DECAL,
       32
     );
-    // Orient FOXSID decal to face outward on both legs
-    lowerLeg.rotateY(side === 1 ? 0 : Math.PI);
-    forkGroup.add(lowerLeg);
+    lowerLegDecal.rotateY(side === 1 ? 0 : Math.PI);
+    forkGroup.add(lowerLegDecal);
 
-    // Bottom rebound adjuster / bolt at fork foot
+    // Forward-offset axle dropout lug at the bottom of the lower leg
+    const dropoutLug = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.028, 0.014), mats.MAT_FRAME_RAL9005);
+    dropoutLug.position.set(pAxleDrop.x, pAxleDrop.y, side * 0.056);
+    forkGroup.add(dropoutLug);
+
+    // Bottom Rebound Adjuster Knob (Red Anodized on right leg bottom, 1:1 as on Photo #4!)
     const footBolt = createCylinderBetween(
-      pAxleDrop.clone().addScaledVector(legAxis, 0.012),
-      pAxleDrop.clone().addScaledVector(legAxis, 0.022),
-      0.008,
-      0.008,
+      pLowerBot,
+      pLowerBot.clone().addScaledVector(legAxis, 0.014),
+      0.0075,
+      0.0075,
       side === -1 ? mats.MAT_RED_ANODIZED : mats.MAT_ANODIZED_BLACK,
       16
     );
     forkGroup.add(footBolt);
   });
 
-  // 2.3 Fork Arch (Gorilla) connecting left and right lowers in front of tire
-  const archLeft = new THREE.Vector3(0.492, 0.278, 0.062);
-  const archMid = new THREE.Vector3(0.542, 0.312, 0.0);
-  const archRight = new THREE.Vector3(0.492, 0.278, -0.062);
-  const archCurve = new THREE.CatmullRomCurve3([archLeft, archMid, archRight]);
-  const archGeom = new THREE.TubeGeometry(archCurve, 24, 0.012, 16, false);
+  // 2.3 Fork Arch (Gorilla) connecting left and right lowers in front of tire (matching Photo #4)
+  const archCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.488, 0.275, 0.062),
+    new THREE.Vector3(0.520, 0.328, 0.036),
+    new THREE.Vector3(0.532, 0.340, 0.000),
+    new THREE.Vector3(0.520, 0.328, -0.036),
+    new THREE.Vector3(0.488, 0.275, -0.062)
+  ]);
+  const archGeom = new THREE.TubeGeometry(archCurve, 28, 0.0115, 16, false);
   const archMesh = new THREE.Mesh(archGeom, mats.MAT_FRAME_RAL9005);
   archMesh.castShadow = true;
   forkGroup.add(archMesh);
 
-  // 2.4 Short Black Plastic Mudguard zipped directly under the Fork Arch (1:1 as on photo!)
+  // Brake hose guide boss on left side of fork arch (visible in Reference Photo #4)
+  const hoseGuideBoss = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.008, 10), mats.MAT_STEEL_ROTOR);
+  hoseGuideBoss.rotation.z = Math.PI / 2;
+  hoseGuideBoss.position.set(0.510, 0.305, 0.054);
+  forkGroup.add(hoseGuideBoss);
+
+  // 2.4 Compact Black Plastic Mudguard zipped directly under the Fork Arch
   const mudguardCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.565, 0.318, 0),
-    new THREE.Vector3(0.505, 0.305, 0),
-    new THREE.Vector3(0.435, 0.255, 0)
+    new THREE.Vector3(0.558, 0.322, 0),
+    new THREE.Vector3(0.502, 0.312, 0),
+    new THREE.Vector3(0.440, 0.268, 0)
   ]);
-  const mudguardGeom = new THREE.TubeGeometry(mudguardCurve, 20, 0.044, 16, false);
-  // Flatten tube into curved fender shell
-  const mgPos = mudguardGeom.attributes.position;
-  for (let i = 0; i < mgPos.count; i++) {
-    const y = mgPos.getY(i);
-    mgPos.setY(i, y * 0.99);
-  }
   const fenderShape = new THREE.Shape();
-  fenderShape.absarc(0, 0, 0.044, Math.PI * 0.15, Math.PI * 0.85, false);
-  fenderShape.absarc(0, 0, 0.041, Math.PI * 0.85, Math.PI * 0.15, true);
+  fenderShape.absarc(0, 0, 0.043, Math.PI * 0.16, Math.PI * 0.84, false);
+  fenderShape.absarc(0, 0, 0.040, Math.PI * 0.84, Math.PI * 0.16, true);
   const fenderExtrude = new THREE.ExtrudeGeometry(fenderShape, {
     steps: 18,
     bevelEnabled: false,
@@ -514,11 +531,11 @@ export function buildForkNode(mats) {
   mudguardMesh.castShadow = true;
   forkGroup.add(mudguardMesh);
 
-  // 2.5 Left Lower Leg Post Mount (PM 160) bosses + CNC Black PM-PM 180mm Adapter + Front ZOOM HB-890E Caliper
-  const pFrontCaliper = new THREE.Vector3(0.508, 0.088, 0.052);
-  const pmAdapterGeom = new THREE.BoxGeometry(0.022, 0.068, 0.014);
+  // 2.5 Left Lower Leg Post Mount (PM 160) bosses + CNC Black F/R-180 Adapter + Front ZOOM HB-890E Caliper
+  const pFrontCaliper = new THREE.Vector3(0.508, 0.088, 0.050);
+  const pmAdapterGeom = new THREE.BoxGeometry(0.018, 0.072, 0.012);
   const pmAdapter = new THREE.Mesh(pmAdapterGeom, mats.MAT_ANODIZED_BLACK);
-  pmAdapter.position.set(0.502, 0.086, 0.056);
+  pmAdapter.position.set(0.500, 0.086, 0.054);
   pmAdapter.rotation.z = -0.32;
   forkGroup.add(pmAdapter);
 
@@ -531,44 +548,50 @@ export function buildForkNode(mats) {
 }
 
 /**
- * Helper: Builds a 4-piston forged ZOOM HB-890E Hydraulic Brake Caliper with cooling fins
+ * Helper: Builds a 4-piston forged ZOOM HB-890E Hydraulic Brake Caliper (1:1 as on Reference Photo #5)
  */
 export function buildZoomCaliperMesh(mats) {
   const calGroup = new THREE.Group();
 
-  // Main forged 4-piston body
-  const bodyGeom = new THREE.BoxGeometry(0.036, 0.076, 0.034);
+  // Main sculpted forged 4-piston body
+  const bodyGeom = new THREE.BoxGeometry(0.034, 0.074, 0.032);
   const body = new THREE.Mesh(bodyGeom, mats.MAT_ANODIZED_BLACK);
   body.castShadow = true;
   calGroup.add(body);
 
-  // Dual machined piston caps (2 per side = 4 pistons)
-  [-0.018, 0.018].forEach((yOff) => {
-    const capGeom = new THREE.CylinderGeometry(0.011, 0.011, 0.037, 18);
-    capGeom.rotateX(Math.PI / 2);
-    const cap = new THREE.Mesh(capGeom, mats.MAT_RED_ANODIZED);
-    cap.position.set(0.002, yOff, 0);
-    calGroup.add(cap);
+  // Dual machined circular piston bores (2 per side = 4 pistons, matching Photo #5!)
+  [-0.016, 0.016].forEach((yOff) => {
+    const boreRing = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.034, 20), mats.MAT_FRAME_RAL9005);
+    boreRing.rotation.x = Math.PI / 2;
+    boreRing.position.set(0.002, yOff, 0);
+    calGroup.add(boreRing);
+
+    const boreCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.0355, 16), mats.MAT_ANODIZED_BLACK);
+    boreCenter.rotation.x = Math.PI / 2;
+    boreCenter.position.set(0.002, yOff, 0);
+    calGroup.add(boreCenter);
   });
 
-  // Top cooling fins on brake pads
-  for (let i = -2; i <= 2; i++) {
-    const finGeom = new THREE.BoxGeometry(0.016, 0.008, 0.002);
-    const fin = new THREE.Mesh(finGeom, mats.MAT_STEEL_ROTOR);
-    fin.position.set(0.016, 0, i * 0.004);
-    calGroup.add(fin);
-  }
+  // Yellow brake pad backing/spacer tab & stainless pad retaining bolt (visible in Photo #5)
+  const yellowPadTab = new THREE.Mesh(new THREE.TorusGeometry(0.010, 0.0022, 8, 16), mats.MAT_XT90_YELLOW);
+  yellowPadTab.position.set(-0.016, -0.012, 0);
+  yellowPadTab.rotation.y = Math.PI / 2;
+  calGroup.add(yellowPadTab);
 
-  // Banjo bolt & bleed nipple
-  const banjo = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.014, 12), mats.MAT_STEEL_ROTOR);
-  banjo.position.set(-0.014, 0.038, 0.008);
-  calGroup.add(banjo);
+  // Silver stainless banjo fitting + black bleed port cap at top of caliper (1:1 as on Photo #5)
+  const banjoCrimp = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0048, 0.016, 12), mats.MAT_STEEL_ROTOR);
+  banjoCrimp.position.set(-0.008, 0.042, 0.006);
+  const banjoBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.010, 12), mats.MAT_STEEL_ROTOR);
+  banjoBolt.rotation.x = Math.PI / 2;
+  banjoBolt.position.set(-0.008, 0.032, 0.014);
+  calGroup.add(banjoCrimp, banjoBolt);
 
   return calGroup;
 }
 
 /**
- * 3. NODE 2: COCKPIT, 740MM RISER BAR, SUR-RON DUAL LED HEADLIGHT, SW900, 20X THROTTLE & ZOOM LEVERS
+ * 3. NODE 2: COCKPIT, 740MM RISER BAR, SUR-RON DUAL LED HEADLIGHT (WITH 4 ALLEN BOLTS & FIGURE-8 BEZEL),
+ *    SW900, TOPTUBE PHONE MOUNT, 20X THROTTLE & ZOOM HB-890E LEVERS (1:1 AS ON PHOTOS #1, #5, #6)
  */
 export function buildCockpitNode(mats) {
   const cockpitGroup = new THREE.Group();
@@ -625,7 +648,6 @@ export function buildCockpitNode(mats) {
     new THREE.Vector3(0.365, 0.658, 0.370)
   ]);
   const barGeom = new THREE.TubeGeometry(barCurve, 64, 0.0125, 20, false);
-  // Thicken center 31.8mm clamp zone
   const bPos = barGeom.attributes.position;
   for (let i = 0; i < bPos.count; i++) {
     const zVal = Math.abs(bPos.getZ(i));
@@ -642,72 +664,108 @@ export function buildCockpitNode(mats) {
   barMesh.castShadow = true;
   cockpitGroup.add(barMesh);
 
-  // SUR-RON LIGHT BEE X (20W) Dual Rectangular LED Headlight right under stem/bar center (1:1 as on photo!)
+  // SUR-RON LIGHT BEE X (20W) Dual LED Headlight (1:1 with Reference Photo #6 & #1!)
+  // Features die-cast black bezel with 4 silver Allen corner bolts + figure-8 dual reflector cavity
   const headlightGroup = new THREE.Group();
   headlightGroup.name = 'SURRON_DUAL_LED_HEADLIGHT';
-  headlightGroup.position.set(0.452, 0.585, 0);
-  headlightGroup.rotation.z = -0.18;
+  headlightGroup.position.set(0.448, 0.592, 0);
+  headlightGroup.rotation.z = -0.14;
 
-  // Finned CNC Aluminum Housing
-  const hlHousing = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.042, 0.112), mats.MAT_ANODIZED_BLACK);
+  // Die-Cast Aluminum Housing (42mm deep x 46mm tall x 114mm wide)
+  const hlHousing = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.046, 0.114), mats.MAT_ANODIZED_BLACK);
   hlHousing.castShadow = true;
   headlightGroup.add(hlHousing);
+
+  // 4 Silver Socket-Head Allen Bolts in the 4 corners of the front bezel (1:1 as on Reference Photo #6!)
+  [-0.016, 0.016].forEach((by) => {
+    [-0.048, 0.048].forEach((bz) => {
+      const cornerBolt = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0034, 0.0034, 0.005, 12),
+        mats.MAT_STEEL_ROTOR
+      );
+      cornerBolt.rotation.z = Math.PI / 2;
+      cornerBolt.position.set(0.021, by, bz);
+      headlightGroup.add(cornerBolt);
+    });
+  });
 
   // Rear cooling fins
   for (let i = -3; i <= 3; i++) {
     const fin = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.003, 0.108), mats.MAT_ANODIZED_BLACK);
-    fin.position.set(-0.025, i * 0.0055, 0);
+    fin.position.set(-0.024, i * 0.0055, 0);
     headlightGroup.add(fin);
   }
 
-  // Two deep reflector LED eyes in a row (Left & Right)
-  const ledEyes = [];
-  [-0.026, 0.026].forEach((zEye) => {
+  // Dual Figure-8 / Peanut Reflector Eyes (Left = Fluted Flood Lens, Right = Deep Parabolic Spot Cone)
+  [-0.024, 0.024].forEach((zEye, eyeIdx) => {
     const reflector = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.016, 0.008, 0.018, 24, 1, true),
+      new THREE.CylinderGeometry(0.0175, 0.007, 0.018, 24, 1, true),
       mats.MAT_STEEL_ROTOR
     );
     reflector.rotation.z = -Math.PI / 2;
-    reflector.position.set(0.015, 0, zEye);
+    reflector.position.set(0.013, 0, zEye);
     headlightGroup.add(reflector);
 
-    const emitter = new THREE.Mesh(new THREE.SphereGeometry(0.009, 16, 16), mats.MAT_LED_HEADLIGHT);
+    // Chrome bezel ring around each reflector eye
+    const eyeRing = new THREE.Mesh(new THREE.TorusGeometry(0.0175, 0.0018, 10, 24), mats.MAT_STEEL_ROTOR);
+    eyeRing.rotation.y = Math.PI / 2;
+    eyeRing.position.set(0.0215, 0, zEye);
+    headlightGroup.add(eyeRing);
+
+    // Yellow Cree LED die inside reflector
+    const creeDie = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.005, 0.005), mats.MAT_XT90_YELLOW);
+    creeDie.position.set(0.006, 0, zEye);
+    headlightGroup.add(creeDie);
+
+    // Emissive glow core (lights up when user clicks [ТЕСТ ТОРМОЗА И СВЕТА])
+    const emitter = new THREE.Mesh(new THREE.SphereGeometry(0.009, 16, 16), mats.MAT_HEADLIGHT_LED);
     emitter.position.set(0.012, 0, zEye);
     headlightGroup.add(emitter);
-    ledEyes.push(emitter);
+
+    // Vertical fluted flood lens ribs on the left eye (1:1 as on Reference Photo #6!)
+    if (eyeIdx === 0) {
+      for (let f = -2; f <= 2; f++) {
+        const flute = new THREE.Mesh(new THREE.CylinderGeometry(0.0012, 0.0012, 0.028, 8), mats.MAT_SMOKE_LENS);
+        flute.position.set(0.0205, 0, zEye + f * 0.005);
+        headlightGroup.add(flute);
+      }
+    }
   });
 
-  // Light Smoke tinted front polycarbonate lens
-  const smokeLens = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.036, 0.104), mats.MAT_HEADLIGHT_SMOKE);
-  smokeLens.position.set(0.023, 0, 0);
+  // Clear/Light-Smoke front polycarbonate lens cover
+  const smokeLens = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.036, 0.086), mats.MAT_SMOKE_LENS);
+  smokeLens.position.set(0.022, 0, 0);
   headlightGroup.add(smokeLens);
 
-  // Headlight bracket to stem
-  const hlBracket = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.035, 0.048), mats.MAT_ANODIZED_BLACK);
-  hlBracket.position.set(-0.018, 0.022, 0);
+  // Top U-Bracket attaching headlight under the stem (matching Reference Photo #6)
+  const hlBracket = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.028, 0.044), mats.MAT_ANODIZED_BLACK);
+  hlBracket.position.set(-0.012, 0.024, 0);
   headlightGroup.add(hlBracket);
 
   cockpitGroup.add(headlightGroup);
 
-  // SW900 LCD Computer above Stem + 3-button remote on Left
+  // SW900 LCD Computer above Stem
   const sw900Group = new THREE.Group();
-  sw900Group.position.set(0.415, 0.658, 0.0);
+  sw900Group.position.set(0.415, 0.656, 0.0);
   sw900Group.rotation.z = 0.45;
-  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.056, 0.086), mats.MAT_ANODIZED_BLACK);
-  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.048, 0.076), mats.MAT_SW900_SCREEN);
+  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.054, 0.082), mats.MAT_ANODIZED_BLACK);
+  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.046, 0.074), mats.MAT_SW900_SCREEN);
   swScreen.rotation.y = Math.PI / 2;
   swScreen.rotation.x = Math.PI / 2;
-  swScreen.position.set(0.0095, 0, 0);
+  swScreen.position.set(0.0085, 0, 0);
   sw900Group.add(swCase, swScreen);
   cockpitGroup.add(sw900Group);
 
-  // Tactical Smartphone Mount with silicone vibration damper on left inner bar (visible in photo!)
+  // Tactical Smartphone Mount clamped cleanly on front of Toptube behind Head Tube (1:1 as on Reference Photo #1!)
+  const toptubeAngle = Math.atan2(0.545 - 0.415, 0.395 - (-0.135));
   const phoneMount = new THREE.Group();
-  phoneMount.position.set(0.355, 0.565, 0.045);
-  const mountClamp = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.045, 0.042), mats.MAT_ANODIZED_BLACK);
-  const clawTop = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.025, 0.072), mats.MAT_ANODIZED_BLACK);
-  clawTop.position.set(-0.015, 0.035, 0);
-  phoneMount.add(mountClamp, clawTop);
+  phoneMount.position.set(0.325, 0.532, 0.0);
+  phoneMount.rotation.z = toptubeAngle;
+  const mountClamp = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.036, 0.040), mats.MAT_VELCRO_STRAP);
+  mountClamp.position.set(0, -0.004, 0);
+  const phoneCradle = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.010, 0.062), mats.MAT_ANODIZED_BLACK);
+  phoneCradle.position.set(0, 0.022, 0);
+  phoneMount.add(mountClamp, phoneCradle);
   cockpitGroup.add(phoneMount);
 
   // Left & Right Ribbed Rubber Grips
@@ -729,105 +787,125 @@ export function buildCockpitNode(mats) {
   );
   cockpitGroup.add(leftGrip, rightGrip);
 
-  // Right Side Half-Twist Throttle 20X with white/blue indicator ring (1:1 as on photo!)
+  // Right Side Half-Twist Throttle 20X
   const throttleBody = createCylinderBetween(
     new THREE.Vector3(0.382, 0.654, -0.220),
     new THREE.Vector3(0.374, 0.656, -0.275),
-    0.022,
-    0.020,
+    0.021,
+    0.019,
     mats.MAT_ANODIZED_BLACK,
     24
   );
   const throttleRing = createCylinderBetween(
     new THREE.Vector3(0.380, 0.655, -0.232),
-    new THREE.Vector3(0.378, 0.655, -0.246),
-    0.0235,
-    0.0235,
-    mats.MAT_WHITE_INSULATOR,
+    new THREE.Vector3(0.378, 0.655, -0.242),
+    0.022,
+    0.022,
+    mats.MAT_STEEL_ROTOR,
     24
   );
-  const throttleAccent = createCylinderBetween(
-    new THREE.Vector3(0.382, 0.654, -0.225),
-    new THREE.Vector3(0.380, 0.655, -0.232),
-    0.0232,
-    0.0232,
-    mats.MAT_BLUE_ANODIZED,
-    24
-  );
-  cockpitGroup.add(throttleBody, throttleRing, throttleAccent);
+  cockpitGroup.add(throttleBody, throttleRing);
 
   // Left Side 2-in-1 Switch Block (Headlight toggle + Red 105 dB Moto Horn Button)
-  const switchBlock = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.042, 0.026), mats.MAT_ANODIZED_BLACK);
+  const switchBlock = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.038, 0.024), mats.MAT_ANODIZED_BLACK);
   switchBlock.position.set(0.380, 0.655, 0.232);
-  const redHornBtn = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.014), mats.MAT_RED_ANODIZED);
-  redHornBtn.position.set(0.364, 0.648, 0.232);
+  const redHornBtn = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.010, 0.012), mats.MAT_RED_ANODIZED);
+  redHornBtn.position.set(0.365, 0.648, 0.232);
   cockpitGroup.add(switchBlock, redHornBtn);
 
-  // ZOOM HB-890E Hydraulic Brake Levers with mineral oil reservoirs & braided hoses
+  // ZOOM HB-890E Hydraulic Brake Levers with mineral oil reservoirs & Red Julet E-Brake Cutoff Plugs (Photo #5)
   [-1, 1].forEach((side) => {
     const zBase = side * 0.205;
     const leverGroup = new THREE.Group();
     leverGroup.position.set(0.386, 0.652, zBase);
 
-    // Mineral oil reservoir master cylinder
-    const reservoir = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.026, 0.045), mats.MAT_ANODIZED_BLACK);
-    reservoir.position.set(0.018, 0.006, -side * 0.018);
+    // Split handlebar clamp + horizontal mineral oil master cylinder reservoir
+    const reservoir = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.024, 0.048), mats.MAT_ANODIZED_BLACK);
+    reservoir.position.set(0.018, 0.005, -side * 0.018);
     leverGroup.add(reservoir);
 
-    // Ergonomic 2-finger CNC brake blade
+    // 2 silver Torx reservoir cap screws (1:1 as on Reference Photo #5)
+    [-0.012, 0.012].forEach((dz) => {
+      const capScrew = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.003, 8), mats.MAT_STEEL_ROTOR);
+      capScrew.position.set(0.018, 0.018, -side * 0.018 + dz);
+      leverGroup.add(capScrew);
+    });
+
+    // Red waterproof Julet 2-pin e-brake power cutoff connector lead (1:1 as on Photo #5!)
+    const juletBody = createCylinderBetween(
+      new THREE.Vector3(0.020, -0.004, -side * 0.042),
+      new THREE.Vector3(0.022, -0.008, -side * 0.068),
+      0.0042,
+      0.0042,
+      mats.MAT_ANODIZED_BLACK,
+      10
+    );
+    const juletRedTip = createCylinderBetween(
+      new THREE.Vector3(0.022, -0.008, -side * 0.068),
+      new THREE.Vector3(0.023, -0.010, -side * 0.075),
+      0.0044,
+      0.0044,
+      mats.MAT_RED_ANODIZED,
+      10
+    );
+    leverGroup.add(juletBody, juletRedTip);
+
+    // Ergonomic 2-finger CNC brake blade with ball tip
     const bladeCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.024, -0.005, -side * 0.025),
       new THREE.Vector3(0.048, -0.018, side * 0.035),
       new THREE.Vector3(0.042, -0.024, side * 0.095)
     ]);
-    const bladeGeom = new THREE.TubeGeometry(bladeCurve, 16, 0.0055, 10, false);
+    const bladeGeom = new THREE.TubeGeometry(bladeCurve, 16, 0.0052, 10, false);
     const blade = new THREE.Mesh(bladeGeom, mats.MAT_ANODIZED_BLACK);
-    leverGroup.add(blade);
+    const ballEnd = new THREE.Mesh(new THREE.SphereGeometry(0.007, 10, 10), mats.MAT_ANODIZED_BLACK);
+    ballEnd.position.set(0.042, -0.024, side * 0.095);
+    leverGroup.add(blade, ballEnd);
 
     cockpitGroup.add(leverGroup);
   });
 
-  // Braided Hydraulic Brake Hoses descending down fork & frame
+  // Braided Hydraulic Brake Hoses descending down fork & frame (matching graceful front arcs in Photo #1)
   const frontHoseCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.405, 0.645, 0.185),
-    new THREE.Vector3(0.465, 0.540, 0.095),
-    new THREE.Vector3(0.470, 0.390, 0.072),
-    new THREE.Vector3(0.495, 0.220, 0.068),
-    new THREE.Vector3(0.505, 0.105, 0.056)
+    new THREE.Vector3(0.405, 0.645, 0.165),
+    new THREE.Vector3(0.478, 0.545, 0.085),
+    new THREE.Vector3(0.495, 0.365, 0.064),
+    new THREE.Vector3(0.502, 0.220, 0.062),
+    new THREE.Vector3(0.505, 0.115, 0.056)
   ]);
-  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(frontHoseCurve, 32, 0.0032, 8, false), mats.MAT_RUBBER_KENDA));
+  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(frontHoseCurve, 32, 0.0028, 8, false), mats.MAT_RUBBER_KENDA));
 
   const rearHoseCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.405, 0.645, -0.185),
-    new THREE.Vector3(0.455, 0.535, -0.065),
+    new THREE.Vector3(0.405, 0.645, -0.165),
+    new THREE.Vector3(0.468, 0.540, -0.055),
     new THREE.Vector3(0.395, 0.455, 0.022),
     new THREE.Vector3(0.015, 0.015, 0.025),
     new THREE.Vector3(-0.425, 0.055, 0.070)
   ]);
-  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(rearHoseCurve, 36, 0.0032, 8, false), mats.MAT_RUBBER_KENDA));
+  cockpitGroup.add(new THREE.Mesh(new THREE.TubeGeometry(rearHoseCurve, 36, 0.0028, 8, false), mats.MAT_RUBBER_KENDA));
 
   return cockpitGroup;
 }
 
 /**
  * Helper: Builds a perforated ventilated 180mm stainless steel brake rotor (R = 0.090m)
+ * Supports red anodized inner spider (as on Front Wheel in Reference Photo #1) or black/steel spider
  */
-export function buildBrakeRotor180mm(mats) {
+export function buildBrakeRotor180mm(mats, useRedSpider = false) {
   const rotorGroup = new THREE.Group();
   const outerR = 0.090;
-  const innerTrackR = 0.073;
+  const innerTrackR = 0.072;
 
-  // Outer friction ring with ventilation holes
+  // Outer friction ring with wave-style ventilation slots (matching Reference Photo #5)
   const ringShape = new THREE.Shape();
   ringShape.absarc(0, 0, outerR, 0, Math.PI * 2, false);
   const innerHole = new THREE.Path();
   innerHole.absarc(0, 0, innerTrackR, 0, Math.PI * 2, true);
   ringShape.holes.push(innerHole);
 
-  // Add 24 ventilation perforations in the friction track
   for (let i = 0; i < 24; i++) {
     const ang = (i / 24) * Math.PI * 2;
-    const rMid = (outerR + innerTrackR) * 0.5;
+    const rMid = (outerR + innerTrackR) * 0.5 + (i % 2 === 0 ? 0.002 : -0.002);
     const vent = new THREE.Path();
     vent.absarc(Math.cos(ang) * rMid, Math.sin(ang) * rMid, 0.0032, 0, Math.PI * 2, true);
     ringShape.holes.push(vent);
@@ -838,29 +916,30 @@ export function buildBrakeRotor180mm(mats) {
   const frictionRing = new THREE.Mesh(rotorGeom, mats.MAT_STEEL_ROTOR);
   rotorGroup.add(frictionRing);
 
-  // 6 Spider Arms + 6-bolt ISO hub mount (BCD 44mm)
+  const spiderMat = useRedSpider ? mats.MAT_RED_ANODIZED : mats.MAT_STEEL_ROTOR;
+
+  // 6 Tangential Spider Arms + 6-bolt ISO hub mount (BCD 44mm)
   for (let i = 0; i < 6; i++) {
     const a1 = (i / 6) * Math.PI * 2;
-    const a2 = a1 + 0.28;
+    const a2 = a1 + 0.34;
     const arm = createCylinderBetween(
       new THREE.Vector3(Math.cos(a1) * 0.024, Math.sin(a1) * 0.024, 0),
       new THREE.Vector3(Math.cos(a2) * innerTrackR, Math.sin(a2) * innerTrackR, 0),
-      0.004,
-      0.0035,
-      mats.MAT_STEEL_ROTOR,
+      0.0045,
+      0.0038,
+      spiderMat,
       8
     );
     arm.scale.z = 0.35;
     rotorGroup.add(arm);
 
-    // Torx T25 rotor bolt
-    const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.006, 10), mats.MAT_STEEL_ROTOR);
+    const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.006, 10), mats.MAT_STEEL_ROTOR);
     bolt.rotation.x = Math.PI / 2;
     bolt.position.set(Math.cos(a1) * 0.022, Math.sin(a1) * 0.022, 0.002);
     rotorGroup.add(bolt);
   }
 
-  const hubRing = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.0024, 24), mats.MAT_STEEL_ROTOR);
+  const hubRing = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.0024, 24), spiderMat);
   hubRing.rotation.x = Math.PI / 2;
   rotorGroup.add(hubRing);
 
@@ -868,71 +947,70 @@ export function buildBrakeRotor180mm(mats) {
 }
 
 /**
- * Helper: Builds a 26" Wheel on SunRingle MTX39 Rim + Kenda 26x2.35" Tire with 72-step 3D Instanced Knobs
+ * Helper: Builds a 26" Wheel on Stealth Black MTX39 Rim + KENDA K-RAD K905 (26x2.30/2.35") Tire
+ * with 5-Row Checkerboard Tread (440 3D blocks per wheel!), Yellow KENDA Sidewall Logo & Red Valve Cap
+ * (1:1 with Reference Photos #1 & #3!)
  */
 function buildWheelBase26(mats) {
   const wheelGroup = new THREE.Group();
 
-  // Outer tire radius = 0.335m (670mm diameter), balloon width = 59mm (tube radius = 0.0295m)
-  // Torus major radius R_carcass = 0.335 - 0.0295 = 0.3055m
-  const R_carcass = 0.302;
+  const R_carcass = 0.303;
   const r_balloon = 0.0295;
 
-  // 1. Tire Carcass (Kenda 26x2.35")
-  const carcassGeom = new THREE.TorusGeometry(R_carcass, r_balloon, 28, 96);
+  // 1. Tire Carcass (Kenda K-Rad K905 26x2.35")
+  const carcassGeom = new THREE.TorusGeometry(R_carcass, r_balloon, 32, 96);
   const carcassMesh = new THREE.Mesh(carcassGeom, mats.MAT_RUBBER_KENDA);
   carcassMesh.castShadow = true;
   carcassMesh.receiveShadow = true;
   wheelGroup.add(carcassMesh);
 
-  // 2. Real 3D Instanced Tread Knobs (72 steps around circumference: dual center + aggressive side lugs!)
-  const steps = 72;
-  const knobGeom = new THREE.BoxGeometry(0.011, 0.0065, 0.012);
-  // 4 knobs per step (2 center blocks + 2 angled shoulder blocks) = 288 3D lugs per wheel
-  const instancedKnobs = new THREE.InstancedMesh(knobGeom, mats.MAT_RUBBER_KENDA, steps * 4);
+  // 2. KENDA K-RAD K905 5-Row Checkerboard 3D Tread Pattern (Reference Photo #3!)
+  // 88 circumferential steps x 5 staggered rows across the tire profile = 440 checkered K-Rad lugs per tire!
+  const steps = 88;
+  const rowsPhi = [-0.64, -0.32, 0.0, 0.32, 0.64]; // 5 rows from right shoulder across crown to left shoulder
+  const knobGeom = new THREE.BoxGeometry(0.0125, 0.0048, 0.0115);
+  const instancedKnobs = new THREE.InstancedMesh(knobGeom, mats.MAT_RUBBER_KENDA, steps * rowsPhi.length);
   instancedKnobs.castShadow = true;
 
   const dummy = new THREE.Object3D();
   let idx = 0;
 
   for (let i = 0; i < steps; i++) {
-    const theta = (i / steps) * Math.PI * 2;
-    const stagger = (i % 2) * 0.003;
+    const baseTheta = (i / steps) * Math.PI * 2;
 
-    // Dual Center Knobs (left & right of centerline)
-    [-1, 1].forEach((side) => {
-      const phi = side * 0.24; // angular offset on tire cross-section
-      const rPos = R_carcass + (r_balloon + 0.0022) * Math.cos(phi);
-      const zPos = (r_balloon + 0.0022) * Math.sin(phi);
-
-      dummy.position.set(Math.cos(theta) * rPos, Math.sin(theta) * rPos, zPos);
-      dummy.rotation.set(0, 0, theta - Math.PI / 2);
-      dummy.rotateX(phi);
-      dummy.scale.set(1.15, 1.0, 0.95);
-      dummy.updateMatrix();
-      instancedKnobs.setMatrixAt(idx++, dummy.matrix);
-    });
-
-    // Aggressive Cornering Side Lugs
-    [-1, 1].forEach((side) => {
-      const phi = side * 0.68;
-      const rPos = R_carcass + (r_balloon + 0.0025) * Math.cos(phi);
-      const zPos = (r_balloon + 0.0025) * Math.sin(phi) + side * stagger;
+    for (let rIdx = 0; rIdx < rowsPhi.length; rIdx++) {
+      const phi = rowsPhi[rIdx];
+      // Checkerboard stagger: odd rows shift by half a block pitch around the circumference
+      const theta = baseTheta + ((rIdx % 2) * (Math.PI / steps));
+      const rPos = R_carcass + (r_balloon + 0.0016) * Math.cos(phi);
+      const zPos = (r_balloon + 0.0016) * Math.sin(phi);
 
       dummy.position.set(Math.cos(theta) * rPos, Math.sin(theta) * rPos, zPos);
       dummy.rotation.set(0, 0, theta - Math.PI / 2);
       dummy.rotateX(phi);
-      dummy.rotateY(side * 0.28);
-      dummy.scale.set(1.3, 1.25, 1.1);
+      // Outer shoulder blocks wrap slightly down the sidewall (K-Rad U-blocks)
+      if (Math.abs(rIdx - 2) === 2) {
+        dummy.scale.set(1.05, 1.25, 1.15);
+      } else {
+        dummy.scale.set(1.12, 1.0, 1.02);
+      }
       dummy.updateMatrix();
       instancedKnobs.setMatrixAt(idx++, dummy.matrix);
-    });
+    }
   }
   instancedKnobs.instanceMatrix.needsUpdate = true;
   wheelGroup.add(instancedKnobs);
 
-  // 3. SunRingle / PowerCircle MTX39 Double-Wall Eyeleted Moto Rim (39mm wide, 24mm profile height)
-  // Rim outer radius ~ 0.279m, inner spoke bed radius ~ 0.255m
+  // 3. Yellow & White "KENDA" Sidewall Hot-Patch Logo Ring at 6 o'clock on both sides (1:1 as on Photo #1!)
+  const sidewallRingGeom = new THREE.RingGeometry(0.280, 0.304, 64);
+  [-0.0292, 0.0292].forEach((zSide) => {
+    const logoRing = new THREE.Mesh(sidewallRingGeom, mats.MAT_KENDA_SIDEWALL);
+    logoRing.position.z = zSide;
+    if (zSide < 0) logoRing.rotation.y = Math.PI;
+    wheelGroup.add(logoRing);
+  });
+
+  // 4. SunRingle / PowerCircle MTX39 Double-Wall Eyeleted Moto Rim (39mm wide, 24mm profile height)
   const rimProfile = [
     new THREE.Vector2(0.255, -0.011),
     new THREE.Vector2(0.264, -0.0195),
@@ -944,15 +1022,43 @@ function buildWheelBase26(mats) {
   ];
   const rimLatheGeom = new THREE.LatheGeometry(rimProfile, 64);
   rimLatheGeom.rotateX(Math.PI / 2);
-  const rimMesh = new THREE.Mesh(rimLatheGeom, mats.MAT_RIM_MTX39);
+  const rimMesh = new THREE.Mesh(rimLatheGeom, mats.MAT_ANODIZED_BLACK);
   rimMesh.castShadow = true;
   wheelGroup.add(rimMesh);
+
+  // Subtle MTX39 Rim Spec Decals on left & right rim sidewalls
+  const decalGeom = new THREE.RingGeometry(0.257, 0.276, 64);
+  [-0.0198, 0.0198].forEach((zSide) => {
+    const decalMesh = new THREE.Mesh(decalGeom, mats.MAT_RIM_MTX39);
+    decalMesh.position.z = zSide;
+    if (zSide < 0) decalMesh.rotation.y = Math.PI;
+    wheelGroup.add(decalMesh);
+  });
+
+  // 5. Red Anodized Schrader Valve Stem & Cap at 6 o'clock (pointing radially inward, 1:1 as on Photo #1!)
+  const valveStem = createCylinderBetween(
+    new THREE.Vector3(0, -0.255, 0),
+    new THREE.Vector3(0, -0.236, 0),
+    0.0026,
+    0.0026,
+    mats.MAT_ANODIZED_BLACK,
+    10
+  );
+  const redValveCap = createCylinderBetween(
+    new THREE.Vector3(0, -0.236, 0),
+    new THREE.Vector3(0, -0.226, 0),
+    0.0032,
+    0.0030,
+    mats.MAT_RED_ANODIZED,
+    10
+  );
+  wheelGroup.add(valveStem, redValveCap);
 
   return wheelGroup;
 }
 
 /**
- * 4. NODE 3A: FRONT WHEEL 26" MTX39 (36x 14G 3-Cross Spokes, Disc Hub, 180mm Rotor)
+ * 4. NODE 3A: FRONT WHEEL 26" MTX39 (36x 14G 3-Cross Spokes, Disc Hub, 180mm Rotor with Red Spider)
  */
 export function buildFrontWheelNode(mats) {
   const frontWheel = buildWheelBase26(mats);
@@ -970,7 +1076,6 @@ export function buildFrontWheelNode(mats) {
   );
   frontWheel.add(hubBody);
 
-  // Hub Flanges
   [-0.032, 0.032].forEach((zFlange) => {
     const flange = createCylinderBetween(
       new THREE.Vector3(0, 0, zFlange - 0.002),
@@ -983,7 +1088,6 @@ export function buildFrontWheelNode(mats) {
     frontWheel.add(flange);
   });
 
-  // Solid axle + black axle nuts
   const axle = createCylinderBetween(
     new THREE.Vector3(0, 0, -0.072),
     new THREE.Vector3(0, 0, 0.072),
@@ -994,14 +1098,14 @@ export function buildFrontWheelNode(mats) {
   );
   frontWheel.add(axle);
 
-  // 36 Black 14G Spokes in 3-Cross pattern with Brass Nipples
+  // 36 Black 14G Spokes in 3-Cross pattern with Silver/Brass Nipples
   const R_rim = 0.255;
   const R_hub = 0.029;
   for (let i = 0; i < 36; i++) {
     const side = i % 2 === 0 ? 1 : -1;
     const crossDir = i % 4 < 2 ? 1 : -1;
     const rimAngle = (i / 36) * Math.PI * 2;
-    const hubAngle = rimAngle + crossDir * 0.95; // 3-cross tangential angle
+    const hubAngle = rimAngle + crossDir * 0.95;
 
     const pHub = new THREE.Vector3(Math.cos(hubAngle) * R_hub, Math.sin(hubAngle) * R_hub, side * 0.032);
     const pRim = new THREE.Vector3(Math.cos(rimAngle) * R_rim, Math.sin(rimAngle) * R_rim, side * 0.003);
@@ -1009,14 +1113,13 @@ export function buildFrontWheelNode(mats) {
     const spoke = createCylinderBetween(pHub, pRim, 0.0011, 0.0011, mats.MAT_ANODIZED_BLACK, 6);
     frontWheel.add(spoke);
 
-    // Brass spoke nipple at rim bed
     const pNippleStart = pRim.clone().lerp(pHub, 0.055);
-    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0022, 0.0022, mats.MAT_BRASS_NIPPLE, 6);
+    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0022, 0.0022, mats.MAT_STEEL_ROTOR, 6);
     frontWheel.add(nipple);
   }
 
-  // Front 180mm Perforated Brake Rotor on Left Side (z = +0.044)
-  const frontRotor = buildBrakeRotor180mm(mats);
+  // Front 180mm Perforated Brake Rotor on Left Side (z = +0.044) with Red Anodized Spider (as on Photo #1!)
+  const frontRotor = buildBrakeRotor180mm(mats, true);
   frontRotor.position.set(0, 0, 0.044);
   frontWheel.add(frontRotor);
 
@@ -1056,7 +1159,6 @@ export function buildRearWheelNode(mats) {
     );
     rearWheel.add(cover);
 
-    // 18 shiny stainless M4 hex socket bolts around motor cover perimeter
     const boltRadius = R_motor * 0.87;
     for (let b = 0; b < 18; b++) {
       const ang = (b / 18) * Math.PI * 2;
@@ -1081,7 +1183,7 @@ export function buildRearWheelNode(mats) {
     const side = i % 2 === 0 ? 1 : -1;
     const crossDir = i % 4 < 2 ? 1 : -1;
     const rimAngle = (i / 36) * Math.PI * 2;
-    const hubAngle = rimAngle + crossDir * 0.26; // 1-cross / radial-tangential lace for large 245mm DD motor
+    const hubAngle = rimAngle + crossDir * 0.26;
 
     const pHub = new THREE.Vector3(Math.cos(hubAngle) * R_flange, Math.sin(hubAngle) * R_flange, side * 0.031);
     const pRim = new THREE.Vector3(Math.cos(rimAngle) * R_rim, Math.sin(rimAngle) * R_rim, side * 0.003);
@@ -1090,7 +1192,7 @@ export function buildRearWheelNode(mats) {
     rearWheel.add(spoke);
 
     const pNippleStart = pRim.clone().lerp(pHub, 0.12);
-    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0028, 0.0028, mats.MAT_BRASS_NIPPLE, 8);
+    const nipple = createCylinderBetween(pNippleStart, pRim, 0.0028, 0.0028, mats.MAT_STEEL_ROTOR, 8);
     rearWheel.add(nipple);
   }
 
@@ -1098,7 +1200,6 @@ export function buildRearWheelNode(mats) {
   const m14Axle = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.010, 0.185), mats.MAT_STEEL_ROTOR);
   rearWheel.add(m14Axle);
 
-  // Heavy-duty M14 flange nuts with lock washers
   [-0.082, 0.082].forEach((zNut) => {
     const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.012, 6), mats.MAT_STEEL_ROTOR);
     nut.rotation.x = Math.PI / 2;
@@ -1118,7 +1219,7 @@ export function buildRearWheelNode(mats) {
   rearWheel.add(freewheel);
 
   // Rear 180mm Perforated Brake Rotor on Left Side (z = +0.052)
-  const rearRotor = buildBrakeRotor180mm(mats);
+  const rearRotor = buildBrakeRotor180mm(mats, false);
   rearRotor.position.set(0, 0, 0.052);
   rearWheel.add(rearRotor);
 
@@ -1133,8 +1234,6 @@ export function buildRearDropoutBrakeNode(mats) {
   const dropoutGroup = new THREE.Group();
   dropoutGroup.name = 'NODE_04_REAR_DROPOUT_6MM_ZOOM';
 
-  // Rear Axle is at (-0.435, 0.030, 0). Left frame dropout is at z = +0.0675.
-  // Outer 6mm monolithic steel plate sits at z = +0.070..+0.076.
   const axX = -0.435;
   const axY = 0.030;
 
@@ -1142,23 +1241,19 @@ export function buildRearDropoutBrakeNode(mats) {
   const plateShape = new THREE.Shape();
   plateShape.moveTo(axX + 0.032, axY - 0.022);
   plateShape.lineTo(axX + 0.005, axY - 0.022);
-  // Open 10mm wide x 14mm deep M14 axle slot at bottom
   plateShape.lineTo(axX + 0.005, axY + 0.007);
   plateShape.lineTo(axX - 0.005, axY + 0.007);
   plateShape.lineTo(axX - 0.005, axY - 0.022);
   plateShape.lineTo(axX - 0.028, axY - 0.022);
   plateShape.lineTo(axX - 0.034, axY + 0.035);
-  // Rear IS Ear #1
   plateShape.lineTo(axX - 0.022, axY + 0.082);
   plateShape.lineTo(axX - 0.006, axY + 0.084);
   plateShape.lineTo(axX + 0.002, axY + 0.056);
-  // Front IS Ear #2 (51mm spacing from Ear #1)
   plateShape.lineTo(axX + 0.024, axY + 0.066);
   plateShape.lineTo(axX + 0.038, axY + 0.062);
   plateShape.lineTo(axX + 0.032, axY + 0.020);
   plateShape.closePath();
 
-  // 6mm mounting bolt holes in IS ears
   const earHole1 = new THREE.Path();
   earHole1.absarc(axX - 0.014, axY + 0.074, 0.0032, 0, Math.PI * 2, true);
   plateShape.holes.push(earHole1);
@@ -1179,7 +1274,6 @@ export function buildRearDropoutBrakeNode(mats) {
   leftArmorPlate.castShadow = true;
   dropoutGroup.add(leftArmorPlate);
 
-  // Right-side 6mm steel torque plate (at z = -0.076)
   const rightPlateGeom = plateGeom.clone();
   rightPlateGeom.translate(0, 0, -0.146);
   const rightArmorPlate = new THREE.Mesh(rightPlateGeom, mats.MAT_FRAME_RAL9005);
@@ -1199,3 +1293,4 @@ export function buildRearDropoutBrakeNode(mats) {
 
   return dropoutGroup;
 }
+

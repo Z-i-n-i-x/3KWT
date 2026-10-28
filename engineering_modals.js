@@ -212,5 +212,125 @@ export const ENGINEERING_MODALS = {
         </tr>
       </table>
     `
+  },
+
+  battery: {
+    title: 'СХЕМА СБОРКИ И РАСПАЙКИ АКБ 20S7P (140× 21700 EVE 50E) + BISIDA BMS 120A',
+    html: `
+      <p><strong>Полная топология соединений «Змейкой» (Serpentine 20S7P):</strong> 140 ячеек <code>EVE INR21700-50E</code> уложены в 8 гексагональных рядов вдоль нижней трубы (ряды 1–4 по <strong>21 банке = 3 группы 7P</strong>, ряды 5–8 по <strong>14 банок = 2 группы 7P</strong>). Нечетные переходы (<code>1S→2S</code>, <code>3S→4S</code>, ..., <code>19S→20S</code>) выполняются на <strong>Правой стороне (-Z)</strong>, четные (<code>2S→3S</code>, <code>4S→5S</code>, ..., <code>18S→19S</code>) — на <strong>Левой стороне (+Z)</strong>.</p>
+
+      <div class="svg-blueprint-box">
+        <svg width="760" height="340" viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg">
+          <rect width="760" height="340" fill="#07080a"/>
+          <!-- BMS Top Block -->
+          <rect x="190" y="12" width="290" height="38" fill="#141820" stroke="#FF5500" stroke-width="2"/>
+          <text x="335" y="28" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">BISIDA BMS 20S 120A (ПОД ВЕРХНЕЙ ТРУБОЙ)</text>
+          <text x="335" y="43" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Пятаки: [B- к 1S(-)] • [C- к XT90(-)] • Разъем 21-pin JST (B0..B20)</text>
+
+          <!-- XT90-S Rear Pocket -->
+          <rect x="20" y="12" width="145" height="38" fill="#241e08" stroke="#f5b800" stroke-width="2"/>
+          <text x="92" y="28" fill="#f5b800" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">AMASS XT90-S (84V)</text>
+          <text x="92" y="43" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">[+] от 20S • [-] от BMS C-</text>
+
+          <!-- 8 Rows Serpentine Diagram -->
+          <!-- Row 8 (Top, 2 groups): 20S <- 19S -->
+          <rect x="80" y="66" width="150" height="24" fill="#3a1010" stroke="#ff3b1f" stroke-width="2"/>
+          <text x="155" y="82" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">20S (7P) [+B+ 84V на +Z]</text>
+          <rect x="250" y="66" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="82" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">19S (7P) [19S→20S на -Z]</text>
+
+          <!-- Row 7 (2 groups): 17S -> 18S -->
+          <rect x="80" y="98" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="155" y="114" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">17S (7P) [17S→18S на -Z]</text>
+          <rect x="250" y="98" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="114" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">18S (7P) [18S→19S на +Z]</text>
+
+          <!-- Row 6 (2 groups): 16S <- 15S -->
+          <rect x="80" y="130" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="155" y="146" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">16S (7P) [16S→17S на +Z]</text>
+          <rect x="250" y="130" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="146" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">15S (7P) [15S→16S на -Z]</text>
+
+          <!-- Row 5 (2 groups): 13S -> 14S -->
+          <rect x="80" y="162" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="155" y="178" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">13S (7P) [13S→14S на -Z]</text>
+          <rect x="250" y="162" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="178" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">14S (7P) [14S→15S на +Z]</text>
+
+          <!-- Row 4 (3 groups): 12S <- 11S <- 10S -->
+          <rect x="80" y="196" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="155" y="212" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">12S (7P) [12S→13S на +Z]</text>
+          <rect x="250" y="196" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="212" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">11S (7P) [11S→12S на -Z]</text>
+          <rect x="420" y="196" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="495" y="212" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">10S (7P) [10S→11S на +Z]</text>
+
+          <!-- Row 3 (3 groups): 7S -> 8S -> 9S -->
+          <rect x="80" y="228" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="155" y="244" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">7S (7P) [7S→8S на -Z]</text>
+          <rect x="250" y="228" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="244" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">8S (7P) [8S→9S на +Z]</text>
+          <rect x="420" y="228" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="495" y="244" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">9S (7P) [9S→10S на -Z]</text>
+
+          <!-- Row 2 (3 groups): 6S <- 5S <- 4S -->
+          <rect x="80" y="260" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="155" y="276" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">6S (7P) [6S→7S на +Z]</text>
+          <rect x="250" y="260" width="150" height="24" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="325" y="276" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">5S (7P) [5S→6S на -Z]</text>
+          <rect x="420" y="260" width="150" height="24" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="495" y="276" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">4S (7P) [4S→5S на +Z]</text>
+
+          <!-- Row 1 (Bottom along Downtube, 3 groups): 1S -> 2S -> 3S -->
+          <rect x="80" y="292" width="150" height="26" fill="#08243c" stroke="#00D2FF" stroke-width="2"/>
+          <text x="155" y="309" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">1S (7P) [-B- 0V на +Z]</text>
+          <rect x="250" y="292" width="150" height="26" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="325" y="309" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">2S (7P) [2S→3S на +Z]</text>
+          <rect x="420" y="292" width="150" height="26" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="495" y="309" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">3S (7P) [3S→4S на -Z]</text>
+
+          <!-- Power Cables Routing -->
+          <path d="M 80 305 L 42 305 L 42 56 L 210 56 L 210 50" fill="none" stroke="#00D2FF" stroke-width="3.5"/>
+          <text x="32" y="185" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" transform="rotate(-90 32 185)" text-anchor="middle">СИНИЙ 6AWG B- (ОТ 1S К BMS B-)</text>
+          <line x1="115" y1="66" x2="115" y2="50" stroke="#ff3b1f" stroke-width="3.5"/>
+          <line x1="190" y1="30" x2="165" y2="30" stroke="#ffffff" stroke-width="3"/>
+
+          <!-- Legend Box -->
+          <rect x="585" y="66" width="160" height="252" fill="#0e1116" stroke="#2c3340" stroke-width="1"/>
+          <text x="665" y="88" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПРАВИЛА СВАРКИ</text>
+          <text x="595" y="112" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5">● Зеленые блоки:</text>
+          <text x="595" y="126" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Переход на ЛЕВОЙ (+Z)</text>
+          <text x="595" y="150" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5">● Синие блоки:</text>
+          <text x="595" y="164" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Переход на ПРАВОЙ (-Z)</text>
+          <text x="595" y="190" fill="#f5b800" font-family="JetBrains Mono" font-size="9.5">● Никель + Медь:</text>
+          <text x="595" y="204" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Лента 0.15×9 мм +</text>
+          <text x="595" y="218" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">медная шина 2.5 мм²</text>
+          <text x="595" y="244" fill="#ff3b1f" font-family="JetBrains Mono" font-size="9.5">● Балансировка:</text>
+          <text x="595" y="258" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">B0 (черный) -> 1S(-)</text>
+          <text x="595" y="272" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">B1..B19 -> плюсы 1S..19S</text>
+          <text x="595" y="286" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">B20 -> плюс 20S (84V)</text>
+        </svg>
+      </div>
+
+      <table class="spec-table">
+        <tr>
+          <th>Узел коммутации АКБ</th>
+          <th>Как соединять (Пошаговая инструкция)</th>
+        </tr>
+        <tr>
+          <td>1. Параллели 7P (внутри секций 1S..20S)</td>
+          <td>В каждой группе <strong>7 банок</strong> стоят одинаковой полярностью и сварены с обоих торцов (<code>+Z</code> и <code>-Z</code>) чистой никелевой лентой <strong>0.15 × 9 мм</strong> (по 4 точки сварки на контакт) с напаянной центральной медной жилой <strong>2.5 мм²</strong>.</td>
+        </tr>
+        <tr>
+          <td>2. Последовательная «Змейка» (1S → 20S)</td>
+          <td>Группы чередуются по полярности: <code>1S(-)</code> на левой стороне -> на правой стороне <code>1S(+)</code> переходит широкой медно-никелевой шиной в <code>2S(-)</code> -> на левой стороне <code>2S(+)</code> переходит в <code>3S(-)</code> -> на правой стороне <code>3S(+)</code> поднимается на 2-й ряд в <code>4S(-)</code> и т.д. до <code>20S(+)</code>.</td>
+        </tr>
+        <tr>
+          <td>3. Силовые выводы (B-, C-, B+) и BMS</td>
+          <td>От минуса <code>1S</code> (внизу у каретки) синий кабель <strong>6AWG</strong> идет вверх к пятаку <code>B-</code> платы <strong>Bisida BMS 120A</strong>. С пятака <code>C-</code> BMS черный кабель <strong>6AWG</strong> идет на минус разъема <strong>Amass XT90-S</strong>, а красный кабель <strong>6AWG (B+ 84V)</strong> идет с <code>20S(+)</code> (8-й ряд у подседела) прямо на плюс <strong>XT90-S</strong>.</td>
+        </tr>
+      </table>
+    `
   }
 };
+
