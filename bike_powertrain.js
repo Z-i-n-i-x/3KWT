@@ -38,87 +38,107 @@ function createRoundedPolygonShape(pts, radius = 0.018) {
 
 /**
  * Compute exact 2D coordinates for all 140 21700 cells (EVE INR21700-50E)
- * arranged in a true 60-degree hexagonal honeycomb matrix along the Downtube & Seat Tube:
- * - Pitch between cell centers in a row: dU = 0.0227m (22.7mm)
- * - Row-to-row pitch: dV = 0.01966m (19.66mm)
- * - Each row r steps by +0.5 * dU along uAxis so the rear edge parallels the Seat Tube (34.8mm clearance)
- * - Rows 1..4 (bottom to mid): 21 cells per row (3 parallel groups 7P per row = 84 cells)
- * - Rows 5..8 (upper triangle): 14 cells per row (2 parallel groups 7P per row = 56 cells)
- * - TOTAL = 84 + 56 = 140 cells, grouped into 20 contiguous serpentine series sections (1S..20S of 7P)
+ * forming a TRUE GEOMETRIC TRIANGLE inside the frame triangle (T_A, T_B, T_C):
+ * - 12 triangular rows parallel to the Downtube:
+ *   rowCounts = [20, 19, 17, 16, 14, 12, 11, 10, 9, 6, 4, 2] -> TOTAL = 140 cells!
+ * - Partitioned into 4 horizontal/diagonal zones with exact multiples of 7 cells:
+ *   * Zone 1 (Rows 0, 1, 2): 20 + 19 + 17 = 56 cells -> 8 compact 7P clusters (1S..8S, left -> right)
+ *   * Zone 2 (Rows 3, 4, 5): 16 + 14 + 12 = 42 cells -> 6 compact 7P clusters (9S..14S, right -> left)
+ *   * Zone 3 (Rows 6, 7):    11 + 10      = 21 cells -> 3 compact 7P clusters (15S..17S, left -> right)
+ *   * Zone 4 (Rows 8..11):   9 + 6 + 4 + 2 = 21 cells -> 3 compact 7P clusters (18S..20S, right -> apex)
+ * - All 3 sides of the 140-cell array strictly parallel the Downtube, Seat Tube, and Toptube!
  */
 export function generate140CellsLayout() {
-  const pDown0 = new THREE.Vector2(0.015, 0.015);
-  const pDown1 = new THREE.Vector2(0.415, 0.465);
-  const uAxis = pDown1.clone().sub(pDown0).normalize(); // along downtube (~48.37 deg)
-  const vAxis = new THREE.Vector2(-uAxis.y, uAxis.x);   // inward normal (~138.37 deg)
+  // Three vertices of the 140-cell triangle (inset inside the EVA cocoon and below the upper Toptube BMS channel)
+  const T_A = new THREE.Vector2(0.015, 0.056);  // Bottom vertex near BB
+  const T_B = new THREE.Vector2(0.365, 0.454);  // Front-right vertex near Head Tube
+  const T_C = new THREE.Vector2(-0.095, 0.354); // Top-rear apex near Seat Tube / Toptube junction
 
-  const dU = 0.0227;   // 22.7mm cell pitch
-  const dV = 0.01966;  // 19.66mm hexagonal row pitch
+  const uAxis = T_B.clone().sub(T_A).normalize();
+  const vAxis = new THREE.Vector2(-uAxis.y, uAxis.x);
 
-  // Base origin inside the 15mm EVA foam cocoon above BB & along Seat Tube
-  const origin = new THREE.Vector2(0.012, 0.068);
+  const rowCounts = [20, 19, 17, 16, 14, 12, 11, 10, 9, 6, 4, 2]; // Sum = 140 cells
+  const sVals = [0.000, 0.082, 0.164, 0.246, 0.328, 0.410, 0.492, 0.572, 0.648, 0.745, 0.840, 0.935];
 
-  const rowCounts = [21, 21, 21, 21, 14, 14, 14, 14]; // Total = 140 cells
+  const zones = [
+    [0, 1, 2],      // Zone 0: 56 cells -> 8 sections (1S..8S)
+    [3, 4, 5],      // Zone 1: 42 cells -> 6 sections (9S..14S)
+    [6, 7],         // Zone 2: 21 cells -> 3 sections (15S..17S)
+    [8, 9, 10, 11]  // Zone 3: 21 cells -> 3 sections (18S..20S)
+  ];
+
+  // 1. Generate raw cell positions in the 12 triangular rows
+  const rows = [];
+  for (let r = 0; r < rowCounts.length; r++) {
+    const cnt = rowCounts[r];
+    const s = sVals[r];
+    const lx = T_A.x + s * (T_C.x - T_A.x);
+    const ly = T_A.y + s * (T_C.y - T_A.y);
+    const rx = T_B.x + s * (T_C.x - T_B.x);
+    const ry = T_B.y + s * (T_C.y - T_B.y);
+
+    const rowCells = [];
+    for (let c = 0; c < cnt; c++) {
+      const t = cnt > 1 ? c / (cnt - 1) : 0.5;
+      const tNorm = (c + 0.5) / cnt;
+      rowCells.push({
+        row: r + 1,
+        col: c + 1,
+        t,
+        tNorm,
+        x: lx + t * (rx - lx),
+        y: ly + t * (ry - ly)
+      });
+    }
+    rows.push(rowCells);
+  }
+
+  // 2. Partition each zone into compact, non-overlapping 7P honeycomb clusters (1S..20S)
   const cells = [];
-  const groupMeta = []; // Metadata for each of the 20 series sections (1S..20S)
+  const groupMeta = [];
   let seriesCounter = 0;
 
-  for (let r = 0; r < rowCounts.length; r++) {
-    const countInRow = rowCounts[r];
-    const groupsInRow = countInRow / 7; // 3 groups for rows 0..3, 2 groups for rows 4..7
+  for (let zIdx = 0; zIdx < zones.length; zIdx++) {
+    const zRows = zones[zIdx];
+    const zoneCells = [];
+    zRows.forEach((rIdx) => zoneCells.push(...rows[rIdx]));
 
-    // True 60-deg hexagonal row step along Seat Tube
-    const rowStartU = r * (0.5 * dU);
+    // Serpentine zone direction: even zones go left->right (rear->front), odd zones go right->left (front->rear)
+    const reverseDir = zIdx % 2 === 1;
+    zoneCells.sort((a, b) => {
+      const dt = Math.round((a.tNorm - b.tNorm) * 10000);
+      if (dt !== 0) return reverseDir ? -dt : dt;
+      return reverseDir ? b.row - a.row : a.row - b.row;
+    });
 
-    // Serpentine row direction: even rows (r=0,2,4,6) go rear->front (g=0..G-1),
-    // odd rows (r=1,3,5,7) go front->rear (g=G-1..0) so every s -> s+1 is physically adjacent!
-    const groupOrder = [];
-    if (r % 2 === 0) {
-      for (let g = 0; g < groupsInRow; g++) groupOrder.push(g);
-    } else {
-      for (let g = groupsInRow - 1; g >= 0; g--) groupOrder.push(g);
-    }
-
-    for (let idxInOrder = 0; idxInOrder < groupOrder.length; idxInOrder++) {
-      const g = groupOrder[idxInOrder];
+    for (let k = 0; k < zoneCells.length; k += 7) {
       seriesCounter++;
       const currentSeriesId = seriesCounter; // 1..20
-      // Alternating polarity on +Z (Left side):
-      // Odd series (1S, 3S, ..., 19S) -> Negative (-1) on +Z (Left), Positive (+1) on -Z (Right)
-      // Even series (2S, 4S, ..., 20S) -> Positive (+1) on +Z (Left), Negative (-1) on -Z (Right)
       const polarityOnLeft = currentSeriesId % 2 === 1 ? -1 : 1;
+      const rawCluster = zoneCells.slice(k, k + 7);
 
-      const groupCells = [];
-      for (let c = 0; c < 7; c++) {
-        const colIdx = g * 7 + c;
-        const uDist = rowStartU + colIdx * dU;
-        const vDist = r * dV;
-
-        const pos2D = origin.clone()
-          .addScaledVector(uAxis, uDist)
-          .addScaledVector(vAxis, vDist);
-
+      const groupCells = rawCluster.map((rc, pIdx) => {
         const cellObj = {
           cellGlobalIndex: cells.length + 1,
-          row: r + 1,
-          blockCol: g,
-          col: colIdx + 1,
-          seriesId: currentSeriesId, // 1S..20S
-          parallelIndex: c + 1,      // 1P..7P
-          polarity: polarityOnLeft,  // +1 means Pos on +Z (Left), -1 means Neg on +Z (Left)
-          x: pos2D.x,
-          y: pos2D.y
+          row: rc.row,
+          col: rc.col,
+          zone: zIdx + 1,
+          seriesId: currentSeriesId,
+          parallelIndex: pIdx + 1,
+          polarity: polarityOnLeft,
+          x: rc.x,
+          y: rc.y
         };
         cells.push(cellObj);
-        groupCells.push(cellObj);
-      }
+        return cellObj;
+      });
 
       const cx = groupCells.reduce((acc, item) => acc + item.x, 0) / 7;
       const cy = groupCells.reduce((acc, item) => acc + item.y, 0) / 7;
       groupMeta.push({
         seriesId: currentSeriesId,
-        row: r,
-        blockCol: g,
+        zone: zIdx + 1,
+        row: groupCells[0].row - 1,
         polarityOnLeft,
         cells: groupCells,
         center: new THREE.Vector2(cx, cy)
@@ -126,11 +146,17 @@ export function generate140CellsLayout() {
     }
   }
 
-  return { cells, groupMeta, uAxis, vAxis };
+  // Compute FR4 dielectric separator line segments between the 4 zones
+  const zoneBarriers = [0.205, 0.451, 0.610].map((sBar) => ({
+    pLeft: new THREE.Vector2(T_A.x + sBar * (T_C.x - T_A.x), T_A.y + sBar * (T_C.y - T_A.y)),
+    pRight: new THREE.Vector2(T_B.x + sBar * (T_C.x - T_B.x), T_B.y + sBar * (T_C.y - T_B.y))
+  }));
+
+  return { cells, groupMeta, uAxis, vAxis, zoneBarriers, triangleVertices: { T_A, T_B, T_C } };
 }
 
 /**
- * 1. NODE 5: TACTICAL BAG CORDURA 1000D + INTERNAL X-RAY 20S7P BATTERY (140x EVE 50E)
+ * 1. NODE 5: TACTICAL BAG CORDURA 1000D + INTERNAL X-RAY 20S7P TRIANGLE BATTERY (140x EVE 50E)
  */
 export function buildBatterySystemNode(mats) {
   const batteryRoot = new THREE.Group();
@@ -151,10 +177,10 @@ export function buildBatterySystemNode(mats) {
   corduraCenterGroup.name = 'CORDURA_BAG_CENTER';
 
   const innerCutPts = [
-    new THREE.Vector2(0.018, 0.056),
-    new THREE.Vector2(0.372, 0.456),
-    new THREE.Vector2(0.354, 0.508),
-    new THREE.Vector2(-0.104, 0.384)
+    new THREE.Vector2(0.014, 0.048),
+    new THREE.Vector2(0.376, 0.458),
+    new THREE.Vector2(0.356, 0.510),
+    new THREE.Vector2(-0.106, 0.386)
   ];
   const innerCutPath = createRoundedPolygonShape(innerCutPts, 0.012);
 
@@ -187,7 +213,6 @@ export function buildBatterySystemNode(mats) {
 
   // 45mm Wide Matte Black Velcro Straps in exact Reference Photo #1 positions:
   const strapWidth = 0.042;
-  // Toptube straps (2 straps between front phone mount and moto-saddle nose, 1:1 as on photo #1)
   [0.44, 0.66].forEach((t) => {
     const p1 = new THREE.Vector3(-0.135, 0.415, 0).lerp(new THREE.Vector3(0.395, 0.545, 0), t);
     const dir = new THREE.Vector3(0.530, 0.130, 0).normalize();
@@ -196,7 +221,6 @@ export function buildBatterySystemNode(mats) {
     corduraCenterGroup.add(strap);
   });
 
-  // Seat tube straps (2 straps: upper-mid and lower-mid on Seat Tube, 1:1 as on photo #1)
   [0.24, 0.68].forEach((t) => {
     const p1 = new THREE.Vector3(0, 0, 0).lerp(new THREE.Vector3(-0.145, 0.435, 0), t);
     const dir = new THREE.Vector3(-0.145, 0.435, 0).normalize();
@@ -225,7 +249,6 @@ export function buildBatterySystemNode(mats) {
     coverMesh.receiveShadow = true;
     group.add(coverMesh);
 
-    // 3D Perimeter Cordura Piping / Welt Seam (окантовочный кедер Ø5.5 мм around the entire triangle border)
     const zPiping = sideSign * 0.0415;
     for (let i = 0; i < bagPts.length; i++) {
       const pA = bagPts[i];
@@ -240,19 +263,16 @@ export function buildBatterySystemNode(mats) {
       );
       group.add(pipeSeg);
 
-      // Rounded piping corner joint
       const cornerSphere = new THREE.Mesh(new THREE.SphereGeometry(0.0034, 12, 12), mats.MAT_VELCRO_STRAP);
       cornerSphere.position.set(pA.x, pA.y, zPiping);
       group.add(cornerSphere);
     }
 
-    // Waterproof Reverse-Coil Zipper Track parallel to Toptube (28mm below upper edge, 1:1 as on Photo #1 & #2)
     const zZip = sideSign * 0.0432;
     const zipRear = new THREE.Vector3(-0.102, 0.376, zZip);
     const zipMid = new THREE.Vector3(0.145, 0.440, zZip);
     const zipFront = new THREE.Vector3(0.352, 0.490, zZip);
 
-    // Upper & lower waterproof zipper tape lips
     [-0.0022, 0.0022].forEach((dy) => {
       const lip1 = createCylinderBetween(
         new THREE.Vector3(zipRear.x, zipRear.y + dy, zZip),
@@ -273,7 +293,6 @@ export function buildBatterySystemNode(mats) {
       group.add(lip1, lip2);
     });
 
-    // Metal Zipper Slider + Tactical Cord Puller at front-top corner (1:1 as on Reference Photo #1)
     const sliderBody = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.008, 0.005), mats.MAT_ANODIZED_BLACK);
     sliderBody.position.set(0.335, 0.485, zZip + sideSign * 0.002);
     sliderBody.rotation.z = 0.25;
@@ -308,11 +327,38 @@ export function buildBatterySystemNode(mats) {
   pvcSleeveMesh.name = 'PVC_HEATSHRINK_SLEEVE';
   corduraCenterGroup.add(pvcSleeveMesh);
 
-  // 1.4 140 Cylindrical Cells Li-ion 21700 EVE INR21700-50E (OD 21.2mm -> R=0.0106m, Length 70.5mm along Z)
-  // Grouped into 20 Contiguous Serpentine Series Groups (1S..20S of 7 parallel cells 7P each)
-  const { cells, groupMeta, uAxis } = generate140CellsLayout();
+  // 1.4 140 Cylindrical Cells Li-ion 21700 EVE INR21700-50E arranged in a TRUE 12-ROW TRIANGLE
+  const { cells, groupMeta, uAxis, zoneBarriers } = generate140CellsLayout();
   const cellsMasterGroup = new THREE.Group();
   cellsMasterGroup.name = 'CELLS_20S7P_140_ARRAY';
+
+  // Green Fishpaper (barley paper) dielectric insulator material + Yellow FR4 fiberglass material
+  const matFishpaper = new THREE.MeshPhysicalMaterial({
+    color: 0x165b3a,
+    roughness: 0.85,
+    metalness: 0.02,
+    side: THREE.DoubleSide
+  });
+  const matFR4Barrier = new THREE.MeshPhysicalMaterial({
+    color: 0xd99b26,
+    roughness: 0.55,
+    metalness: 0.05,
+    transparent: true,
+    opacity: 0.85
+  });
+
+  // Add 3D Yellow FR4 Fiberglass Dielectric Barrier Strips between the 4 horizontal zones of the triangle
+  zoneBarriers.forEach((bar) => {
+    const p1 = new THREE.Vector3(bar.pLeft.x, bar.pLeft.y, 0);
+    const p2 = new THREE.Vector3(bar.pRight.x, bar.pRight.y, 0);
+    const barLen = p1.distanceTo(p2) + 0.012;
+    const barMid = p1.clone().add(p2).multiplyScalar(0.5);
+    const barAng = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    const fr4Strip = new THREE.Mesh(new THREE.BoxGeometry(barLen, 0.0016, 0.0725), matFR4Barrier);
+    fr4Strip.position.copy(barMid);
+    fr4Strip.rotation.z = barAng;
+    cellsMasterGroup.add(fr4Strip);
+  });
 
   const seriesGroups = [];
   for (let s = 1; s <= 20; s++) {
@@ -323,6 +369,7 @@ export function buildBatterySystemNode(mats) {
       seriesId: s,
       code: `${s}S7P`,
       row: meta.row + 1,
+      zone: meta.zone,
       polarityOnLeft: meta.polarityOnLeft,
       voltage: 4.20,
       cumVoltage: (s * 4.20).toFixed(1),
@@ -335,19 +382,25 @@ export function buildBatterySystemNode(mats) {
     cellsMasterGroup.add(sGroup);
   }
 
-  // Shared geometries for the 140 cells
-  const cellBodyGeom = new THREE.CylinderGeometry(0.0106, 0.0106, 0.0705, 24);
-  cellBodyGeom.rotateX(Math.PI / 2); // Align along Z axis
+  // High-detail geometries for the 140 21700 cells
+  const cellRadius = 0.0096;
+  const cellBodyGeom = new THREE.CylinderGeometry(cellRadius, cellRadius, 0.0702, 24);
+  cellBodyGeom.rotateX(Math.PI / 2);
 
-  const insRingGeom = new THREE.RingGeometry(0.0042, 0.0103, 20);
-  const posTermGeom = new THREE.CylinderGeometry(0.0044, 0.0044, 0.0014, 16);
+  // Green Fishpaper positive insulator ring + white nylon gasket + raised 3-lobed CID positive button + negative flat
+  const fishpaperRingGeom = new THREE.RingGeometry(0.0052, cellRadius * 0.98, 24);
+  const whiteGasketGeom = new THREE.RingGeometry(0.0038, 0.0053, 20);
+  const posTermGeom = new THREE.CylinderGeometry(0.0040, 0.0042, 0.0014, 18);
   posTermGeom.rotateX(Math.PI / 2);
-  const negTermGeom = new THREE.CylinderGeometry(0.0082, 0.0082, 0.0006, 16);
+  const negTermGeom = new THREE.CylinderGeometry(0.0076, 0.0076, 0.0006, 18);
   negTermGeom.rotateX(Math.PI / 2);
 
-  // Spot weld dimple geometry
-  const weldDotGeom = new THREE.CylinderGeometry(0.0009, 0.0009, 0.0008, 8);
+  // Stamped Circular Nickel Contact Pad per cell pole (R = 7.4mm) + 6 Spot-Weld Dimples per pole
+  const niPadGeom = new THREE.CylinderGeometry(0.0074, 0.0074, 0.0005, 18);
+  niPadGeom.rotateX(Math.PI / 2);
+  const weldDotGeom = new THREE.CylinderGeometry(0.00075, 0.00075, 0.0008, 8);
   weldDotGeom.rotateX(Math.PI / 2);
+  const solderDomeGeom = new THREE.SphereGeometry(0.0019, 10, 10);
 
   // Left & Right 3D-Printed PETG Honeycomb Holders (Explodable along ±Z by ±0.14m)
   const holderLeftGroup = new THREE.Group();
@@ -355,7 +408,7 @@ export function buildBatterySystemNode(mats) {
   const holderRightGroup = new THREE.Group();
   holderRightGroup.name = 'EXPLODE_PETG_HOLDER_RIGHT';
 
-  const hexSocketGeom = new THREE.CylinderGeometry(0.0114, 0.0114, 0.012, 6, 1, true);
+  const hexSocketGeom = new THREE.CylinderGeometry(0.0105, 0.0105, 0.012, 6, 1, true);
   hexSocketGeom.rotateX(Math.PI / 2);
   const instancedHolderL = new THREE.InstancedMesh(hexSocketGeom, mats.MAT_PETG_HOLDER, 140);
   const instancedHolderR = new THREE.InstancedMesh(hexSocketGeom, mats.MAT_PETG_HOLDER, 140);
@@ -374,15 +427,19 @@ export function buildBatterySystemNode(mats) {
     cellMesh.userData = { seriesId: cell.seriesId, cellIndex: cell.cellGlobalIndex };
     sGroup.add(cellMesh);
 
-    // Positive end: White barley-paper insulator ring + raised steel button cap
-    // Negative end: Flat nickel-plated steel circular bottom
-    const posZ = cell.polarity === 1 ? 0.0354 : -0.0354;
+    const posZ = cell.polarity === 1 ? 0.0352 : -0.0352;
     const negZ = -posZ;
 
-    const insRing = new THREE.Mesh(insRingGeom, mats.MAT_WHITE_INSULATOR);
-    insRing.position.set(cell.x, cell.y, posZ);
-    insRing.userData = { seriesId: cell.seriesId };
-    sGroup.add(insRing);
+    // Green Fishpaper insulator ring + White nylon crimp gasket + Raised positive button cap
+    const fpRing = new THREE.Mesh(fishpaperRingGeom, matFishpaper);
+    fpRing.position.set(cell.x, cell.y, posZ);
+    fpRing.userData = { seriesId: cell.seriesId };
+    sGroup.add(fpRing);
+
+    const wGasket = new THREE.Mesh(whiteGasketGeom, mats.MAT_WHITE_INSULATOR);
+    wGasket.position.set(cell.x, cell.y, posZ + Math.sign(posZ) * 0.0001);
+    wGasket.userData = { seriesId: cell.seriesId };
+    sGroup.add(wGasket);
 
     const posBtn = new THREE.Mesh(posTermGeom, mats.MAT_STEEL_ROTOR);
     posBtn.position.set(cell.x, cell.y, posZ);
@@ -394,28 +451,39 @@ export function buildBatterySystemNode(mats) {
     negFlat.userData = { seriesId: cell.seriesId };
     sGroup.add(negFlat);
 
-    // 4 Spot-Weld Dimples on both +Z and -Z terminals of every cell
-    [-0.0365, 0.0365].forEach((wz) => {
-      [
-        [-0.0022, -0.0018],
-        [0.0022, -0.0018],
-        [-0.0022, 0.0018],
-        [0.0022, 0.0018]
-      ].forEach(([dx, dy]) => {
+    // Stamped Nickel Circular Pad + 6 Spot-Weld Dimples + Tin-Lead Solder Dome on both +Z and -Z
+    [-0.0359, 0.0359].forEach((zSide) => {
+      const padMesh = new THREE.Mesh(niPadGeom, sGroup.userData.niMat);
+      padMesh.position.set(cell.x, cell.y, zSide);
+      padMesh.userData = { seriesId: cell.seriesId };
+      sGroup.add(padMesh);
+
+      for (let w = 0; w < 6; w++) {
+        const wAng = (w / 6) * Math.PI * 2;
         const dot = new THREE.Mesh(weldDotGeom, sGroup.userData.busMat);
-        dot.position.set(cell.x + dx, cell.y + dy, wz);
+        dot.position.set(
+          cell.x + Math.cos(wAng) * 0.0034,
+          cell.y + Math.sin(wAng) * 0.0034,
+          zSide + Math.sign(zSide) * 0.0003
+        );
         dot.userData = { seriesId: cell.seriesId };
         sGroup.add(dot);
-      });
+      }
+
+      const solderDome = new THREE.Mesh(solderDomeGeom, mats.MAT_STEEL_ROTOR);
+      solderDome.scale.set(1.0, 1.0, 0.55);
+      solderDome.position.set(cell.x, cell.y, zSide + Math.sign(zSide) * 0.0012);
+      solderDome.userData = { seriesId: cell.seriesId };
+      sGroup.add(solderDome);
     });
 
     // Populate Left & Right PETG Honeycomb Hex Sockets
-    dummy.position.set(cell.x, cell.y, 0.0295);
+    dummy.position.set(cell.x, cell.y, 0.0292);
     dummy.rotation.set(0, 0, Math.atan2(uAxis.y, uAxis.x));
     dummy.updateMatrix();
     instancedHolderL.setMatrixAt(idx, dummy.matrix);
 
-    dummy.position.set(cell.x, cell.y, -0.0295);
+    dummy.position.set(cell.x, cell.y, -0.0292);
     dummy.updateMatrix();
     instancedHolderR.setMatrixAt(idx, dummy.matrix);
   });
@@ -425,7 +493,6 @@ export function buildBatterySystemNode(mats) {
   holderLeftGroup.add(instancedHolderL);
   holderRightGroup.add(instancedHolderR);
 
-  // Outer PETG frame rails around the 140 hex sockets
   const holderPerimGeomL = new THREE.ExtrudeGeometry(bagRimShape, { depth: 0.010, bevelEnabled: false });
   holderPerimGeomL.scale(0.92, 0.92, 1);
   holderPerimGeomL.translate(0.010, 0.022, 0.024);
@@ -437,123 +504,130 @@ export function buildBatterySystemNode(mats) {
 
   batteryRoot.add(holderLeftGroup, holderRightGroup);
 
-  // 1.5 PARALLEL 7P NICKEL STRIPS + SOLDERED COPPER BUSBARS + SERPENTINE SERIES BRIDGES (1S -> 2S -> ... -> 20S)
-  const labelPlaneGeom = new THREE.PlaneGeometry(0.032, 0.0085);
+  // 1.5 STAMPED 7P HONEYCOMB NICKEL PLATES + SOLDERED COPPER BUSBAR SPINES + DUAL SERIES BRIDGES (1S -> 20S)
+  const labelPlaneGeom = new THREE.PlaneGeometry(0.028, 0.0076);
 
   for (let s = 1; s <= 20; s++) {
     const sGroup = seriesGroups[s - 1];
     const meta = groupMeta[s - 1];
     const groupCells = meta.cells;
-    const firstCell = groupCells[0];
-    const lastCell = groupCells[groupCells.length - 1];
-    const angle = Math.atan2(lastCell.y - firstCell.y, lastCell.x - firstCell.x);
 
-    // Parallel 7P Nickel Strip (0.15 x 9mm) + Tinned Copper Busbar (2.5 mm²) on both +Z and -Z
-    [-0.036, 0.036].forEach((zEnd) => {
-      const pStart = new THREE.Vector3(firstCell.x, firstCell.y, zEnd);
-      const pEnd = new THREE.Vector3(lastCell.x, lastCell.y, zEnd);
-      const stripLen = pStart.distanceTo(pEnd) + 0.017;
-      const stripCenter = pStart.clone().add(pEnd).multiplyScalar(0.5);
+    // 1) Within each 7-cell cluster s, connect all neighbor cell pairs (dist < 34mm) with stamped 8.5mm pure nickel webs
+    //    so all 7 cells visually fuse into a solid, unmistakable 7P honeycomb island!
+    for (let i = 0; i < groupCells.length; i++) {
+      for (let j = i + 1; j < groupCells.length; j++) {
+        const cA = groupCells[i];
+        const cB = groupCells[j];
+        const dist = Math.hypot(cB.x - cA.x, cB.y - cA.y);
+        if (dist < 0.0355) {
+          const webAngle = Math.atan2(cB.y - cA.y, cB.x - cA.x);
+          const midX = (cA.x + cB.x) * 0.5;
+          const midY = (cA.y + cB.y) * 0.5;
 
-      // Pure Nickel Strip (0.15 x 9mm)
-      const niGeom = new THREE.BoxGeometry(stripLen, 0.009, 0.0006);
-      const niStrip = new THREE.Mesh(niGeom, sGroup.userData.niMat);
-      niStrip.position.copy(stripCenter);
-      niStrip.rotation.z = angle;
-      niStrip.userData = { seriesId: s };
-      sGroup.add(niStrip);
+          [-0.0359, 0.0359].forEach((zSide) => {
+            const niWeb = new THREE.Mesh(
+              new THREE.BoxGeometry(dist, 0.0086, 0.0005),
+              sGroup.userData.niMat
+            );
+            niWeb.position.set(midX, midY, zSide);
+            niWeb.rotation.z = webAngle;
+            niWeb.userData = { seriesId: s };
+            sGroup.add(niWeb);
+          });
+        }
+      }
+    }
 
-      // Soldered Tinned Copper Spine (2.5 mm²) along the 7P group
-      const cuGeom = new THREE.BoxGeometry(stripLen * 0.92, 0.0036, 0.0014);
-      const cuBus = new THREE.Mesh(cuGeom, sGroup.userData.busMat);
-      cuBus.position.set(stripCenter.x, stripCenter.y, zEnd + Math.sign(zEnd) * 0.0007);
-      cuBus.rotation.z = angle;
-      cuBus.userData = { seriesId: s };
-      sGroup.add(cuBus);
+    // 2) Soldered Heavy Copper Busbar Spine (Cu 3.0 x 1.5mm) snaking through all 7 cells of cluster s
+    for (let i = 0; i < groupCells.length - 1; i++) {
+      const cA = groupCells[i];
+      const cB = groupCells[i + 1];
+      const segLen = Math.hypot(cB.x - cA.x, cB.y - cA.y);
+      const segAng = Math.atan2(cB.y - cA.y, cB.x - cA.x);
+      const midX = (cA.x + cB.x) * 0.5;
+      const midY = (cA.y + cB.y) * 0.5;
 
-      // Crisp 3D Section Badge ("1S [B-]", "2S (+)", ..., "20S [B+]") on each group
-      const sidePolarity = zEnd > 0 ? meta.polarityOnLeft : -meta.polarityOnLeft;
+      [-0.0368, 0.0368].forEach((zCu) => {
+        const cuSeg = new THREE.Mesh(
+          new THREE.BoxGeometry(segLen + 0.003, 0.0032, 0.0014),
+          sGroup.userData.busMat
+        );
+        cuSeg.position.set(midX, midY, zCu);
+        cuSeg.rotation.z = segAng;
+        cuSeg.userData = { seriesId: s };
+        sGroup.add(cuSeg);
+      });
+    }
+
+    // 3) Crisp 3D Section Badge ("1S [B- 0V]", "2S (+)", ..., "20S [B+ 84V]") at the centroid of each 7P cluster
+    const badgeAngle = Math.atan2(uAxis.y, uAxis.x);
+    [-0.0382, 0.0382].forEach((zBadge) => {
+      const sidePolarity = zBadge > 0 ? meta.polarityOnLeft : -meta.polarityOnLeft;
       const badgeMat = createBatterySeriesLabelMaterial(s, sidePolarity);
       const badgeMesh = new THREE.Mesh(labelPlaneGeom, badgeMat);
-      badgeMesh.position.set(stripCenter.x, stripCenter.y, zEnd + Math.sign(zEnd) * 0.0018);
-      badgeMesh.rotation.z = angle;
-      if (zEnd < 0) badgeMesh.rotation.y = Math.PI;
+      badgeMesh.position.set(meta.center.x, meta.center.y, zBadge);
+      badgeMesh.rotation.z = badgeAngle;
+      if (zBadge < 0) badgeMesh.rotation.y = Math.PI;
       badgeMesh.userData = { seriesId: s };
       sGroup.add(badgeMesh);
     });
 
-    // SERPENTINE SERIES CONNECTIONS: Connect Section s -> Section (s + 1)
-    // Odd s (1S->2S, 3S->4S, ..., 19S->20S) connects on -Z (Right side)
-    // Even s (2S->3S, 4S->5S, ..., 18S->19S) connects on +Z (Left side)
+    // 4) SERPENTINE SERIES INTERCONNECT BRIDGES: Connect Cluster s -> Cluster (s + 1)
+    //    Odd s (1S->2S, 3S->4S, ..., 19S->20S) connects on -Z (Right side)
+    //    Even s (2S->3S, 4S->5S, ..., 18S->19S) connects on +Z (Left side)
     if (s < 20) {
       const nextMeta = groupMeta[s];
-      const zBridge = s % 2 === 1 ? -0.0363 : 0.0363;
+      const zBridge = s % 2 === 1 ? -0.0365 : 0.0365;
 
-      if (meta.row === nextMeta.row) {
-        // Horizontal in-row series transition (e.g. 1S->2S, 2S->3S, 4S->5S, etc.):
-        // Connect the adjacent ends of group s and group s+1 with a wide Nickel + Copper bridge!
-        let cellA = groupCells[groupCells.length - 1];
-        let cellB = nextMeta.cells[0];
-        if (cellA.x > cellB.x) {
-          cellA = groupCells[0];
-          cellB = nextMeta.cells[nextMeta.cells.length - 1];
+      // Find all cell pairs between cluster s and cluster s+1, sort by distance, and pick the 2 closest disjoint pairs!
+      const candidatePairs = [];
+      groupCells.forEach((cA, iA) => {
+        nextMeta.cells.forEach((cB, iB) => {
+          candidatePairs.push({
+            cA,
+            cB,
+            iA,
+            iB,
+            d: Math.hypot(cB.x - cA.x, cB.y - cA.y)
+          });
+        });
+      });
+      candidatePairs.sort((a, b) => a.d - b.d);
+
+      const chosenPairs = [candidatePairs[0]];
+      for (let p = 1; p < candidatePairs.length; p++) {
+        if (candidatePairs[p].iA !== chosenPairs[0].iA && candidatePairs[p].iB !== chosenPairs[0].iB) {
+          chosenPairs.push(candidatePairs[p]);
+          break;
         }
-        const pA = new THREE.Vector3(cellA.x, cellA.y, zBridge);
-        const pB = new THREE.Vector3(cellB.x, cellB.y, zBridge);
-        const bridgeCenter = pA.clone().add(pB).multiplyScalar(0.5);
-        const bridgeLen = pA.distanceTo(pB) + 0.016;
+      }
 
+      chosenPairs.forEach((pair) => {
+        const { cA, cB, d } = pair;
+        const midX = (cA.x + cB.x) * 0.5;
+        const midY = (cA.y + cB.y) * 0.5;
+        const brAngle = Math.atan2(cB.y - cA.y, cB.x - cA.x);
+
+        // Wide Stamped Series Nickel Bridge (10mm wide)
         const niBridge = new THREE.Mesh(
-          new THREE.BoxGeometry(bridgeLen, 0.012, 0.0008),
+          new THREE.BoxGeometry(d + 0.012, 0.010, 0.0008),
           sGroup.userData.niMat
         );
-        niBridge.position.copy(bridgeCenter);
-        niBridge.rotation.z = angle;
+        niBridge.position.set(midX, midY, zBridge);
+        niBridge.rotation.z = brAngle;
         niBridge.userData = { seriesId: s };
         sGroup.add(niBridge);
 
+        // Soldered Heavy Copper Series Busbar Bridge (4.2mm wide) on top of the nickel bridge
         const cuBridge = new THREE.Mesh(
-          new THREE.BoxGeometry(bridgeLen * 0.9, 0.0055, 0.0018),
+          new THREE.BoxGeometry(d + 0.008, 0.0042, 0.0018),
           sGroup.userData.busMat
         );
-        cuBridge.position.set(bridgeCenter.x, bridgeCenter.y, zBridge + Math.sign(zBridge) * 0.0009);
-        cuBridge.rotation.z = angle;
+        cuBridge.position.set(midX, midY, zBridge + Math.sign(zBridge) * 0.0010);
+        cuBridge.rotation.z = brAngle;
         cuBridge.userData = { seriesId: s };
         sGroup.add(cuBridge);
-      } else {
-        // Vertical row-to-row turnaround transition (e.g. 3S->4S, 6S->7S, 9S->10S, 12S->13S, 14S->15S, 16S->17S, 18S->19S):
-        // Connect all 7 cells of group s directly across to the 7 adjacent cells of group s+1!
-        for (let c = 0; c < 7; c++) {
-          const cA = groupCells[c];
-          const cB = nextMeta.cells[c];
-          const pA = new THREE.Vector3(cA.x, cA.y, zBridge);
-          const pB = new THREE.Vector3(cB.x, cB.y, zBridge);
-          const mid = pA.clone().add(pB).multiplyScalar(0.5);
-          const len = pA.distanceTo(pB) + 0.012;
-          const crossAngle = Math.atan2(cB.y - cA.y, cB.x - cA.x);
-
-          const niCross = new THREE.Mesh(
-            new THREE.BoxGeometry(len, 0.0075, 0.0007),
-            sGroup.userData.niMat
-          );
-          niCross.position.copy(mid);
-          niCross.rotation.z = crossAngle;
-          niCross.userData = { seriesId: s };
-          sGroup.add(niCross);
-
-          // Heavy copper cross-link on every odd parallel pair (c = 0, 2, 4, 6) for 120A current sharing
-          if (c % 2 === 0) {
-            const cuCross = new THREE.Mesh(
-              new THREE.BoxGeometry(len * 0.88, 0.0034, 0.0016),
-              sGroup.userData.busMat
-            );
-            cuCross.position.set(mid.x, mid.y, zBridge + Math.sign(zBridge) * 0.0009);
-            cuCross.rotation.z = crossAngle;
-            cuCross.userData = { seriesId: s };
-            sGroup.add(cuCross);
-          }
-        }
-      }
+      });
     }
   }
 
@@ -561,62 +635,62 @@ export function buildBatterySystemNode(mats) {
   const group1S = seriesGroups[0];
   const cell1S_0 = groupMeta[0].cells[0];
   const bMinusCollector = new THREE.Mesh(
-    new THREE.BoxGeometry(0.024, 0.014, 0.003),
+    new THREE.BoxGeometry(0.022, 0.012, 0.003),
     mats.MAT_COPPER_BUSBAR
   );
-  bMinusCollector.position.set(cell1S_0.x - 0.008, cell1S_0.y + 0.006, 0.0375);
+  bMinusCollector.position.set(cell1S_0.x - 0.006, cell1S_0.y + 0.005, 0.0375);
   bMinusCollector.rotation.z = 0.84;
   group1S.add(bMinusCollector);
 
   const group20S = seriesGroups[19];
-  const cell20S_0 = groupMeta[19].cells[0];
+  const cell20S_0 = groupMeta[19].cells[groupMeta[19].cells.length - 1];
   const bPlusCollector = new THREE.Mesh(
-    new THREE.BoxGeometry(0.024, 0.014, 0.003),
+    new THREE.BoxGeometry(0.022, 0.012, 0.003),
     mats.MAT_COPPER_BUSBAR
   );
-  bPlusCollector.position.set(cell20S_0.x - 0.008, cell20S_0.y + 0.006, 0.0375);
-  bPlusCollector.rotation.z = 0.84;
+  bPlusCollector.position.set(cell20S_0.x, cell20S_0.y + 0.008, 0.0375);
+  bPlusCollector.rotation.z = 0.25;
   group20S.add(bPlusCollector);
 
   batteryRoot.add(cellsMasterGroup);
 
-  // 1.6 Bisida BMS 20S 120A Li-ion in Finned Aluminum Heatsink in upper 48mm gap under Toptube
+  // 1.6 Bisida BMS 20S 120A Li-ion in Finned Aluminum Heatsink in upper channel under Toptube
   // + Full Power Cable Harness (B-, C-, B+ 84V) + 21 Balance Sense Leads (B0..B20) + XT90-S Anti-Spark
   const bmsGroup = new THREE.Group();
   bmsGroup.name = 'EXPLODE_BISIDA_BMS_120A';
 
   const toptubeAngle = Math.atan2(0.545 - 0.415, 0.395 - (-0.135));
-  const bmsPos = new THREE.Vector3(0.095, 0.435, 0);
+  const bmsPos = new THREE.Vector3(0.155, 0.448, 0);
   const bmsCore = new THREE.Group();
   bmsCore.position.copy(bmsPos);
   bmsCore.rotation.z = toptubeAngle;
 
-  // Finned Aluminum Heatsink Body (145 x 20 x 64 mm)
-  const bmsPlate = new THREE.Mesh(new THREE.BoxGeometry(0.145, 0.018, 0.064), mats.MAT_ANODIZED_BLACK);
+  // Finned Aluminum Heatsink Body (140 x 18 x 62 mm)
+  const bmsPlate = new THREE.Mesh(new THREE.BoxGeometry(0.140, 0.016, 0.062), mats.MAT_ANODIZED_BLACK);
   bmsCore.add(bmsPlate);
 
   for (let f = -3; f <= 3; f++) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.142, 0.005, 0.003), mats.MAT_RED_ANODIZED);
-    fin.position.set(0, 0.011, f * 0.0085);
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.0045, 0.003), mats.MAT_RED_ANODIZED);
+    fin.position.set(0, 0.010, f * 0.0082);
     bmsCore.add(fin);
   }
 
   // White 21-pin JST-XH Balance Connector Header on BMS front edge
-  const jstHeader = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.007, 0.009), mats.MAT_WHITE_INSULATOR);
-  jstHeader.position.set(0.010, -0.008, 0.033);
+  const jstHeader = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.0065, 0.0085), mats.MAT_WHITE_INSULATOR);
+  jstHeader.position.set(0.008, -0.007, 0.032);
   bmsCore.add(jstHeader);
 
   // Solder pads B- and C- on BMS left end
-  const padBMinus = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.004, 0.022), mats.MAT_COPPER_BUSBAR);
-  padBMinus.position.set(-0.064, -0.008, 0.016);
-  const padCMinus = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.004, 0.022), mats.MAT_COPPER_BUSBAR);
-  padCMinus.position.set(-0.064, -0.008, -0.016);
+  const padBMinus = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.004, 0.020), mats.MAT_COPPER_BUSBAR);
+  padBMinus.position.set(-0.062, -0.007, 0.015);
+  const padCMinus = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.004, 0.020), mats.MAT_COPPER_BUSBAR);
+  padCMinus.position.set(-0.062, -0.007, -0.015);
   bmsCore.add(padBMinus, padCMinus);
 
   bmsGroup.add(bmsCore);
 
-  // Rear pocket near Seat Tube: Amass XT90-S Anti-Spark Yellow Connector + GX16-3 Charge Port
-  const xt90Pos = new THREE.Vector3(-0.085, 0.365, 0.015);
+  // Upper-Rear pocket near Seat Tube / Toptube corner: Amass XT90-S Anti-Spark Yellow Connector
+  const xt90Pos = new THREE.Vector3(-0.048, 0.394, 0.015);
   const xt90Housing = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.022, 0.014), mats.MAT_XT90_YELLOW);
   xt90Housing.position.copy(xt90Pos);
   const xt90AntiSparkBand = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.023, 0.015), mats.MAT_ANODIZED_BLACK);
@@ -625,24 +699,24 @@ export function buildBatterySystemNode(mats) {
 
   // Heavy 6AWG Power Cables showing exact electrical connections:
   // 1) B- (Blue 6AWG): from 1S (-) Collector at bottom-rear up along Seat Tube channel to BMS B- pad
-  const pBMinusStart = new THREE.Vector3(cell1S_0.x - 0.010, cell1S_0.y + 0.006, 0.037);
-  const pBMinusMid = new THREE.Vector3(-0.055, 0.255, 0.035);
-  const pBMinusEnd = new THREE.Vector3(0.032, 0.415, 0.018);
+  const pBMinusStart = new THREE.Vector3(cell1S_0.x - 0.008, cell1S_0.y + 0.005, 0.037);
+  const pBMinusMid = new THREE.Vector3(-0.098, 0.365, 0.034);
+  const pBMinusEnd = new THREE.Vector3(0.092, 0.430, 0.016);
   bmsGroup.add(
     createCylinderBetween(pBMinusStart, pBMinusMid, 0.0036, 0.0036, mats.MAT_BLUE_ANODIZED, 12),
     createCylinderBetween(pBMinusMid, pBMinusEnd, 0.0036, 0.0036, mats.MAT_BLUE_ANODIZED, 12)
   );
 
   // 2) C- (Black 6AWG): from BMS C- pad to Amass XT90-S Negative pin
-  const pCMinusStart = new THREE.Vector3(0.032, 0.415, -0.016);
+  const pCMinusStart = new THREE.Vector3(0.092, 0.430, -0.015);
   const pCMinusEnd = new THREE.Vector3(xt90Pos.x + 0.010, xt90Pos.y - 0.005, xt90Pos.z);
   bmsGroup.add(
     createCylinderBetween(pCMinusStart, pCMinusEnd, 0.0036, 0.0036, mats.MAT_ANODIZED_BLACK, 12)
   );
 
-  // 3) B+ 84V (Red 6AWG): from 20S (+) Collector directly to Amass XT90-S Positive pin
-  const pBPlusStart = new THREE.Vector3(cell20S_0.x - 0.008, cell20S_0.y + 0.006, 0.037);
-  const pBPlusEnd = new THREE.Vector3(xt90Pos.x + 0.010, xt90Pos.y + 0.006, xt90Pos.z);
+  // 3) B+ 84V (Red 6AWG): from 20S (+) Collector at top apex directly to Amass XT90-S Positive pin
+  const pBPlusStart = new THREE.Vector3(cell20S_0.x, cell20S_0.y + 0.008, 0.037);
+  const pBPlusEnd = new THREE.Vector3(xt90Pos.x - 0.010, xt90Pos.y + 0.005, xt90Pos.z);
   bmsGroup.add(
     createCylinderBetween(pBPlusStart, pBPlusEnd, 0.0038, 0.0038, mats.MAT_RED_ANODIZED, 12)
   );
@@ -652,20 +726,18 @@ export function buildBatterySystemNode(mats) {
     const meta = groupMeta[s - 1];
     const t = s / 20;
     const jstPinPos = new THREE.Vector3(
-      bmsPos.x - 0.032 + t * 0.082,
-      bmsPos.y - 0.010 + t * 0.020,
+      bmsPos.x - 0.034 + t * 0.080,
+      bmsPos.y - 0.010 + t * 0.019,
       s % 2 === 1 ? -0.034 : 0.034
     );
-    const tapZ = s % 2 === 1 ? -0.0365 : 0.0365;
-    const tapCell = meta.cells[Math.min(3, meta.cells.length - 1)];
-    const tapPos = new THREE.Vector3(tapCell.x, tapCell.y, tapZ);
+    const tapZ = s % 2 === 1 ? -0.0368 : 0.0368;
+    const tapPos = new THREE.Vector3(meta.center.x, meta.center.y, tapZ);
 
     const wireMat = s === 20 ? mats.MAT_XT90_YELLOW : mats.MAT_RED_ANODIZED;
-    const senseWire = createCylinderBetween(jstPinPos, tapPos, 0.0008, 0.0008, wireMat, 6);
+    const senseWire = createCylinderBetween(jstPinPos, tapPos, 0.00075, 0.00075, wireMat, 6);
     bmsGroup.add(senseWire);
 
-    // Solder dot on the busbar balance tap
-    const tapDot = new THREE.Mesh(new THREE.SphereGeometry(0.0018, 8, 8), mats.MAT_STEEL_ROTOR);
+    const tapDot = new THREE.Mesh(new THREE.SphereGeometry(0.0016, 8, 8), mats.MAT_STEEL_ROTOR);
     tapDot.position.copy(tapPos);
     bmsGroup.add(tapDot);
   }
@@ -673,20 +745,20 @@ export function buildBatterySystemNode(mats) {
   // B0 (Black balance ground lead) to 1S (-)
   bmsGroup.add(
     createCylinderBetween(
-      new THREE.Vector3(bmsPos.x - 0.036, bmsPos.y - 0.012, 0.034),
+      new THREE.Vector3(bmsPos.x - 0.038, bmsPos.y - 0.012, 0.034),
       pBMinusStart,
-      0.0009,
-      0.0009,
+      0.00085,
+      0.00085,
       mats.MAT_ANODIZED_BLACK,
       6
     )
   );
 
-  // Teardrop NTC Thermistor glued into center of honeycomb (Row 4 center)
-  const ntcStart = new THREE.Vector3(bmsPos.x + 0.02, bmsPos.y - 0.01, 0);
-  const ntcEnd = new THREE.Vector3(0.145, 0.275, 0);
-  const ntcWire = createCylinderBetween(ntcStart, ntcEnd, 0.0012, 0.0012, mats.MAT_ANODIZED_BLACK, 8);
-  const ntcBead = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 12, 12), mats.MAT_ANODIZED_BLACK);
+  // Teardrop NTC Thermistor glued into center of honeycomb
+  const ntcStart = new THREE.Vector3(bmsPos.x + 0.01, bmsPos.y - 0.01, 0);
+  const ntcEnd = new THREE.Vector3(0.115, 0.285, 0);
+  const ntcWire = createCylinderBetween(ntcStart, ntcEnd, 0.0011, 0.0011, mats.MAT_ANODIZED_BLACK, 8);
+  const ntcBead = new THREE.Mesh(new THREE.SphereGeometry(0.0032, 12, 12), mats.MAT_ANODIZED_BLACK);
   ntcBead.position.copy(ntcEnd);
   bmsGroup.add(ntcWire, ntcBead);
 

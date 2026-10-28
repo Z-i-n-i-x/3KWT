@@ -30,10 +30,10 @@ import { ENGINEERING_MODALS } from './engineering_modals.js';
 const container = document.getElementById('webgl-container');
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.02, 40);
-// Default 3/4 front-left studio angle matching the reference photo composition
-const DEFAULT_CAM_POS = new THREE.Vector3(1.18, 0.56, 1.48);
-const DEFAULT_CAM_TARGET = new THREE.Vector3(0.05, 0.24, 0.0);
+const camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 0.02, 40);
+// Studio telephoto 3/4 front-left angle matching Reference Photo #1 without wide-angle wheel distortion
+const DEFAULT_CAM_POS = new THREE.Vector3(1.42, 0.48, 2.15);
+const DEFAULT_CAM_TARGET = new THREE.Vector3(0.06, 0.21, 0.0);
 camera.position.copy(DEFAULT_CAM_POS);
 
 const renderer = new THREE.WebGLRenderer({
@@ -62,7 +62,7 @@ controls.minDistance = 0.22;
 controls.maxPolarAngle = Math.PI * 0.52; // Prevent going far below the studio floor
 
 // ----------------------------------------------------------------------------
-// 2. STUDIO LIGHTING & FLOOR CONTACT SHADOWS (y = -0.335m)
+// 2. STUDIO LIGHTING & FLOOR CONTACT SHADOWS (y = -0.278m)
 // ----------------------------------------------------------------------------
 const ambientLight = new THREE.AmbientLight(0xdbe6f5, 0.75);
 scene.add(ambientLight);
@@ -92,10 +92,10 @@ const fillLight = new THREE.DirectionalLight(0xffcfa8, 0.85);
 fillLight.position.set(2.0, 0.4, 1.6);
 scene.add(fillLight);
 
-// Studio Contact Shadows on floor y = -0.335m (No fence, no pavement tiles — pure studio!)
+// Studio Contact Shadows on floor y = -0.278m (No fence, no pavement tiles — pure studio!)
 function createStudioContactShadowFloor() {
   const floorGroup = new THREE.Group();
-  floorGroup.position.y = -0.335;
+  floorGroup.position.y = -0.278;
 
   // Soft procedural dual-wheel + chassis contact shadow texture
   const canvas = document.createElement('canvas');
@@ -518,6 +518,9 @@ function highlightBatterySeriesGroup(seriesId) {
 
 btnXRay.addEventListener('click', () => {
   setXRayMode(!isXRayMode);
+  if (isXRayMode) {
+    flyCameraTo(new THREE.Vector3(0.14, 0.28, 1.05), new THREE.Vector3(0.12, 0.27, 0.0));
+  }
 });
 
 // Raycaster for hovering over any of the 20 groups (1S..20S) in X-Ray or Exploded mode
@@ -595,13 +598,13 @@ function flyCameraTo(posVec, targetVec) {
 
 const CAMERA_PRESETS = {
   default: { pos: DEFAULT_CAM_POS, target: DEFAULT_CAM_TARGET, code: 'ALL' },
-  fork: { pos: new THREE.Vector3(0.95, 0.32, 0.68), target: new THREE.Vector3(0.49, 0.28, 0.0), code: 'FRK-01' },
-  cockpit: { pos: new THREE.Vector3(0.82, 0.72, 0.48), target: new THREE.Vector3(0.42, 0.61, 0.0), code: 'CKP-02' },
-  wheels: { pos: new THREE.Vector3(-0.42, 0.12, 0.92), target: new THREE.Vector3(-0.435, 0.03, 0.0), code: 'WHL-03' },
-  dropout: { pos: new THREE.Vector3(-0.38, 0.14, 0.42), target: new THREE.Vector3(-0.435, 0.05, 0.065), code: 'BRK-04' },
-  battery: { pos: new THREE.Vector3(0.14, 0.30, 0.76), target: new THREE.Vector3(0.14, 0.28, 0.0), code: 'BAT-05' },
-  controller: { pos: new THREE.Vector3(0.42, -0.02, 0.58), target: new THREE.Vector3(0.18, 0.18, 0.0), code: 'ESC-06' },
-  saddle: { pos: new THREE.Vector3(-0.28, 0.65, 0.68), target: new THREE.Vector3(-0.34, 0.50, 0.0), code: 'SDL-07' }
+  fork: { pos: new THREE.Vector3(1.12, 0.30, 0.88), target: new THREE.Vector3(0.50, 0.25, 0.0), code: 'FRK-01' },
+  cockpit: { pos: new THREE.Vector3(0.92, 0.74, 0.62), target: new THREE.Vector3(0.42, 0.61, 0.0), code: 'CKP-02' },
+  wheels: { pos: new THREE.Vector3(-0.42, 0.10, 1.15), target: new THREE.Vector3(-0.445, 0.015, 0.0), code: 'WHL-03' },
+  dropout: { pos: new THREE.Vector3(-0.38, 0.12, 0.54), target: new THREE.Vector3(-0.445, 0.04, 0.065), code: 'BRK-04' },
+  battery: { pos: new THREE.Vector3(0.14, 0.28, 1.05), target: new THREE.Vector3(0.12, 0.27, 0.0), code: 'BAT-05' },
+  controller: { pos: new THREE.Vector3(0.48, -0.02, 0.74), target: new THREE.Vector3(0.18, 0.18, 0.0), code: 'ESC-06' },
+  saddle: { pos: new THREE.Vector3(-0.28, 0.65, 0.88), target: new THREE.Vector3(-0.34, 0.50, 0.0), code: 'SDL-07' }
 };
 
 const nodeButtons = document.querySelectorAll('.node-btn');
@@ -675,7 +678,7 @@ const HOTSPOT_DEFS = [
     id: 'dropout',
     label: '[ ДРОПАУТ 6 ММ М14 + ZOOM ]',
     parent: rearDropoutNode,
-    localPos: new THREE.Vector3(-0.435, 0.09, 0.08)
+    localPos: new THREE.Vector3(-0.445, 0.08, 0.08)
   },
   {
     id: 'motor',
@@ -733,8 +736,8 @@ window.addEventListener('resize', () => {
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('mode') === 'xray') {
   setXRayMode(true);
-  camera.position.set(0.14, 0.30, 0.56);
-  controls.target.set(0.13, 0.28, 0.0);
+  camera.position.set(0.13, 0.28, 0.96);
+  controls.target.set(0.12, 0.27, 0.0);
   controls.update();
 } else if (urlParams.get('mode') === 'explode') {
   applyExplodeFactor(1.0, false);
