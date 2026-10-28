@@ -100,7 +100,7 @@ export function buildBatterySystemNode(mats) {
 
   // Perimeter Cordura rim band (width 74mm, z = -0.037..+0.037)
   const bagRimShape = bagShape.clone();
-  const innerCutPath = new THREE.Path();
+  const innerCutPath = new THREE.Shape();
   innerCutPath.moveTo(0.020, 0.056);
   innerCutPath.lineTo(0.372, 0.456);
   innerCutPath.lineTo(0.356, 0.508);

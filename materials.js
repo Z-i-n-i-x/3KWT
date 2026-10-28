@@ -134,30 +134,28 @@ export function createFoxsidDecalMaterial() {
   canvas.height = 1024;
   const ctx = canvas.getContext('2d');
 
-  // Matte black magnesium lower background
-  ctx.fillStyle = '#0d0e10';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.save();
   ctx.translate(128, 512);
   ctx.rotate(-Math.PI / 2);
 
-  // Subtle grey technical stripes
-  ctx.fillStyle = '#262930';
-  ctx.fillRect(-360, -85, 720, 14);
+  // Subtle grey & red technical accent stripes
+  ctx.fillStyle = '#383d47';
+  ctx.fillRect(-310, -76, 620, 8);
   ctx.fillStyle = '#d92b2b';
-  ctx.fillRect(-360, 72, 190, 10);
+  ctx.fillRect(-310, 62, 165, 8);
 
   // Crisp white FOXSID vertical typography
-  ctx.font = '900 122px "JetBrains Mono", Arial, sans-serif';
+  ctx.font = '900 112px "JetBrains Mono", Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#f5f7fa';
   ctx.fillText('FOXSID', 0, -4);
 
-  ctx.font = '700 28px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#9aa2b0';
-  ctx.fillText('AIR EVOLUTION // X2 32MM', 65, 80);
+  ctx.font = '700 24px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#c4cbd6';
+  ctx.fillText('AIR EVOLUTION // X2 32MM', 55, 70);
   ctx.restore();
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -165,46 +163,70 @@ export function createFoxsidDecalMaterial() {
 
   return new THREE.MeshPhysicalMaterial({
     map: tex,
-    roughness: 0.45,
-    metalness: 0.35,
-    clearcoat: 0.15
+    transparent: true,
+    alphaTest: 0.08,
+    roughness: 0.42,
+    metalness: 0.25,
+    clearcoat: 0.2
   });
 }
 
 /**
- * Generates MTX39 red/white/yellow rim arc decal texture on deep matte black rim
+ * Generates MTX39 circular polar rim arc decal texture matching RingGeometry planar UVs
  */
 export function createMtx39DecalTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
-  canvas.height = 128;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
+  const cx = 512;
+  const cy = 512;
 
-  ctx.fillStyle = '#0b0b0d';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Deep matte black rim base
+  ctx.fillStyle = '#0c0c0e';
+  ctx.fillRect(0, 0, 1024, 1024);
 
-  const drawBadge = (offsetX) => {
-    // Red/magenta & yellow racing stripes matching reference photo
-    ctx.fillStyle = '#d91642';
-    ctx.fillRect(offsetX, 28, 95, 72);
-    ctx.fillStyle = '#f5b800';
-    ctx.fillRect(offsetX + 95, 28, 18, 72);
+  // Draw 3 authentic SunRingle MTX39 arc decals around the rim circumference
+  const decalAngles = [0.25, 2.35, 4.45];
+  decalAngles.forEach((baseAngle) => {
+    // Red/magenta racing arc
+    ctx.beginPath();
+    ctx.arc(cx, cy, 496, baseAngle - 0.26, baseAngle - 0.08);
+    ctx.strokeStyle = '#d91642';
+    ctx.lineWidth = 22;
+    ctx.stroke();
 
-    ctx.font = '900 54px "JetBrains Mono", Impact, sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('MTX39', offsetX + 125, 82);
+    // Yellow accent tick
+    ctx.beginPath();
+    ctx.arc(cx, cy, 496, baseAngle - 0.07, baseAngle - 0.03);
+    ctx.strokeStyle = '#f5b800';
+    ctx.lineWidth = 22;
+    ctx.stroke();
 
-    ctx.font = '700 22px "JetBrains Mono", sans-serif';
-    ctx.fillStyle = '#d91642';
-    ctx.fillText('SUNRINGLE // 26"', offsetX + 335, 78);
-  };
+    // White MTX39 lettering along arc
+    const letters = ['M', 'T', 'X', '3', '9'];
+    letters.forEach((ch, idx) => {
+      const ang = baseAngle + 0.02 + idx * 0.048;
+      ctx.save();
+      ctx.translate(cx + Math.cos(ang) * 496, cy + Math.sin(ang) * 496);
+      ctx.rotate(ang + Math.PI / 2);
+      ctx.font = '900 26px "JetBrains Mono", Impact, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+    });
 
-  drawBadge(40);
-  drawBadge(552);
+    // Red tail stripe
+    ctx.beginPath();
+    ctx.arc(cx, cy, 496, baseAngle + 0.27, baseAngle + 0.38);
+    ctx.strokeStyle = '#d91642';
+    ctx.lineWidth = 18;
+    ctx.stroke();
+  });
 
   const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.anisotropy = 8;
   return tex;
 }
