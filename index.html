@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STEALTH SUR-RON 72V 3000W | High-Poly Procedural CAD & Telemetry Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/",
+      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+    }
+  }
+  </script>
+  <style>
+    :root {
+      --bg-void: #050505;
+      --bg-panel: rgba(18, 18, 18, 0.88);
+      --bg-panel-solid: #121212;
+      --border-dim: rgba(255, 255, 255, 0.12);
+      --border-accent: #FF5500;
+      --accent-orange: #FF5500;
+      --accent-green: #00FF66;
+      --accent-cyan: #00D2FF;
+      --text-main: #F0F2F5;
+      --text-muted: #8E95A2;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-void);
+      background-image: radial-gradient(circle at 50% 45%, #16181c 0%, #090a0c 55%, #050505 100%);
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #webgl-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* TACTICAL HUD OVERLAY */
+    .hud-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px 24px;
+    }
+
+    /* TOP HEADER BAR */
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      pointer-events: auto;
+    }
+
+    .brand-block {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-left: 4px solid var(--accent-orange);
+      padding: 12px 18px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+    }
+
+    .brand-tag {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--accent-orange);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      display: inline-block;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #ffffff;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .telemetry-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .metric-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      padding: 10px 14px;
+      min-width: 125px;
+      backdrop-filter: blur(10px);
+    }
+
+    .metric-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .metric-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-green);
+      margin-top: 2px;
+    }
+
+    .metric-val.orange {
+      color: var(--accent-orange);
+    }
+
+    /* LEFT CAD NODE INSPECTOR & X-RAY TELEMETRY */
+    .hud-middle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex: 1;
+      margin: 16px 0;
+      pointer-events: none;
+    }
+
+    .side-panel {
+      width: 340px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      max-height: calc(100vh - 210px);
+      overflow-y: auto;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--accent-orange);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .node-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .node-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 8px 10px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.18s ease;
+    }
+
+    .node-btn:hover, .node-btn.active {
+      background: rgba(255, 85, 0, 0.14);
+      border-color: var(--accent-orange);
+      color: #ffffff;
+    }
+
+    .node-btn span.code {
+      color: var(--accent-orange);
+      font-weight: 700;
+      font-size: 10px;
+    }
+
+    /* BATTERY X-RAY PASSPORT CARD */
+    .xray-passport {
+      margin-top: 14px;
+      border: 1px solid rgba(0, 255, 102, 0.35);
+      background: rgba(0, 255, 102, 0.05);
+      padding: 12px;
+      display: none;
+    }
+
+    .xray-passport.visible {
+      display: block;
+    }
+
+    .xray-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-green);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .xray-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+      font-size: 11px;
+    }
+
+    .xray-item-label {
+      color: var(--text-muted);
+      font-size: 9px;
+    }
+
+    .xray-item-val {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* RIGHT HOTSPOT QUICK BUTTONS */
+    .hotspot-dock {
+      width: 310px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .blueprint-btn {
+      background: rgba(255, 85, 0, 0.08);
+      border: 1px solid rgba(255, 85, 0, 0.35);
+      color: #fff;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .blueprint-btn:hover {
+      background: rgba(255, 85, 0, 0.22);
+      border-color: var(--accent-orange);
+      transform: translateX(-3px);
+    }
+
+    .blueprint-btn small {
+      color: var(--text-muted);
+      font-size: 9px;
+      font-weight: 400;
+    }
+
+    /* BOTTOM CONTROL DECK */
+    .hud-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      pointer-events: auto;
+      flex-wrap: wrap;
+    }
+
+    .controls-bar {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      padding: 14px 20px;
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .tactical-btn {
+      background: #191b20;
+      border: 1px solid var(--border-dim);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 10px 16px;
+      cursor: pointer;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tactical-btn:hover {
+      border-color: var(--accent-orange);
+      color: #fff;
+    }
+
+    .tactical-btn.active-orange {
+      background: var(--accent-orange);
+      border-color: var(--accent-orange);
+      color: #050505;
+      box-shadow: 0 0 18px rgba(255, 85, 0, 0.45);
+    }
+
+    .tactical-btn.active-green {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: #050505;
+      box-shadow: 0 0 18px rgba(0, 255, 102, 0.45);
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 240px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .slider-header span.val {
+      color: var(--accent-orange);
+    }
+
+    input[type="range"].tactical-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #22252a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"].tactical-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-orange);
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+
+    /* 3D HOTSPOT MARKERS IN SCREEN SPACE */
+    #hotspot-markers {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .hotspot-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(10, 10, 12, 0.88);
+      border: 1px solid var(--accent-orange);
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      transition: transform 0.15s ease, background 0.15s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+    }
+
+    .hotspot-pin:hover {
+      background: var(--accent-orange);
+      color: #050505;
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .hotspot-pin .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent-green);
+      border-radius: 50%;
+    }
+
+    /* ENGINEERING MODAL WINDOW */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 3, 4, 0.82);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-window {
+      width: 100%;
+      max-width: 860px;
+      max-height: 88vh;
+      background: #0e1013;
+      border: 1px solid var(--accent-orange);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 22px;
+      background: #14171c;
+      border-bottom: 1px solid var(--border-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent-orange);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid var(--border-dim);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      border-color: var(--accent-orange);
+      color: var(--accent-orange);
+    }
+
+    .modal-body {
+      padding: 22px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      color: #d5d9e0;
+    }
+
+    .svg-blueprint-box {
+      background: #07080a;
+      border: 1px solid rgba(255, 85, 0, 0.3);
+      padding: 16px;
+      margin: 14px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 11px;
+    }
+
+    .spec-table th, .spec-table td {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .spec-table th {
+      background: rgba(255, 85, 0, 0.12);
+      color: var(--accent-orange);
+    }
+
+    @media (max-width: 1024px) {
+      .side-panel, .hotspot-dock {
+        width: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="webgl-container"></div>
+  <div id="hotspot-markers"></div>
+
+  <!-- STEALTH HUB TACTICAL UI -->
+  <div class="hud-layer">
+    <!-- TOP HEADER -->
+    <header class="hud-header">
+      <div class="brand-block">
+        <div class="brand-tag">
+          <span class="status-dot"></span>
+          CAD BUILD // STERN DYNAMIC 1.0 18" MOD (RAL 9005 STEALTH)
+        </div>
+        <div class="brand-title">STEALTH SUR-RON 72V 3000W</div>
+        <div class="brand-sub">МАСШТАБ 1:1 (1 ЕД = 1 М) • 20S7P (140× EVE 50E) • FOXSID-X2 • MTX39</div>
+      </div>
+
+      <div class="telemetry-strip">
+        <div class="metric-card">
+          <div class="metric-label">НАПРЯЖЕНИЕ / ПИК</div>
+          <div class="metric-val">72.0V / 84.0V</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">ЕМКОСТЬ 20S7P</div>
+          <div class="metric-val">35.0 Ah (2.94 kWh)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">КОНТРОЛЛЕР / BMS</div>
+          <div class="metric-val orange">60A SIN / 120A</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">ПРИВОД / ОБОДА</div>
+          <div class="metric-val">3000W DD / MTX39</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MIDDLE PANELS -->
+    <div class="hud-middle">
+      <!-- LEFT INSPECTOR -->
+      <aside class="side-panel">
+        <div class="panel-title">
+          <span>ИНЖЕНЕРНЫЕ УЗЛЫ (CAD)</span>
+          <span id="active-node-indicator">ALL</span>
+        </div>
+        <div class="node-list">
+          <button class="node-btn active" data-cam="default">
+            <span>00. ОБЩИЙ СТУДИЙНЫЙ ВИД</span>
+            <span class="code">FULL</span>
+          </button>
+          <button class="node-btn" data-cam="fork">
+            <span>01. ВИЛКА FOXSID-X2 26" (120 ММ)</span>
+            <span class="code">FRK-01</span>
+          </button>
+          <button class="node-btn" data-cam="cockpit">
+            <span>02. КОКПИТ + ФАРА SUR-RON + SW900</span>
+            <span class="code">CKP-02</span>
+          </button>
+          <button class="node-btn" data-cam="wheels">
+            <span>03. КОЛЕСА 26" MTX39 + МОТОР 3000W</span>
+            <span class="code">WHL-03</span>
+          </button>
+          <button class="node-btn" data-cam="dropout">
+            <span>04. ТОРМОЗА ZOOM HB-890E + ДРОПАУТ 6ММ</span>
+            <span class="code">BRK-04</span>
+          </button>
+          <button class="node-btn" data-cam="battery">
+            <span>05. СУМКА CORDURA + АКБ 20S7P (140 ЯЧЕЕК)</span>
+            <span class="code">BAT-05</span>
+          </button>
+          <button class="node-btn" data-cam="controller">
+            <span>06. КОНТРОЛЛЕР 60А + 3D-КОРОБ DC-DC</span>
+            <span class="code">ESC-06</span>
+          </button>
+          <button class="node-btn" data-cam="saddle">
+            <span>07. МОТО-СЕДЛО SUR-RON + ПОДРАМНИК</span>
+            <span class="code">SDL-07</span>
+          </button>
+        </div>
+
+        <!-- X-RAY CELL PASSPORT -->
+        <div id="xray-passport" class="xray-passport">
+          <div class="xray-title" id="xray-group-title">СЕКЦИЯ: НАВЕДИТЕ КУРСОР (1S..20S)</div>
+          <div class="xray-grid">
+            <div>
+              <div class="xray-item-label">ЯЧЕЙКА</div>
+              <div class="xray-item-val">EVE INR21700-50E</div>
+            </div>
+            <div>
+              <div class="xray-item-label">КОНФИГУРАЦИЯ</div>
+              <div class="xray-item-val" id="xray-group-cfg">7P ПАРАЛЛЕЛЬ</div>
+            </div>
+            <div>
+              <div class="xray-item-label">НАПРЯЖЕНИЕ СЕКЦИИ</div>
+              <div class="xray-item-val" id="xray-group-volt">4.20 V (100%)</div>
+            </div>
+            <div>
+              <div class="xray-item-label">ЕМКОСТЬ ГРУППЫ</div>
+              <div class="xray-item-val">35.0 Ah (7×5000mAh)</div>
+            </div>
+            <div>
+              <div class="xray-item-label">ЗАЩИТА BMS</div>
+              <div class="xray-item-val">Bisida 20S 120A</div>
+            </div>
+            <div>
+              <div class="xray-item-label">ДАТЧИК NTC / ШИНА</div>
+              <div class="xray-item-val" id="xray-group-temp">27.0°C / Cu+Ni</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT BLUEPRINT DOCK -->
+      <aside class="hotspot-dock">
+        <div class="panel-title">
+          <span>ЧЕРТЕЖИ И ТЕХКАРТЫ (1:1)</span>
+          <span>CAD DOCS</span>
+        </div>
+        <button class="blueprint-btn" data-modal="saddle">
+          <span>ЧЕРТЕЖ: МОТО-СЕДЛО И ПОДРАМНИК</span>
+          <small>П-паз 40×70 мм • Сталь 18×2 мм • Стоп-сигнал</small>
+        </button>
+        <button class="blueprint-btn" data-modal="dropout">
+          <span>SVG-ШАБЛОН: БРОНЕПЛАСТИНА 6 ММ</span>
+          <small>Ось М14 (10×14 мм) + Ушки IS 51 мм (2-в-1)</small>
+        </button>
+        <button class="blueprint-btn" data-modal="motor">
+          <span>ГАЙД: МОТОР 3000W + ПМС-100 + EBS</span>
+          <small>Заливка 40 мл силикона • Пайка рекуперации</small>
+        </button>
+        <button class="blueprint-btn" data-modal="wiring">
+          <span>СХЕМА: 3D-КОРОБ + DC-DC 12V + ГУДОК</span>
+          <small>Акустические жабры • Фара Sur-Ron 20W • 105 дБ</small>
+        </button>
+      </aside>
+    </div>
+
+    <!-- BOTTOM CONTROLS -->
+    <footer class="hud-footer">
+      <div class="controls-bar">
+        <button id="btn-explode" class="tactical-btn">
+          <span>[EXPLODED VIEW / РАЗБОРКА]</span>
+        </button>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span>EXPLODE FACTOR (КИНЕМАТИКА)</span>
+            <span id="explode-val" class="val">0%</span>
+          </div>
+          <input id="slider-explode" type="range" class="tactical-slider" min="0" max="100" value="0" step="1" />
+        </div>
+
+        <button id="btn-xray" class="tactical-btn">
+          <span>[X-RAY 20S7P BATTERY]</span>
+        </button>
+
+        <button id="btn-lights" class="tactical-btn">
+          <span>[ТЕСТ ТОРМОЗА И СВЕТА]</span>
+        </button>
+
+        <button id="btn-reset-cam" class="tactical-btn">
+          <span>СБРОС КАМЕРЫ</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL WINDOW FOR BLUEPRINTS & GUIDES -->
+  <div id="modal-backdrop" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div id="modal-title" class="modal-title">ИНЖЕНЕРНАЯ ДОКУМЕНТАЦИЯ</div>
+        <button id="modal-close" class="modal-close">[ ЗАКРЫТЬ ESC ]</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
