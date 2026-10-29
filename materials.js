@@ -898,28 +898,28 @@ export function createStealthMaterials() {
     clearcoatRoughness: 0.28
   });
 
-  // 4. MAT_RUBBER_KENDA (Tires Kenda K-Rad 26x2.35)
-  const MAT_RUBBER_KENDA = new THREE.MeshPhysicalMaterial({
+  // 4. MAT_RUBBER_KENDA (Tires Kenda K-Rad 26x2.35 — deep matte rubber)
+  const MAT_RUBBER_KENDA = new THREE.MeshStandardMaterial({
     name: 'MAT_RUBBER_KENDA',
-    color: 0x161719,
-    roughness: 0.90,
-    metalness: 0.04,
+    color: 0x121315,
+    roughness: 0.97,
+    metalness: 0.0,
     bumpMap: microGrainTex,
-    bumpScale: 0.0012
+    bumpScale: 0.0014,
+    envMapIntensity: 0.06
   });
 
-  // 4b. MAT_MOTO_GRIP_RUBBER (120mm Motocross Full-Waffle + Diamond Knurled Rubber Grips 1:1 with Photo)
+  // 4b. MAT_MOTO_GRIP_RUBBER (120mm Motocross Full-Waffle + Diamond Knurled Rubber Grips — 100% Matte Vulcanized Rubber, ZERO gloss!)
   const { colorTex: gripWaffleColor, bumpTex: gripWaffleBump } = createMotoGripWaffleKnurlTextures(1024);
-  const MAT_MOTO_GRIP_RUBBER = new THREE.MeshPhysicalMaterial({
+  const MAT_MOTO_GRIP_RUBBER = new THREE.MeshStandardMaterial({
     name: 'MAT_MOTO_GRIP_RUBBER',
     color: 0xffffff,
     map: gripWaffleColor,
     bumpMap: gripWaffleBump,
-    bumpScale: 0.0038,
-    roughnessMap: gripWaffleBump,
-    roughness: 0.88,
-    metalness: 0.02,
-    clearcoat: 0.03
+    bumpScale: 0.0042,
+    roughness: 0.99,
+    metalness: 0.0,
+    envMapIntensity: 0.04
   });
 
   // 5. MAT_STEEL_ROTOR (180mm brake rotors, spokes, M4/M5/M6 fasteners)

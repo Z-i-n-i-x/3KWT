@@ -895,80 +895,234 @@ export function buildCockpitNode(mats) {
   barMesh.castShadow = true;
   cockpitGroup.add(barMesh);
 
-  // SUR-RON LIGHT BEE X (20W) Dual LED Headlight (1:1 with Reference Photo #6 & #1!)
+  // ==========================================================================
+  // SUR-RON LIGHT BEE X DUAL-LENS LED HEADLIGHT (1:1 WITH ATTACHED PHOTO!)
+  // Compact 96 x 42 x 38 mm Matte Black Rounded Housing + Genuine Figure-8
+  // ("Peanut") Bezel Cutout + 4 Recessed Socket-Head Allen Bolts + Fluted Flood
+  // Left Reflector + Deep Parabolic Spot Right Reflector + Stamped U-Bracket +
+  // Waterproof 2-Pin Grey/Black Connector Harness
+  // ==========================================================================
   const headlightGroup = new THREE.Group();
   headlightGroup.name = 'SURRON_DUAL_LED_HEADLIGHT';
-  headlightGroup.position.set(0.448, 0.592, 0);
-  headlightGroup.rotation.z = -0.14;
+  headlightGroup.position.set(0.440, 0.592, 0);
+  headlightGroup.rotation.z = -0.11;
 
-  const hlHousing = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.046, 0.114), mats.MAT_ANODIZED_BLACK);
+  // Helper: Rounded Rectangle 2D Shape in (z, y) plane (width W along Z, height H along Y)
+  function makeRoundedRectShape(w, h, r) {
+    const s = new THREE.Shape();
+    const hw = w / 2;
+    const hh = h / 2;
+    s.moveTo(-hw + r, -hh);
+    s.lineTo(hw - r, -hh);
+    s.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
+    s.lineTo(hw, hh - r);
+    s.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
+    s.lineTo(-hw + r, hh);
+    s.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
+    s.lineTo(-hw, -hh + r);
+    s.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+    return s;
+  }
+
+  // Helper: Genuine Figure-8 ("Peanut" / "Infinity") Optical Aperture Path in (z, y)
+  function makeFigure8AperturePath(eyeOffset = 0.0185, eyeRadius = 0.0148, waistHalfH = 0.0086) {
+    const p = new THREE.Path();
+    const steps = 64;
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * Math.PI * 2;
+      // Smooth peanut / figure-8 contour matching the two overlapping reflectors with central waist pinch
+      const z = Math.cos(t) * (eyeOffset + eyeRadius);
+      const pinch = 1.0 - 0.36 * Math.pow(Math.sin(t), 4);
+      const y = Math.sin(t) * eyeRadius * (0.98 * pinch + 0.14);
+      if (i === 0) p.moveTo(z, y);
+      else p.lineTo(z, y);
+    }
+    p.closePath();
+    return p;
+  }
+
+  // 1. Main Matte Die-Cast Aluminum Body (Width 96mm, Height 42mm, Depth 34mm, Corner Radius 7.5mm)
+  const bodyShape = makeRoundedRectShape(0.096, 0.042, 0.0075);
+  const bodyGeom = new THREE.ExtrudeGeometry(bodyShape, {
+    depth: 0.032,
+    bevelEnabled: true,
+    bevelThickness: 0.002,
+    bevelSize: 0.0018,
+    bevelSegments: 4
+  });
+  bodyGeom.rotateY(Math.PI / 2); // Extrude along +X (front is +X)
+  bodyGeom.translate(-0.018, 0, 0);
+  const hlHousing = new THREE.Mesh(bodyGeom, mats.MAT_FRAME_RAL9005);
   hlHousing.castShadow = true;
+  hlHousing.receiveShadow = true;
   headlightGroup.add(hlHousing);
 
-  // Sculpted front chamfered bezel frame
-  const hlBezel = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.048, 0.116), mats.MAT_FRAME_RAL9005);
-  hlBezel.position.set(0.020, 0, 0);
+  // 2. Sculpted Front Matte Bezel Frame with True Figure-8 ("Peanut") Cutout & 4 Bolt Counterbores
+  const bezelShape = makeRoundedRectShape(0.096, 0.042, 0.0075);
+  bezelShape.holes.push(makeFigure8AperturePath(0.0185, 0.0148, 0.0086));
+  const bezelGeom = new THREE.ExtrudeGeometry(bezelShape, {
+    depth: 0.0055,
+    bevelEnabled: true,
+    bevelThickness: 0.0012,
+    bevelSize: 0.0012,
+    bevelSegments: 3
+  });
+  bezelGeom.rotateY(Math.PI / 2);
+  bezelGeom.translate(0.014, 0, 0);
+  const hlBezel = new THREE.Mesh(bezelGeom, mats.MAT_FRAME_RAL9005);
   headlightGroup.add(hlBezel);
 
-  // 4 Silver Socket-Head Allen Bolts in the 4 corners of the front bezel (1:1 as on Reference Photo #6!)
-  [-0.017, 0.017].forEach((by) => {
-    [-0.049, 0.049].forEach((bz) => {
-      const cornerBolt = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.0035, 0.0035, 0.005, 12),
+  // Raised chrome/silver inner lip lining the Figure-8 peanut opening (exact match with photo!)
+  const rimPts = makeFigure8AperturePath(0.0185, 0.0148).getPoints(64);
+  const rimCurvePts = rimPts.map((pt) => new THREE.Vector3(0.0192, pt.y, pt.x));
+  const rimCurve = new THREE.CatmullRomCurve3(rimCurvePts, true);
+  const figure8ChromeLip = new THREE.Mesh(
+    new THREE.TubeGeometry(rimCurve, 64, 0.0011, 10, true),
+    mats.MAT_STEEL_ROTOR
+  );
+  headlightGroup.add(figure8ChromeLip);
+
+  // 3. 4 Recessed Stainless Socket-Head Allen Bolts (M4) in the 4 corners of the bezel (1:1 as on Photo!)
+  [-0.0135, 0.0135].forEach((by) => {
+    [-0.0395, 0.0395].forEach((bz) => {
+      // Dark counterbore recess ring
+      const recess = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0038, 0.0038, 0.002, 16),
+        mats.MAT_ANODIZED_BLACK
+      );
+      recess.rotation.z = Math.PI / 2;
+      recess.position.set(0.0195, by, bz);
+      headlightGroup.add(recess);
+
+      // Silver cylindrical socket head cap screw
+      const boltHead = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0031, 0.0031, 0.0032, 18),
         mats.MAT_STEEL_ROTOR
       );
-      cornerBolt.rotation.z = Math.PI / 2;
-      cornerBolt.position.set(0.0225, by, bz);
-      headlightGroup.add(cornerBolt);
+      boltHead.rotation.z = Math.PI / 2;
+      boltHead.position.set(0.0202, by, bz);
+      headlightGroup.add(boltHead);
+
+      // Hex Allen socket hole inside bolt head
+      const hexSocket = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0016, 0.0016, 0.0036, 6),
+        mats.MAT_ANODIZED_BLACK
+      );
+      hexSocket.rotation.z = Math.PI / 2;
+      hexSocket.position.set(0.0204, by, bz);
+      headlightGroup.add(hexSocket);
     });
   });
 
-  // Rear cooling fins
-  for (let i = -4; i <= 4; i++) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.0026, 0.108), mats.MAT_ANODIZED_BLACK);
-    fin.position.set(-0.024, i * 0.0046, 0);
+  // 4. Rear Horizontal Die-Cast Cooling Heatsink Fins
+  for (let i = -3; i <= 3; i++) {
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.009, 0.0022, 0.088), mats.MAT_FRAME_RAL9005);
+    fin.position.set(-0.021, i * 0.0046, 0);
     headlightGroup.add(fin);
   }
 
-  // Dual Figure-8 / Peanut Reflector Eyes (Left = Fluted Flood Lens, Right = Deep Parabolic Spot Cone)
-  [-0.024, 0.024].forEach((zEye, eyeIdx) => {
-    const reflector = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.0175, 0.007, 0.018, 28, 1, true),
-      mats.MAT_STEEL_ROTOR
+  // 5. Dual Asymmetric Chrome Reflector Bowls inside the Figure-8 Cavity (1:1 with Photo!)
+  // Left Eye (z = +0.0185): Vertical Ribbed/Fluted Wide-Flood Reflector + 3 vertical yellow LED segments visible in reflections
+  // Right Eye (z = -0.0185): Deep Smooth Mirror-Chrome Parabolic Spot Cone + Square Silver Bezel & Yellow CREE XHP LED Die at base
+  const chromeReflectorMat = new THREE.MeshPhysicalMaterial({
+    color: 0xf5f8fc,
+    metalness: 0.98,
+    roughness: 0.05,
+    clearcoat: 1.0
+  });
+
+  [0.0185, -0.0185].forEach((zEye, eyeIdx) => {
+    const reflectorBowl = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0146, 0.0052, 0.016, 32, 1, true),
+      chromeReflectorMat
     );
-    reflector.rotation.z = -Math.PI / 2;
-    reflector.position.set(0.013, 0, zEye);
-    headlightGroup.add(reflector);
+    reflectorBowl.rotation.z = -Math.PI / 2;
+    reflectorBowl.position.set(0.011, 0, zEye);
+    headlightGroup.add(reflectorBowl);
 
-    const eyeRing = new THREE.Mesh(new THREE.TorusGeometry(0.0175, 0.0018, 12, 28), mats.MAT_STEEL_ROTOR);
-    eyeRing.rotation.y = Math.PI / 2;
-    eyeRing.position.set(0.0218, 0, zEye);
-    headlightGroup.add(eyeRing);
+    // Square silver SMD emitter base + Yellow Phosphor CREE LED Die at bottom of reflector
+    const smdFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.0022, 0.0068, 0.0068),
+      mats.MAT_WHITE_INSULATOR
+    );
+    smdFrame.position.set(0.0035, 0, zEye);
+    headlightGroup.add(smdFrame);
 
-    const creeDie = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.005, 0.005), mats.MAT_XT90_YELLOW);
-    creeDie.position.set(0.006, 0, zEye);
+    const creeDie = new THREE.Mesh(
+      new THREE.BoxGeometry(0.0028, 0.0042, 0.0042),
+      mats.MAT_XT90_YELLOW
+    );
+    creeDie.position.set(0.0040, 0, zEye);
     headlightGroup.add(creeDie);
 
-    const emitter = new THREE.Mesh(new THREE.SphereGeometry(0.009, 16, 16), mats.MAT_HEADLIGHT_LED);
-    emitter.position.set(0.012, 0, zEye);
+    // Emissive LED core when headlight 'L' is switched on
+    const emitter = new THREE.Mesh(
+      new THREE.SphereGeometry(0.0055, 16, 16),
+      mats.MAT_HEADLIGHT_LED
+    );
+    emitter.position.set(0.007, 0, zEye);
     headlightGroup.add(emitter);
 
     if (eyeIdx === 0) {
-      for (let f = -3; f <= 3; f++) {
-        const flute = new THREE.Mesh(new THREE.CylinderGeometry(0.0011, 0.0011, 0.030, 8), mats.MAT_SMOKE_LENS);
-        flute.position.set(0.0208, 0, zEye + f * 0.0042);
-        headlightGroup.add(flute);
+      // Left Eye: Vertical cylindrical chrome/glass flood flutes (5 vertical optical ribs + yellow phosphor reflections)
+      for (let f = -2; f <= 2; f++) {
+        const fluteRib = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.0018, 0.0018, 0.025, 12),
+          chromeReflectorMat
+        );
+        fluteRib.position.set(0.0155, 0, zEye + f * 0.0042);
+        headlightGroup.add(fluteRib);
+
+        if (Math.abs(f) <= 1) {
+          const yellowRefl = new THREE.Mesh(
+            new THREE.BoxGeometry(0.0015, 0.0055, 0.0016),
+            mats.MAT_XT90_YELLOW
+          );
+          yellowRefl.position.set(0.0168, 0, zEye + f * 0.0045);
+          headlightGroup.add(yellowRefl);
+        }
       }
     }
   });
 
-  const smokeLens = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.036, 0.088), mats.MAT_SMOKE_LENS);
-  smokeLens.position.set(0.023, 0, 0);
-  headlightGroup.add(smokeLens);
+  // 6. Crystal-Clear Polycarbonate Front Lens Cover fitted inside the Figure-8 opening
+  const clearLensShape = new THREE.Shape(makeFigure8AperturePath(0.0185, 0.0146).getPoints(48));
+  const clearLensGeom = new THREE.ExtrudeGeometry(clearLensShape, { depth: 0.0018, bevelEnabled: false });
+  clearLensGeom.rotateY(Math.PI / 2);
+  clearLensGeom.translate(0.0178, 0, 0);
+  const clearLensMesh = new THREE.Mesh(clearLensGeom, mats.MAT_SMOKE_LENS);
+  headlightGroup.add(clearLensMesh);
 
-  const hlBracket = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.028, 0.044), mats.MAT_ANODIZED_BLACK);
-  hlBracket.position.set(-0.012, 0.024, 0);
-  headlightGroup.add(hlBracket);
+  // 7. Stamped Black Steel U-Shaped Mounting Bracket + Side M6 Pivot Bolts & Washers (1:1 as in top-left of Photo!)
+  const uBracketGroup = new THREE.Group();
+  const uBasePlate = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.003, 0.046), mats.MAT_FRAME_RAL9005);
+  uBasePlate.position.set(-0.012, 0.023, 0);
+  uBracketGroup.add(uBasePlate);
+  [-0.022, 0.022].forEach((zEar) => {
+    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 0.003), mats.MAT_FRAME_RAL9005);
+    ear.position.set(-0.008, 0.015, zEar);
+    const m5Bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.006, 12), mats.MAT_STEEL_ROTOR);
+    m5Bolt.rotation.x = Math.PI / 2;
+    m5Bolt.position.set(-0.008, 0.014, zEar + (zEar > 0 ? 0.0025 : -0.0025));
+    uBracketGroup.add(ear, m5Bolt);
+  });
+  headlightGroup.add(uBracketGroup);
+
+  // 8. Waterproof 2-Pin Grey/Black Automotive Connector + Red/Black Wire Pigtail (1:1 as in top-right of Photo!)
+  const hlCableCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.018, -0.006, -0.028),
+    new THREE.Vector3(-0.032, -0.016, -0.036),
+    new THREE.Vector3(-0.044, 0.008, -0.026)
+  ]);
+  headlightGroup.add(new THREE.Mesh(new THREE.TubeGeometry(hlCableCurve, 16, 0.0026, 8, false), mats.MAT_RUBBER_KENDA));
+
+  // Grey 2-Pin Waterproof Plug & Orange Weather Seal Collar tucked behind the headlight
+  const greyPlugMat = new THREE.MeshStandardMaterial({ color: 0x6e737b, roughness: 0.55, metalness: 0.1 });
+  const greyPlug = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.011, 0.014), greyPlugMat);
+  greyPlug.position.set(-0.044, 0.014, -0.024);
+  const orangeSeal = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.012, 0.015), mats.MAT_RED_ANODIZED);
+  orangeSeal.position.set(-0.033, 0.014, -0.024);
+  headlightGroup.add(greyPlug, orangeSeal);
 
   cockpitGroup.add(headlightGroup);
 
