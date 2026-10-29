@@ -50,8 +50,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
 // Studio PMREM Environment for realistic metallic/anodized reflections on matte black
-const pmremGenerator = new THREE.PMREMGenerator(renderer);
-scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+try {
+  if (typeof RoomEnvironment !== 'undefined') {
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+  }
+} catch (e) {
+  console.warn('Studio PMREM skipped (direct studio lighting active):', e);
+}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(DEFAULT_CAM_TARGET);
@@ -74,11 +80,11 @@ keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
 keyLight.shadow.camera.near = 0.5;
 keyLight.shadow.camera.far = 8.0;
-const d = 1.35;
-keyLight.shadow.camera.left = -d;
-keyLight.shadow.camera.right = d;
-keyLight.shadow.camera.top = d;
-keyLight.shadow.camera.bottom = -d;
+const shadowDist = 1.35;
+keyLight.shadow.camera.left = -shadowDist;
+keyLight.shadow.camera.right = shadowDist;
+keyLight.shadow.camera.top = shadowDist;
+keyLight.shadow.camera.bottom = -shadowDist;
 keyLight.shadow.bias = -0.0005;
 scene.add(keyLight);
 

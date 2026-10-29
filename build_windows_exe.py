@@ -11,29 +11,25 @@ import struct
 
 
 def strip_es_module_syntax(js_code: str) -> str:
-    lines = []
-    skip_multiline_import = False
-    for line in js_code.splitlines():
-        stripped = line.strip()
-        if skip_multiline_import:
-            if "from " in stripped and stripped.endswith(";"):
-                skip_multiline_import = False
-            continue
-        if stripped.startswith("import "):
-            if "from " in stripped and stripped.endswith(";"):
-                continue
-            else:
-                skip_multiline_import = True
-                continue
-        # Replace leading export keywords
-        line = re.sub(r"^(\s*)export\s+(function|const|let|var|class)\s+", r"\1\2 ", line)
-        lines.append(line)
-    return "\n".join(lines)
+    # Robust stripping of single/multiline ES import and export statements
+    code = re.sub(r'import\s+[\s\S]*?from\s*[\'\"][^\'\"]+[\'\"];?', '', js_code)
+    code = re.sub(r'import\s*[\'\"][^\'\"]+[\'\"];?', '', code)
+    code = re.sub(r'export\s+(default\s+)?(function|const|let|var|class)\s+', r'\2 ', code)
+    code = re.sub(r'export\s*\{[^}]*\};?', '', code)
+    return code
 
 
 def build_standalone_html() -> bytes:
     with open("index.html", "r", encoding="utf-8") as f:
         index_html = f.read()
+
+    # Read offline embedded Three.js r165 + OrbitControls + RoomEnvironment + GSAP engine
+    if not os.path.exists("vendor_engine.js"):
+        raise RuntimeError("vendor_engine.js missing! Run engine generation first.")
+
+    with open("vendor_engine.js", "r", encoding="utf-8") as f:
+        vendor_engine_js = f.read()
+
     with open("materials.js", "r", encoding="utf-8") as f:
         materials_js = strip_es_module_syntax(f.read())
     with open("bike_chassis.js", "r", encoding="utf-8") as f:
@@ -45,11 +41,16 @@ def build_standalone_html() -> bytes:
     with open("main.js", "r", encoding="utf-8") as f:
         main_js = strip_es_module_syntax(f.read())
 
-    combined_module = f"""<script type="module">
-import * as THREE from 'three';
-import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
-import {{ RoomEnvironment }} from 'three/addons/environments/RoomEnvironment.js';
-import gsap from 'gsap';
+    # Build 100% self-contained zero-network offline bundle
+    combined_script = f"""<script>
+// --- [0/5] EMBEDDED THREE.JS r165 + ORBITCONTROLS + ROOMENVIRONMENT + GSAP 3.12 ---
+(function() {{
+{vendor_engine_js}
+}})();
+var THREE = window.THREE;
+var OrbitControls = THREE.OrbitControls;
+var RoomEnvironment = THREE.RoomEnvironment;
+var gsap = window.gsap;
 
 // --- [1/5] MATERIALS & PROCEDURAL PBR TEXTURES ---
 {materials_js}
@@ -67,15 +68,23 @@ import gsap from 'gsap';
 {main_js}
 </script>"""
 
+    # Remove importmap in the standalone offline HTML (no external CDN calls!)
+    standalone_html = re.sub(
+        r'<script\s+type="importmap"\s*>[\s\S]*?</script>',
+        '<!-- Zero-network standalone offline CAD build (Three.js r165 + GSAP embedded) -->',
+        index_html
+    )
+
     standalone_html = re.sub(
         r'<script\s+type="module"\s+src="\./main\.js"\s*>\s*</script>',
-        lambda _: combined_module,
-        index_html,
+        lambda _: combined_script,
+        standalone_html,
     )
 
     with open("Stealth_SurRon_Standalone.html", "w", encoding="utf-8") as f:
         f.write(standalone_html)
 
+    print(f"[OK] Stealth_SurRon_Standalone.html generated ({len(standalone_html)} bytes, 100% offline self-contained)")
     return standalone_html.encode("utf-8")
 
 

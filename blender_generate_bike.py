@@ -370,56 +370,73 @@ def build_battery_20s7p_collection(mats, root_col):
     add_box_cad("Cordura_1000D_Bag_Right_Cover", (0.145, 0.305, -0.039), (0.460, 0.320, 0.004), m_cordura, col, 0.42)
 
     # Generate all 140 cylindrical cells Li-ion 21700 EVE INR21700-50E (OD 21.2mm -> R=0.0106m, L=70.5mm):
-    # Rows 1..4 = 21 cells/row (84 cells), Rows 5..8 = 14 cells/row (56 cells) -> Total = 140 cells!
-    ux, uy = 0.400 / 0.598, 0.450 / 0.598
-    vx, vy = -uy, ux
-    du = 0.0227
-    dv = 0.01966
-    orig_x = 0.015 + ux * 0.048 + vx * 0.036
-    orig_y = 0.015 + uy * 0.048 + vy * 0.036
+    # Arranged in a TRUE 12-ROW TRIANGLE matching the bicycle frame triangle (T_A, T_B, T_C):
+    T_A = (0.015, 0.056)
+    T_B = (0.365, 0.454)
+    T_C = (-0.095, 0.354)
 
-    row_counts = [21, 21, 21, 21, 14, 14, 14, 14]
-    series_idx = 0
+    row_counts = [20, 19, 17, 16, 14, 12, 11, 10, 9, 6, 4, 2] # Sum = 140 cells
+    s_vals = [0.000, 0.082, 0.164, 0.246, 0.328, 0.410, 0.492, 0.572, 0.648, 0.745, 0.840, 0.935]
 
-    for r, count_in_row in enumerate(row_counts):
-        groups_in_row = count_in_row // 7
-        hex_stagger = (r % 2) * (du * 0.5)
-        row_shift = (r - 3) * du * 0.85 if r >= 4 else r * du * 0.12
+    zones = [
+        [0, 1, 2],      # Zone 0: 56 cells -> 8 sections (1S..8S)
+        [3, 4, 5],      # Zone 1: 42 cells -> 6 sections (9S..14S)
+        [6, 7],         # Zone 2: 21 cells -> 3 sections (15S..17S)
+        [8, 9, 10, 11]  # Zone 3: 21 cells -> 3 sections (18S..20S)
+    ]
 
-        for g in range(groups_in_row):
-            series_id = series_idx + 1
-            s_col = get_or_create_collection(f"Battery_Section_{series_id:02d}S_7P", col)
-            first_xy = None
-            last_xy = None
+    # Generate cells row by row
+    rows = []
+    for r, cnt in enumerate(row_counts):
+        s = s_vals[r]
+        lx = T_A[0] + s * (T_C[0] - T_A[0])
+        ly = T_A[1] + s * (T_C[1] - T_A[1])
+        rx = T_B[0] + s * (T_C[0] - T_B[0])
+        ry = T_B[1] + s * (T_C[1] - T_B[1])
 
-            for c in range(7):
-                col_idx = g * 7 + c
-                u_dist = row_shift + hex_stagger + col_idx * du
-                v_dist = r * dv
-                cx = orig_x + ux * u_dist + vx * v_dist
-                cy = orig_y + uy * u_dist + vy * v_dist
+        row_cells = []
+        for c in range(cnt):
+            t = c / (cnt - 1) if cnt > 1 else 0.5
+            t_norm = (c + 0.5) / cnt
+            cx = lx + t * (rx - lx)
+            cy = ly + t * (ry - ly)
+            row_cells.append({'row': r, 'col': c, 't_norm': t_norm, 'cx': cx, 'cy': cy})
+        rows.append(row_cells)
 
-                if first_xy is None:
-                    first_xy = (cx, cy)
-                last_xy = (cx, cy)
+    series_counter = 0
+    for z_idx, z_rows in enumerate(zones):
+        zone_cells = []
+        for r_idx in z_rows:
+            zone_cells.extend(rows[r_idx])
 
+        reverse_dir = (z_idx % 2 == 1)
+        zone_cells.sort(key=lambda item: (-item['t_norm'] if reverse_dir else item['t_norm'], -item['row'] if reverse_dir else item['row']))
+
+        for k in range(0, len(zone_cells), 7):
+            series_counter += 1
+            s_id = series_counter
+            s_col = get_or_create_collection(f"Battery_Section_{s_id:02d}S_7P", col)
+            cluster = zone_cells[k:k + 7]
+
+            for p_idx, cell in enumerate(cluster):
+                cx, cy = cell['cx'], cell['cy']
                 add_cylinder_between_cad(
-                    f"Cell_EVE50E_{series_id:02d}S_{c + 1}P",
+                    f"Cell_EVE50E_{s_id:02d}S_{p_idx + 1}P",
                     (cx, cy, -0.03525), (cx, cy, 0.03525),
                     0.0106, 0.0106, m_cell, s_col, 16
                 )
 
-            # Pure Nickel Strip (0.15x8mm) + Soldered Tinned Copper Busbar (2.5mm²) on both Z ends
-            mx = (first_xy[0] + last_xy[0]) * 0.5
-            my = (first_xy[1] + last_xy[1]) * 0.5
-            ang = math.atan2(last_xy[1] - first_xy[1], last_xy[0] - first_xy[0])
+            # Stamped Nickel Strip (0.15x8mm) + Soldered Tinned Copper Busbar (2.5mm²)
+            first_c = cluster[0]
+            last_c = cluster[-1]
+            mx = sum(c['cx'] for c in cluster) / 7.0
+            my = sum(c['cy'] for c in cluster) / 7.0
+            ang = math.atan2(last_c['cy'] - first_c['cy'], last_c['cx'] - first_c['cx'])
             for z_end, side_tag in [(0.036, "L"), (-0.036, "R")]:
-                add_box_cad(f"Nickel_Strip_{series_id:02d}S_{side_tag}", (mx, my, z_end), (0.152, 0.008, 0.0006), m_ni, s_col, ang)
-                add_box_cad(f"Copper_Busbar_{series_id:02d}S_{side_tag}", (mx, my, z_end * 1.02), (0.145, 0.0032, 0.0014), m_cu, s_col, ang)
+                add_box_cad(f"Nickel_Strip_{s_id:02d}S_{side_tag}", (mx, my, z_end), (0.125, 0.008, 0.0006), m_ni, s_col, ang)
+                add_box_cad(f"Copper_Busbar_{s_id:02d}S_{side_tag}", (mx, my, z_end * 1.02), (0.120, 0.0032, 0.0014), m_cu, s_col, ang)
 
-            series_idx += 1
-
-    # Bisida BMS 20S 120A Li-ion in upper 48mm gap under Toptube + Amass XT90-S Anti-Spark
+    # Bisida BMS 20S 120A Li-ion in upper gap under Toptube + Amass XT90-S Anti-Spark
     add_box_cad("Bisida_BMS_20S_120A_Heatsink", (0.145, 0.432, 0.0), (0.145, 0.022, 0.064), mats["MAT_ANODIZED_BLACK"], col, 0.24)
     add_box_cad("Amass_XT90S_AntiSpark", (-0.105, 0.385, 0.012), (0.026, 0.022, 0.012), mats["MAT_XT90_YELLOW"], col)
     add_box_cad("PETG_Honeycomb_Holder_Left", (0.145, 0.275, 0.029), (0.420, 0.220, 0.012), m_petg, col, 0.72)
