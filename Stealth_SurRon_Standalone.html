@@ -3195,7 +3195,8 @@ function createStealthMaterials() {
     sheen: 0.22,
     sheenRoughness: 0.86,
     sheenColor: new THREE.Color(0x181a1e),
-    transparent: true,
+    transparent: false,
+    depthWrite: true,
     opacity: 1.0
   });
 
@@ -5513,13 +5514,13 @@ function buildBatterySystemNode(mats) {
     group.name = name;
 
     const coverGeom = new THREE.ExtrudeGeometry(bagShape, {
-      depth: 0.004,
+      depth: 0.005,
       bevelEnabled: true,
-      bevelSize: 0.004,
-      bevelThickness: 0.003,
+      bevelSize: 0.0015,
+      bevelThickness: 0.0015,
       bevelSegments: 5
     });
-    coverGeom.translate(0, 0, sideSign > 0 ? 0.037 : -0.041);
+    coverGeom.translate(0, 0, sideSign > 0 ? 0.0392 : -0.0442);
 
     // Subtle organic 3D pillowing + diagonal fabric tension creases toward the Velcro straps (as on Photo #3!)
     const cPos = coverGeom.attributes.position;
@@ -5527,7 +5528,7 @@ function buildBatterySystemNode(mats) {
       const vx = cPos.getX(i);
       const vy = cPos.getY(i);
       const vz = cPos.getZ(i);
-      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.038) {
+      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.041) {
         const wrinkle = Math.sin(vx * 28.0 - vy * 22.0) * 0.0008 + Math.cos(vx * 14.0 + vy * 19.0) * 0.0006;
         cPos.setZ(i, vz + sideSign * wrinkle);
       }
@@ -5540,7 +5541,7 @@ function buildBatterySystemNode(mats) {
     group.add(coverMesh);
 
     // Perimeter heavy nylon piping (кедер) + reinforced stitch seam
-    const zPiping = sideSign * 0.0418;
+    const zPiping = sideSign * 0.0448;
     for (let i = 0; i < bagPts.length; i++) {
       const pA = bagPts[i];
       const pB = bagPts[(i + 1) % bagPts.length];
@@ -5560,7 +5561,7 @@ function buildBatterySystemNode(mats) {
     }
 
     // Recessed Waterproof Coil Zipper Track parallel to Toptube (1:1 as on Reference Photo #3!)
-    const zZip = sideSign * 0.0432;
+    const zZip = sideSign * 0.0462;
     const zipRear = new THREE.Vector3(-0.104, 0.372, zZip);
     const zipMid = new THREE.Vector3(0.135, 0.432, zZip);
     const zipFront = new THREE.Vector3(0.354, 0.486, zZip);
@@ -6968,12 +6969,12 @@ function getViewportAdjustedPos(basePos, targetVec) {
   camera.fov = aspect < 1.0 ? 44 : 28;
   camera.updateProjectionMatrix();
   if (aspect < 1.0 && basePos === DEFAULT_CAM_POS) {
-    // On 20:9 portrait smartphones (e.g. iQOO Z10r 393x852), use a balanced 3/4 side-front vector so both 26" wheels fit 100% symmetrically
-    const portraitDir = new THREE.Vector3(0.56, 0.25, 2.88);
-    const scale = Math.min(2.85, 1.04 / Math.max(aspect, 0.38));
+    // On 20:9 portrait smartphones (e.g. iQOO Z10r 393x852), use a balanced 3/4 side-front vector filling the screen
+    const portraitDir = new THREE.Vector3(0.48, 0.21, 2.25);
+    const scale = Math.min(2.15, 0.86 / Math.max(aspect, 0.38));
     return targetVec.clone().add(portraitDir.multiplyScalar(scale));
   }
-  const distScale = aspect < 1.25 ? Math.min(2.55, 1.08 / Math.max(aspect, 0.42)) : 1.0;
+  const distScale = aspect < 1.25 ? Math.min(2.25, 0.96 / Math.max(aspect, 0.42)) : 1.0;
   return targetVec.clone().add(basePos.clone().sub(targetVec).multiplyScalar(distScale));
 }
 
@@ -7386,7 +7387,9 @@ function setXRayMode(enable) {
 
     // Hide outer Cordura side covers & PETG honeycomb shells so all 140 cells,
     // 1S..20S badges, serpentine copper/nickel busbars, and 21 balance wires are 100% clear!
+    mats.MAT_CORDURA_1000D.transparent = true;
     mats.MAT_CORDURA_1000D.depthWrite = false;
+    mats.MAT_CORDURA_1000D.needsUpdate = true;
     gsap.to(mats.MAT_CORDURA_1000D, { opacity: 0.10, duration: 0.5 });
     batterySys.leftCoverGroup.visible = false;
     batterySys.rightCoverGroup.visible = false;
@@ -7406,8 +7409,10 @@ function setXRayMode(enable) {
     xrayPassport.classList.remove('visible');
     if (mobileXRayBanner) mobileXRayBanner.classList.remove('visible');
 
+    mats.MAT_CORDURA_1000D.transparent = false;
     mats.MAT_CORDURA_1000D.depthWrite = true;
-    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.5 });
+    mats.MAT_CORDURA_1000D.opacity = 1.0;
+    mats.MAT_CORDURA_1000D.needsUpdate = true;
     batterySys.leftCoverGroup.visible = true;
     batterySys.rightCoverGroup.visible = true;
     batterySys.holderLeftGroup.visible = true;
@@ -7421,7 +7426,7 @@ function resetAllBatterySeriesMaterials() {
   hoveredSeriesId = null;
   batterySys.seriesGroups.forEach((sGroup) => {
     const { cellMat, busMat, niMat } = sGroup.userData;
-    cellMat.color.setHex(0x3b82a6);
+    cellMat.color.setHex(0xffffff);
     cellMat.emissive.setHex(0x000000);
     cellMat.emissiveIntensity = 0;
     cellMat.opacity = 1.0;

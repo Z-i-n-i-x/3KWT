@@ -41,12 +41,12 @@ function getViewportAdjustedPos(basePos, targetVec) {
   camera.fov = aspect < 1.0 ? 44 : 28;
   camera.updateProjectionMatrix();
   if (aspect < 1.0 && basePos === DEFAULT_CAM_POS) {
-    // On 20:9 portrait smartphones (e.g. iQOO Z10r 393x852), use a balanced 3/4 side-front vector so both 26" wheels fit 100% symmetrically
-    const portraitDir = new THREE.Vector3(0.56, 0.25, 2.88);
-    const scale = Math.min(2.85, 1.04 / Math.max(aspect, 0.38));
+    // On 20:9 portrait smartphones (e.g. iQOO Z10r 393x852), use a balanced 3/4 side-front vector filling the screen
+    const portraitDir = new THREE.Vector3(0.48, 0.21, 2.25);
+    const scale = Math.min(2.15, 0.86 / Math.max(aspect, 0.38));
     return targetVec.clone().add(portraitDir.multiplyScalar(scale));
   }
-  const distScale = aspect < 1.25 ? Math.min(2.55, 1.08 / Math.max(aspect, 0.42)) : 1.0;
+  const distScale = aspect < 1.25 ? Math.min(2.25, 0.96 / Math.max(aspect, 0.42)) : 1.0;
   return targetVec.clone().add(basePos.clone().sub(targetVec).multiplyScalar(distScale));
 }
 
@@ -459,7 +459,9 @@ function setXRayMode(enable) {
 
     // Hide outer Cordura side covers & PETG honeycomb shells so all 140 cells,
     // 1S..20S badges, serpentine copper/nickel busbars, and 21 balance wires are 100% clear!
+    mats.MAT_CORDURA_1000D.transparent = true;
     mats.MAT_CORDURA_1000D.depthWrite = false;
+    mats.MAT_CORDURA_1000D.needsUpdate = true;
     gsap.to(mats.MAT_CORDURA_1000D, { opacity: 0.10, duration: 0.5 });
     batterySys.leftCoverGroup.visible = false;
     batterySys.rightCoverGroup.visible = false;
@@ -479,8 +481,10 @@ function setXRayMode(enable) {
     xrayPassport.classList.remove('visible');
     if (mobileXRayBanner) mobileXRayBanner.classList.remove('visible');
 
+    mats.MAT_CORDURA_1000D.transparent = false;
     mats.MAT_CORDURA_1000D.depthWrite = true;
-    gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.5 });
+    mats.MAT_CORDURA_1000D.opacity = 1.0;
+    mats.MAT_CORDURA_1000D.needsUpdate = true;
     batterySys.leftCoverGroup.visible = true;
     batterySys.rightCoverGroup.visible = true;
     batterySys.holderLeftGroup.visible = true;
@@ -494,7 +498,7 @@ function resetAllBatterySeriesMaterials() {
   hoveredSeriesId = null;
   batterySys.seriesGroups.forEach((sGroup) => {
     const { cellMat, busMat, niMat } = sGroup.userData;
-    cellMat.color.setHex(0x3b82a6);
+    cellMat.color.setHex(0xffffff);
     cellMat.emissive.setHex(0x000000);
     cellMat.emissiveIntensity = 0;
     cellMat.opacity = 1.0;

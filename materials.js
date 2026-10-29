@@ -471,7 +471,8 @@ export function createStealthMaterials() {
     sheen: 0.22,
     sheenRoughness: 0.86,
     sheenColor: new THREE.Color(0x181a1e),
-    transparent: true,
+    transparent: false,
+    depthWrite: true,
     opacity: 1.0
   });
 

@@ -655,7 +655,7 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
     off_code_oncreate = off_data_start + len(data_buf)
     data_buf.extend(code_item_oncreate)
 
-    # 2. type_list items for protos with parameters
+    # 2. type_list items for protos with parameters (each must be 4-byte aligned!)
     proto_param_offsets = []
     for shorty, ret_t, params in protos:
         if not params:
@@ -667,6 +667,7 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
             data_buf.extend(struct.pack("<I", len(params)))
             for pt in params:
                 data_buf.extend(struct.pack("<H", t_idx[pt]))
+            align_data(4)
 
     # 3. string_data_item entries
     string_data_offsets = []
@@ -950,9 +951,10 @@ def build_apk_v2_signing_block(
 
     # --- 1. APK Signature Scheme v2 Block (ID 0x7109871a) ---
     # Mandatory V3 stripping protection attribute (0xbeeff00d -> 3) required when V3 block is present!
+    # In V2, signed_data has ONLY 3 fields: digests + certificates + additional_attributes (NO trailing uint32!)
     v2_stripping_attr = lp_prefixed(struct.pack("<II", ATTR_V3_STRIPPING_PROTECTION, 3))
     v2_additional_attrs = lp_prefixed(v2_stripping_attr)
-    v2_signed_data = digests_seq + certs_seq + v2_additional_attrs + struct.pack("<I", 0)
+    v2_signed_data = digests_seq + certs_seq + v2_additional_attrs
     v2_sig_bytes = private_key.sign(v2_signed_data, padding.PKCS1v15(), hashes.SHA256())
     v2_sig_entry = lp_prefixed(struct.pack("<I", SIG_ALGO_RSA_PKCS1_V1_5_SHA256) + lp_prefixed(v2_sig_bytes))
     v2_sigs_seq = lp_prefixed(v2_sig_entry)
@@ -1095,7 +1097,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
                 comp_size,
                 uncomp_size,
                 len(name_bytes),
-                0,           # Extra field length in CD
+                len(extra_field),  # Extra field length in CD matching Local Header
                 0,           # File comment length
                 0,           # Disk number start
                 0,           # Internal file attributes
@@ -1103,6 +1105,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
                 local_header_offset,
             )
             + name_bytes
+            + extra_field
         )
         central_dir_chunks.extend(cd_header)
 

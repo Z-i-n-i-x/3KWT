@@ -301,13 +301,13 @@ export function buildBatterySystemNode(mats) {
     group.name = name;
 
     const coverGeom = new THREE.ExtrudeGeometry(bagShape, {
-      depth: 0.004,
+      depth: 0.005,
       bevelEnabled: true,
-      bevelSize: 0.004,
-      bevelThickness: 0.003,
+      bevelSize: 0.0015,
+      bevelThickness: 0.0015,
       bevelSegments: 5
     });
-    coverGeom.translate(0, 0, sideSign > 0 ? 0.037 : -0.041);
+    coverGeom.translate(0, 0, sideSign > 0 ? 0.0392 : -0.0442);
 
     // Subtle organic 3D pillowing + diagonal fabric tension creases toward the Velcro straps (as on Photo #3!)
     const cPos = coverGeom.attributes.position;
@@ -315,7 +315,7 @@ export function buildBatterySystemNode(mats) {
       const vx = cPos.getX(i);
       const vy = cPos.getY(i);
       const vz = cPos.getZ(i);
-      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.038) {
+      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.041) {
         const wrinkle = Math.sin(vx * 28.0 - vy * 22.0) * 0.0008 + Math.cos(vx * 14.0 + vy * 19.0) * 0.0006;
         cPos.setZ(i, vz + sideSign * wrinkle);
       }
@@ -328,7 +328,7 @@ export function buildBatterySystemNode(mats) {
     group.add(coverMesh);
 
     // Perimeter heavy nylon piping (кедер) + reinforced stitch seam
-    const zPiping = sideSign * 0.0418;
+    const zPiping = sideSign * 0.0448;
     for (let i = 0; i < bagPts.length; i++) {
       const pA = bagPts[i];
       const pB = bagPts[(i + 1) % bagPts.length];
@@ -348,7 +348,7 @@ export function buildBatterySystemNode(mats) {
     }
 
     // Recessed Waterproof Coil Zipper Track parallel to Toptube (1:1 as on Reference Photo #3!)
-    const zZip = sideSign * 0.0432;
+    const zZip = sideSign * 0.0462;
     const zipRear = new THREE.Vector3(-0.104, 0.372, zZip);
     const zipMid = new THREE.Vector3(0.135, 0.432, zZip);
     const zipFront = new THREE.Vector3(0.354, 0.486, zZip);
