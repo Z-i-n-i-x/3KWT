@@ -557,12 +557,22 @@ export function createStealthMaterials() {
 
   const MAT_CELL_EVE50E = new THREE.MeshPhysicalMaterial({
     name: 'MAT_CELL_EVE50E',
-    color: 0x3b82a6, // Authentic EVE INR21700-50E cyan-blue PVC wrap
-    roughness: 0.28,
-    metalness: 0.15,
-    clearcoat: 0.35,
+    color: 0xffffff,
+    map: createEve50ECellWrapTexture(),
+    roughness: 0.24,
+    metalness: 0.14,
+    clearcoat: 0.45,
+    clearcoatRoughness: 0.18,
     transparent: true,
     opacity: 1.0
+  });
+
+  const MAT_GOLD_BRASS = new THREE.MeshPhysicalMaterial({
+    name: 'MAT_GOLD_BRASS',
+    color: 0xe6b836,
+    roughness: 0.22,
+    metalness: 0.96,
+    clearcoat: 0.2
   });
 
   const MAT_WHITE_INSULATOR = new THREE.MeshStandardMaterial({
@@ -576,25 +586,26 @@ export function createStealthMaterials() {
   const MAT_NICKEL_STRIP = new THREE.MeshPhysicalMaterial({
     name: 'MAT_NICKEL_STRIP',
     color: 0xdbe2ea,
-    roughness: 0.20,
-    metalness: 0.96
+    roughness: 0.18,
+    metalness: 0.96,
+    clearcoat: 0.25
   });
 
   const MAT_COPPER_BUSBAR = new THREE.MeshPhysicalMaterial({
     name: 'MAT_COPPER_BUSBAR',
-    color: 0xe07a3c,
-    roughness: 0.22,
-    metalness: 0.95,
-    clearcoat: 0.15
+    color: 0xe47835,
+    roughness: 0.20,
+    metalness: 0.96,
+    clearcoat: 0.22
   });
 
   const MAT_PETG_HOLDER = new THREE.MeshPhysicalMaterial({
     name: 'MAT_PETG_HOLDER',
     color: 0x121316,
-    roughness: 0.48,
+    roughness: 0.46,
     metalness: 0.08,
     bumpMap: microGrainTex,
-    bumpScale: 0.001
+    bumpScale: 0.0012
   });
 
   const MAT_EVA_FOAM = new THREE.MeshStandardMaterial({
@@ -667,6 +678,7 @@ export function createStealthMaterials() {
     MAT_RED_ANODIZED,
     MAT_BLUE_ANODIZED,
     MAT_BRASS_NIPPLE,
+    MAT_GOLD_BRASS,
     MAT_RIM_MTX39,
     MAT_CELL_EVE50E,
     MAT_WHITE_INSULATOR,
@@ -684,3 +696,54 @@ export function createStealthMaterials() {
     MAT_KENDA_SIDEWALL
   };
 }
+
+/**
+ * 10. Authentic EVE INR21700-50E Cyan-Blue PVC Wrap with Dot-Matrix Lot Code & QR Matrix
+ */
+export function createEve50ECellWrapTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0, 0, 512, 0);
+  grad.addColorStop(0.0, '#2e7094');
+  grad.addColorStop(0.35, '#3b84aa');
+  grad.addColorStop(0.7, '#34789c');
+  grad.addColorStop(1.0, '#2e7094');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Subtle positive-end crimp groove shadow line
+  ctx.fillStyle = 'rgba(12, 32, 46, 0.55)';
+  ctx.fillRect(0, 22, 512, 7);
+  ctx.fillStyle = 'rgba(180, 230, 255, 0.25)';
+  ctx.fillRect(0, 29, 512, 3);
+
+  // Laser dot-matrix industrial print on cell body
+  ctx.save();
+  ctx.translate(160, 136);
+  ctx.font = '700 22px "JetBrains Mono", monospace';
+  ctx.fillStyle = 'rgba(18, 34, 46, 0.78)';
+  ctx.fillText('INR21700/50E', 0, -24);
+  ctx.font = '600 18px "JetBrains Mono", monospace';
+  ctx.fillText('EVE  18.0Wh  72V-PRO', 0, 4);
+  ctx.fillText('+  LI-ION  2026B  -', 0, 32);
+
+  // 2D DataMatrix QR square
+  ctx.fillStyle = 'rgba(16, 30, 42, 0.75)';
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 6; c++) {
+      if ((r * c + r + c) % 2 === 0 || r === 0 || c === 0) {
+        ctx.fillRect(-56 + c * 7, -30 + r * 7, 5, 5);
+      }
+    }
+  }
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
