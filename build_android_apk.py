@@ -803,15 +803,20 @@ def generate_signing_key_and_cert():
             x509.NameAttribute(NameOID.COMMON_NAME, "Stealth Sur-Ron 72V 3000W"),
         ]
     )
-    # Use UTCTime dates (< 2050) and 64-bit positive serial number matching Android keytool/apksigner
+    # Use UTCTime dates (< 2050), 64-bit positive serial number, and standard X509v3 extensions matching Android keytool/apksigner
+    pub_key = private_key.public_key()
+    ski = x509.SubjectKeyIdentifier.from_public_key(pub_key)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
         .issuer_name(issuer)
-        .public_key(private_key.public_key())
+        .public_key(pub_key)
         .serial_number(0x535552524F4E3732)
         .not_valid_before(datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
         .not_valid_after(datetime.datetime(2048, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
+        .add_extension(ski, critical=False)
+        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(ski), critical=False)
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=False)
         .sign(private_key, hashes.SHA256())
     )
     cert_der = cert.public_bytes(serialization.Encoding.DER)
@@ -835,6 +840,7 @@ def build_jar_v1_signature_files(entries_dict: dict, private_key, cert) -> tuple
         sec_digest = base64.b64encode(hashlib.sha256(section.encode("utf-8")).digest()).decode("ascii")
         sf_sections.append(f"Name: {name}\r\nSHA-256-Digest: {sec_digest}\r\n\r\n")
 
+    manifest_main_digest = base64.b64encode(hashlib.sha256(manifest_header.encode("utf-8")).digest()).decode("ascii")
     manifest_bytes = (manifest_header + "".join(manifest_sections)).encode("utf-8")
     manifest_digest = base64.b64encode(hashlib.sha256(manifest_bytes).digest()).decode("ascii")
 
@@ -842,6 +848,7 @@ def build_jar_v1_signature_files(entries_dict: dict, private_key, cert) -> tuple
         "Signature-Version: 1.0\r\n"
         "Created-By: 1.0 (Android)\r\n"
         f"SHA-256-Digest-Manifest: {manifest_digest}\r\n"
+        f"SHA-256-Digest-Manifest-Main-Attributes: {manifest_main_digest}\r\n"
         "X-Android-APK-Signed: 2, 3\r\n\r\n"
     )
     sf_bytes = sf_header.encode("utf-8") + "".join(sf_sections).encode("utf-8")
@@ -1054,20 +1061,20 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
         comp_size = len(comp_data)
         local_header_offset = len(local_chunks)
 
-        # 4-byte zipalign for STORED (uncompressed) files so data starts at a multiple of 4
+        # 4-byte zipalign for STORED (uncompressed) files using standard zipalign 0xd935 extra field in Local File Header ONLY
         extra_field = b""
         if method == 0:
             data_start = local_header_offset + 30 + len(name_bytes)
-            pad = (4 - (data_start % 4)) % 4
-            if pad > 0:
-                extra_field = b"\x00" * pad
+            if data_start % 4 != 0:
+                pad = (4 - ((data_start + 6) % 4)) % 4
+                extra_field = struct.pack("<HHH", 0xD935, 2 + pad, 4) + (b"\x00" * pad)
 
         local_header = (
             struct.pack(
                 "<IHHHHHIIIHH",
                 0x04034B50,  # Local file header signature
                 20,          # Version needed to extract (2.0)
-                0,           # General purpose bit flag
+                0x0800,      # General purpose bit flag (UTF-8 filename)
                 method,      # Compression method
                 0x0000,      # Last mod file time
                 0x5421,      # Last mod file date
@@ -1089,7 +1096,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
                 0x02014B50,  # Central directory file header signature
                 20,          # Version made by
                 20,          # Version needed to extract
-                0,           # Flags
+                0x0800,      # General purpose bit flag (UTF-8 filename)
                 method,
                 0x0000,
                 0x5421,
@@ -1097,7 +1104,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
                 comp_size,
                 uncomp_size,
                 len(name_bytes),
-                len(extra_field),  # Extra field length in CD matching Local Header
+                0,           # Extra field length in CD is 0 (matching official zipalign / apksigner)
                 0,           # File comment length
                 0,           # Disk number start
                 0,           # Internal file attributes
@@ -1105,11 +1112,14 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
                 local_header_offset,
             )
             + name_bytes
-            + extra_field
         )
         central_dir_chunks.extend(cd_header)
 
-    # Pad before_cd so APK Signing Block starts at a 4096-byte page boundary (if needed by extra field on last entry? No, APK Signing Block size is padded so cd_offset_final % 4096 == 0)
+    # Pad before_cd to a 4096-byte page boundary (matching official Android SDK apksigner DefaultApkSignerEngine)
+    # so that BOTH the APK Signing Block offset AND the ZIP Central Directory offset are exact multiples of 4096!
+    if len(local_chunks) % 4096 != 0:
+        local_chunks.extend(b"\x00" * (4096 - (len(local_chunks) % 4096)))
+
     before_cd = bytes(local_chunks)
     central_dir = bytes(central_dir_chunks)
     cd_offset_initial = len(before_cd)
