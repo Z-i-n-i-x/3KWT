@@ -318,27 +318,27 @@ def build_wheels_and_motor_collection(mats, root_col):
     m_ano = mats["MAT_ANODIZED_BLACK"]
     m_steel = mats["MAT_STEEL_ROTOR"]
 
-    for wheel_name, wx, wy in [("Front_Wheel_26", 0.565, 0.030), ("Rear_Wheel_26_3000W", -0.435, 0.030)]:
-        # Tire Carcass (R_outer = 0.335m, tube_r = 0.0295m -> major_r = 0.3055m)
-        add_weld_torus_cad(f"{wheel_name}_Kenda_Carcass", (wx, wy, 0.0), (0, 0, 1), 0.3055, 0.0295, m_rubber, col)
-        # MTX39 Rim (width 39mm, height 24mm)
-        add_weld_torus_cad(f"{wheel_name}_MTX39_Rim", (wx, wy, 0.0), (0, 0, 1), 0.268, 0.0195, m_ano, col)
+    for wheel_name, wx, wy in [("Front_Wheel_26", 0.610, 0.015), ("Rear_Wheel_26_3000W", -0.438, 0.015)]:
+        # Tire Carcass (proportional 26x2.30" Kenda K-Rad K905)
+        add_weld_torus_cad(f"{wheel_name}_Kenda_Carcass", (wx, wy, 0.0), (0, 0, 1), 0.244, 0.0225, m_rubber, col)
+        # MTX39 Rim
+        add_weld_torus_cad(f"{wheel_name}_MTX39_Rim", (wx, wy, 0.0), (0, 0, 1), 0.221, 0.015, m_ano, col)
 
         # 72-step 3D Tread Knobs around circumference
         for i in range(72):
             theta = (i / 72.0) * math.pi * 2.0
             for side in (-1.0, 1.0):
-                kx = wx + math.cos(theta) * 0.332
-                ky = wy + math.sin(theta) * 0.332
-                kz = side * 0.014
-                add_box_cad(f"{wheel_name}_Knob_{i}_{int(side)}", (kx, ky, kz), (0.012, 0.007, 0.012), m_rubber, col, theta)
+                kx = wx + math.cos(theta) * 0.266
+                ky = wy + math.sin(theta) * 0.266
+                kz = side * 0.011
+                add_box_cad(f"{wheel_name}_Knob_{i}_{int(side)}", (kx, ky, kz), (0.010, 0.005, 0.010), m_rubber, col, theta)
 
         # 180mm Perforated Stainless Steel Brake Rotor on Left Side (z_cad = +0.048)
         add_cylinder_between_cad(f"{wheel_name}_Rotor_180mm", (wx, wy, 0.047), (wx, wy, 0.0492), 0.090, 0.090, m_steel, col, 36)
 
-    # Rear 72V 3000W Direct Drive Hub Motor (OD 245mm -> R=0.1225m) + M14 Axle
-    add_cylinder_between_cad("Motor_72V_3000W_Stator_245mm", (-0.435, 0.030, -0.034), (-0.435, 0.030, 0.034), 0.1225, 0.1225, m_frame, col, 48)
-    add_box_cad("Motor_Axle_M14_10mm_Flats", (-0.435, 0.030, 0.0), (0.014, 0.010, 0.185), m_steel, col)
+    # Rear 72V 3000W Direct Drive Hub Motor + M14 Axle
+    add_cylinder_between_cad("Motor_72V_3000W_Stator_216mm", (-0.438, 0.015, -0.032), (-0.438, 0.015, 0.032), 0.108, 0.108, m_frame, col, 48)
+    add_box_cad("Motor_Axle_M14_10mm_Flats", (-0.438, 0.015, 0.0), (0.014, 0.010, 0.185), m_steel, col)
 
 
 def build_dropout_and_brakes_collection(mats, root_col):
@@ -348,12 +348,12 @@ def build_dropout_and_brakes_collection(mats, root_col):
     m_ano = mats["MAT_ANODIZED_BLACK"]
 
     # Monolithic 6mm Left Steel Armor Plate ("2-in-1": M14 10x14mm slot + IS 51mm brake mounting ears)
-    add_box_cad("Left_6mm_Monolithic_Dropout_Plate_M14_IS51", (-0.435, 0.052, 0.073), (0.064, 0.095, 0.006), m_frame, col)
-    add_box_cad("Right_6mm_Torque_Dropout_Plate_M14", (-0.435, 0.035, -0.073), (0.056, 0.055, 0.006), m_frame, col)
+    add_box_cad("Left_6mm_Monolithic_Dropout_Plate_M14_IS51", (-0.438, 0.052, 0.073), (0.064, 0.095, 0.006), m_frame, col)
+    add_box_cad("Right_6mm_Torque_Dropout_Plate_M14", (-0.438, 0.035, -0.073), (0.056, 0.055, 0.006), m_frame, col)
 
     # Rear & Front 4-Piston Forged ZOOM HB-890E Hydraulic Brake Calipers
-    add_box_cad("ZOOM_HB890E_4Piston_Caliper_Rear", (-0.421, 0.112, 0.052), (0.036, 0.076, 0.034), m_ano, col, -1.12)
-    add_box_cad("ZOOM_HB890E_4Piston_Caliper_Front", (0.508, 0.088, 0.052), (0.036, 0.076, 0.034), m_ano, col, -0.32)
+    add_box_cad("ZOOM_HB890E_4Piston_Caliper_Rear", (-0.424, 0.097, 0.052), (0.034, 0.074, 0.032), m_ano, col, -1.12)
+    add_box_cad("ZOOM_HB890E_4Piston_Caliper_Front", (0.548, 0.076, 0.050), (0.034, 0.074, 0.032), m_ano, col, -0.36)
 
 
 def build_battery_20s7p_collection(mats, root_col):
@@ -369,23 +369,22 @@ def build_battery_20s7p_collection(mats, root_col):
     add_box_cad("Cordura_1000D_Bag_Left_Cover", (0.145, 0.305, 0.039), (0.460, 0.320, 0.004), m_cordura, col, 0.42)
     add_box_cad("Cordura_1000D_Bag_Right_Cover", (0.145, 0.305, -0.039), (0.460, 0.320, 0.004), m_cordura, col, 0.42)
 
-    # Generate all 140 cylindrical cells Li-ion 21700 EVE INR21700-50E (OD 21.2mm -> R=0.0106m, L=70.5mm):
-    # Arranged in a TRUE 12-ROW TRIANGLE matching the bicycle frame triangle (T_A, T_B, T_C):
-    T_A = (0.015, 0.056)
-    T_B = (0.365, 0.454)
-    T_C = (-0.095, 0.354)
+    # Generate all 140 cylindrical cells Li-ion 21700 EVE INR21700-50E in a 10-row, 5-tier (6+5+4+3+2 = 20S) triangle:
+    T_A = (0.016, 0.050)
+    T_B = (0.374, 0.466)
+    T_C = (-0.104, 0.376)
 
-    row_counts = [20, 19, 17, 16, 14, 12, 11, 10, 9, 6, 4, 2] # Sum = 140 cells
-    s_vals = [0.000, 0.082, 0.164, 0.246, 0.328, 0.410, 0.492, 0.572, 0.648, 0.745, 0.840, 0.935]
+    row_counts = [22, 20, 18, 17, 15, 13, 11, 10, 8, 6]  # Sum = 140 cells
+    s_vals = [0.000, 0.082, 0.184, 0.264, 0.366, 0.446, 0.548, 0.626, 0.728, 0.806]
 
-    zones = [
-        [0, 1, 2],      # Zone 0: 56 cells -> 8 sections (1S..8S)
-        [3, 4, 5],      # Zone 1: 42 cells -> 6 sections (9S..14S)
-        [6, 7],         # Zone 2: 21 cells -> 3 sections (15S..17S)
-        [8, 9, 10, 11]  # Zone 3: 21 cells -> 3 sections (18S..20S)
+    tier_defs = [
+        (0, 1, False, [4, 3, 4, 4, 3, 4], [3, 4, 3, 3, 4, 3]),  # Tier 1: 1S..6S (42 cells)
+        (2, 3, True,  [4, 3, 4, 3, 4],    [3, 4, 3, 4, 3]),     # Tier 2: 7S..11S (35 cells)
+        (4, 5, False, [4, 4, 3, 4],       [3, 3, 4, 3]),        # Tier 3: 12S..15S (28 cells)
+        (6, 7, True,  [4, 3, 4],          [3, 4, 3]),           # Tier 4: 16S..18S (21 cells)
+        (8, 9, False, [4, 4],             [3, 3])               # Tier 5: 19S..20S (14 cells)
     ]
 
-    # Generate cells row by row
     rows = []
     for r, cnt in enumerate(row_counts):
         s = s_vals[r]
@@ -397,48 +396,42 @@ def build_battery_20s7p_collection(mats, root_col):
         row_cells = []
         for c in range(cnt):
             t = c / (cnt - 1) if cnt > 1 else 0.5
-            t_norm = (c + 0.5) / cnt
             cx = lx + t * (rx - lx)
             cy = ly + t * (ry - ly)
-            row_cells.append({'row': r, 'col': c, 't_norm': t_norm, 'cx': cx, 'cy': cy})
+            row_cells.append({'row': r, 'col': c, 'cx': cx, 'cy': cy})
         rows.append(row_cells)
 
     series_counter = 0
-    for z_idx, z_rows in enumerate(zones):
-        zone_cells = []
-        for r_idx in z_rows:
-            zone_cells.extend(rows[r_idx])
-
-        reverse_dir = (z_idx % 2 == 1)
-        zone_cells.sort(key=lambda item: (-item['t_norm'] if reverse_dir else item['t_norm'], -item['row'] if reverse_dir else item['row']))
-
-        for k in range(0, len(zone_cells), 7):
+    for r_a, r_b, rev, slices_a, slices_b in tier_defs:
+        arr_a = list(reversed(rows[r_a])) if rev else list(rows[r_a])
+        arr_b = list(reversed(rows[r_b])) if rev else list(rows[r_b])
+        cur_a, cur_b = 0, 0
+        for ca, cb in zip(slices_a, slices_b):
             series_counter += 1
             s_id = series_counter
             s_col = get_or_create_collection(f"Battery_Section_{s_id:02d}S_7P", col)
-            cluster = zone_cells[k:k + 7]
+            cluster = arr_a[cur_a:cur_a + ca] + arr_b[cur_b:cur_b + cb]
+            cur_a += ca
+            cur_b += cb
 
             for p_idx, cell in enumerate(cluster):
                 cx, cy = cell['cx'], cell['cy']
                 add_cylinder_between_cad(
                     f"Cell_EVE50E_{s_id:02d}S_{p_idx + 1}P",
                     (cx, cy, -0.03525), (cx, cy, 0.03525),
-                    0.0106, 0.0106, m_cell, s_col, 16
+                    0.0098, 0.0098, m_cell, s_col, 16
                 )
 
-            # Stamped Nickel Strip (0.15x8mm) + Soldered Tinned Copper Busbar (2.5mm²)
-            first_c = cluster[0]
-            last_c = cluster[-1]
             mx = sum(c['cx'] for c in cluster) / 7.0
             my = sum(c['cy'] for c in cluster) / 7.0
-            ang = math.atan2(last_c['cy'] - first_c['cy'], last_c['cx'] - first_c['cx'])
+            ang = math.atan2(T_B[1] - T_A[1], T_B[0] - T_A[0])
             for z_end, side_tag in [(0.036, "L"), (-0.036, "R")]:
-                add_box_cad(f"Nickel_Strip_{s_id:02d}S_{side_tag}", (mx, my, z_end), (0.125, 0.008, 0.0006), m_ni, s_col, ang)
-                add_box_cad(f"Copper_Busbar_{s_id:02d}S_{side_tag}", (mx, my, z_end * 1.02), (0.120, 0.0032, 0.0014), m_cu, s_col, ang)
+                add_box_cad(f"Nickel_Plate_{s_id:02d}S_{side_tag}", (mx, my, z_end), (0.072, 0.022, 0.0006), m_ni, s_col, ang)
+                add_box_cad(f"Copper_Busbar_{s_id:02d}S_{side_tag}", (mx, my, z_end * 1.02), (0.068, 0.0032, 0.0014), m_cu, s_col, ang)
 
     # Bisida BMS 20S 120A Li-ion in upper gap under Toptube + Amass XT90-S Anti-Spark
-    add_box_cad("Bisida_BMS_20S_120A_Heatsink", (0.145, 0.432, 0.0), (0.145, 0.022, 0.064), mats["MAT_ANODIZED_BLACK"], col, 0.24)
-    add_box_cad("Amass_XT90S_AntiSpark", (-0.105, 0.385, 0.012), (0.026, 0.022, 0.012), mats["MAT_XT90_YELLOW"], col)
+    add_box_cad("Bisida_BMS_20S_120A_Heatsink", (0.155, 0.452, 0.0), (0.140, 0.018, 0.062), mats["MAT_ANODIZED_BLACK"], col, 0.24)
+    add_box_cad("Amass_XT90S_AntiSpark", (-0.048, 0.398, 0.015), (0.028, 0.022, 0.014), mats["MAT_XT90_YELLOW"], col)
     add_box_cad("PETG_Honeycomb_Holder_Left", (0.145, 0.275, 0.029), (0.420, 0.220, 0.012), m_petg, col, 0.72)
     add_box_cad("PETG_Honeycomb_Holder_Right", (0.145, 0.275, -0.029), (0.420, 0.220, 0.012), m_petg, col, 0.72)
 

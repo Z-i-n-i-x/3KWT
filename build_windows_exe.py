@@ -68,11 +68,21 @@ var gsap = window.gsap;
 {main_js}
 </script>"""
 
-    # Remove importmap in the standalone offline HTML (no external CDN calls!)
+    # Remove importmap, external font links, and external vendor script tag in the standalone offline HTML
+    standalone_html = re.sub(
+        r'<link[^>]*fonts\.g(oogleapis|static)\.com[^>]*>\s*',
+        '',
+        index_html
+    )
+    standalone_html = re.sub(
+        r'<script\s+src="\./vendor_engine\.js"\s*>\s*</script>\s*',
+        '',
+        standalone_html
+    )
     standalone_html = re.sub(
         r'<script\s+type="importmap"\s*>[\s\S]*?</script>',
         '<!-- Zero-network standalone offline CAD build (Three.js r165 + GSAP embedded) -->',
-        index_html
+        standalone_html
     )
 
     standalone_html = re.sub(

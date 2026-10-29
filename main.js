@@ -98,10 +98,10 @@ const fillLight = new THREE.DirectionalLight(0xffcfa8, 0.85);
 fillLight.position.set(2.0, 0.4, 1.6);
 scene.add(fillLight);
 
-// Studio Contact Shadows on floor y = -0.278m (No fence, no pavement tiles — pure studio!)
+// Studio Contact Shadows on floor y = -0.256m (No fence, no pavement tiles — pure studio!)
 function createStudioContactShadowFloor() {
   const floorGroup = new THREE.Group();
-  floorGroup.position.y = -0.278;
+  floorGroup.position.y = -0.256;
 
   // Soft procedural dual-wheel + chassis contact shadow texture
   const canvas = document.createElement('canvas');
@@ -678,13 +678,13 @@ const HOTSPOT_DEFS = [
     id: 'saddle',
     label: '[ МОТО-СЕДЛО + ПОДРАМНИК ]',
     parent: saddleSys.saddleAndFenderGroup,
-    localPos: new THREE.Vector3(-0.34, 0.56, 0.0)
+    localPos: new THREE.Vector3(-0.28, 0.49, 0.0)
   },
   {
     id: 'dropout',
     label: '[ ДРОПАУТ 6 ММ М14 + ZOOM ]',
     parent: rearDropoutNode,
-    localPos: new THREE.Vector3(-0.445, 0.08, 0.08)
+    localPos: new THREE.Vector3(-0.438, 0.08, 0.08)
   },
   {
     id: 'motor',
@@ -738,15 +738,26 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Support optional URL query params (?mode=xray or ?mode=explode)
+// Support optional URL query params (?mode=xray, ?mode=explode, ?mode=side, ?mode=xray_explode)
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('mode') === 'xray') {
+const modeParam = urlParams.get('mode');
+if (modeParam === 'xray') {
   setXRayMode(true);
-  camera.position.set(0.13, 0.28, 0.96);
-  controls.target.set(0.12, 0.27, 0.0);
+  camera.position.set(0.13, 0.27, 0.88);
+  controls.target.set(0.12, 0.26, 0.0);
   controls.update();
-} else if (urlParams.get('mode') === 'explode') {
+} else if (modeParam === 'explode') {
   applyExplodeFactor(1.0, false);
+} else if (modeParam === 'xray_explode') {
+  setXRayMode(true);
+  applyExplodeFactor(0.55, false);
+  camera.position.set(0.14, 0.27, 0.92);
+  controls.target.set(0.12, 0.26, 0.0);
+  controls.update();
+} else if (modeParam === 'side') {
+  camera.position.set(0.08, 0.24, 1.98);
+  controls.target.set(0.08, 0.24, 0.0);
+  controls.update();
 }
 
 function animate() {

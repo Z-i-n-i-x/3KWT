@@ -217,98 +217,104 @@ export const ENGINEERING_MODALS = {
   battery: {
     title: 'СХЕМА СБОРКИ И РАСПАЙКИ АКБ 20S7P (140× 21700 EVE 50E) + BISIDA BMS 120A',
     html: `
-      <p><strong>Полная топология треугольного сотового массива «Змейкой» (Triangle Serpentine 20S7P):</strong> Все 140 ячеек <code>EVE INR21700-50E</code> образуют <strong>правильный 12-рядный геометрический треугольник</strong> (<code>20 + 19 + 17 + 16 + 14 + 12 + 11 + 10 + 9 + 6 + 4 + 2 = 140 шт.</code>), повторяющий внутренний контур рамы и разделенный диэлектрическими перегородками из желтого стеклотекстолита <strong>FR4 (1.5 мм)</strong> на 4 яруса: <strong>Ярус 1 (ряды 1–3: 56 банок = 8 секций 1S..8S)</strong>, <strong>Ярус 2 (ряды 4–6: 42 банки = 6 секций 9S..14S)</strong>, <strong>Ярус 3 (ряды 7–8: 21 банка = 3 секции 15S..17S)</strong> и <strong>Ярус 4 (ряды 9–12, вершина: 21 банка = 3 секции 18S..20S)</strong>. Нечетные переходы (<code>1S→2S</code>, <code>3S→4S</code>, ..., <code>19S→20S</code>) выполняются на <strong>Правой стороне (-Z)</strong>, четные (<code>2S→3S</code>, <code>4S→5S</code>, ..., <code>18S→19S</code>) — на <strong>Левой стороне (+Z)</strong>.</p>
+      <p><strong>Полная топология 5-ярусного треугольного сотового массива «Змейкой» (6 + 5 + 4 + 3 + 2 = 20S7P):</strong> Все 140 ячеек <code>EVE INR21700-50E</code> образуют <strong>правильный 10-рядный гексагональный треугольник</strong> (<code>22 + 20 + 18 + 17 + 15 + 13 + 11 + 10 + 8 + 6 = 140 шт.</code>), разделенный 4 перегородками из желтого стеклотекстолита <strong>FR4 (1.5 мм)</strong> на 5 двухрядных сотовых ярусов: <strong>Ярус 1 (42 банки = 6 секций 1S..6S)</strong>, <strong>Ярус 2 (35 банок = 5 секций 7S..11S)</strong>, <strong>Ярус 3 (28 банок = 4 секции 12S..15S)</strong>, <strong>Ярус 4 (21 банка = 3 секции 16S..18S)</strong> и <strong>Ярус 5 (14 банок = 2 секции 19S..20S)</strong>. Каждая секция <code>7P</code> представляет собой единую трапецию <code>4 + 3 = 7</code> соседних банок. Нечетные переходы (<code>1S→2S</code>, <code>3S→4S</code>, ..., <code>19S→20S</code>) выполняются на <strong>Правой стороне (-Z)</strong>, четные (<code>2S→3S</code>, <code>4S→5S</code>, ..., <code>18S→19S</code>) — на <strong>Левой стороне (+Z)</strong>.</p>
 
       <div class="svg-blueprint-box">
-        <svg width="760" height="340" viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg">
-          <rect width="760" height="340" fill="#07080a"/>
+        <svg width="760" height="350" viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg">
+          <rect width="760" height="350" fill="#07080a"/>
           <!-- BMS Top Block -->
-          <rect x="190" y="12" width="290" height="38" fill="#141820" stroke="#FF5500" stroke-width="2"/>
-          <text x="335" y="28" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">BISIDA BMS 20S 120A (ПОД ВЕРХНЕЙ ТРУБОЙ)</text>
-          <text x="335" y="43" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Пятаки: [B- к 1S(-)] • [C- к XT90(-)] • Разъем 21-pin JST (B0..B20)</text>
+          <rect x="190" y="10" width="290" height="36" fill="#141820" stroke="#FF5500" stroke-width="2"/>
+          <text x="335" y="25" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">BISIDA BMS 20S 120A (ПОД ВЕРХНЕЙ ТРУБОЙ)</text>
+          <text x="335" y="40" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Пятаки: [B- к 1S(-)] • [C- к XT90(-)] • Разъем 21-pin JST (B0..B20)</text>
 
           <!-- XT90-S Rear Pocket -->
-          <rect x="20" y="12" width="145" height="38" fill="#241e08" stroke="#f5b800" stroke-width="2"/>
-          <text x="92" y="28" fill="#f5b800" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">AMASS XT90-S (84V)</text>
-          <text x="92" y="43" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">[+] от 20S • [-] от BMS C-</text>
+          <rect x="20" y="10" width="145" height="36" fill="#241e08" stroke="#f5b800" stroke-width="2"/>
+          <text x="92" y="25" fill="#f5b800" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">AMASS XT90-S (84V)</text>
+          <text x="92" y="40" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">[+] от 20S • [-] от BMS C-</text>
 
-          <!-- Zone 4 (Top Apex, Rows 9..12, 21 cells = 3 clusters): 20S <- 19S <- 18S -->
-          <rect x="80" y="68" width="120" height="38" fill="#3a1010" stroke="#ff3b1f" stroke-width="2"/>
-          <text x="140" y="91" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">20S (7P) [B+ 84V]</text>
-          <rect x="210" y="68" width="115" height="38" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="267" y="91" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">19S (7P) [-Z]</text>
-          <rect x="335" y="68" width="115" height="38" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="392" y="91" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">18S (7P) [+Z]</text>
+          <!-- Tier 5 (Rows 9-10: 8+6=14 cells = 2 blocks): 19S -> 20S -->
+          <rect x="80" y="58" width="95" height="36" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="127" y="80" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">19S (4+3) [-Z]</text>
+          <rect x="183" y="58" width="110" height="36" fill="#3a1010" stroke="#ff3b1f" stroke-width="2"/>
+          <text x="238" y="80" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">20S [B+ 84V]</text>
+
+          <!-- FR4 Barrier 4 -->
+          <line x1="75" y1="100" x2="320" y2="100" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
+
+          <!-- Tier 4 (Rows 7-8: 11+10=21 cells = 3 blocks): 18S <- 17S <- 16S -->
+          <rect x="80" y="106" width="88" height="38" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="124" y="129" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">18S (4+3) [+Z]</text>
+          <rect x="176" y="106" width="88" height="38" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="220" y="129" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">17S (3+4) [-Z]</text>
+          <rect x="272" y="106" width="88" height="38" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="316" y="129" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">16S (4+3) [+Z]</text>
 
           <!-- FR4 Barrier 3 -->
-          <line x1="75" y1="114" x2="465" y2="114" stroke="#d99b26" stroke-width="3" stroke-dasharray="8,3"/>
+          <line x1="75" y1="150" x2="395" y2="150" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
 
-          <!-- Zone 3 (Rows 7..8, 21 cells = 3 clusters): 15S -> 16S -> 17S -->
-          <rect x="80" y="122" width="130" height="40" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="145" y="146" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">15S (7P) [15S→16S -Z]</text>
-          <rect x="220" y="122" width="130" height="40" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="285" y="146" fill="#00FF66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">16S (7P) [16S→17S +Z]</text>
-          <rect x="360" y="122" width="130" height="40" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="425" y="146" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">17S (7P) [17S→18S -Z]</text>
+          <!-- Tier 3 (Rows 5-6: 15+13=28 cells = 4 blocks): 12S -> 13S -> 14S -> 15S -->
+          <rect x="80" y="156" width="82" height="40" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="121" y="180" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">12S (4+3) [+Z]</text>
+          <rect x="168" y="156" width="82" height="40" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="209" y="180" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">13S (4+3) [-Z]</text>
+          <rect x="256" y="156" width="82" height="40" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="297" y="180" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">14S (3+4) [+Z]</text>
+          <rect x="344" y="156" width="82" height="40" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="385" y="180" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">15S (4+3) [-Z]</text>
 
           <!-- FR4 Barrier 2 -->
-          <line x1="75" y1="170" x2="510" y2="170" stroke="#d99b26" stroke-width="3" stroke-dasharray="8,3"/>
+          <line x1="75" y1="202" x2="465" y2="202" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
 
-          <!-- Zone 2 (Rows 4..6, 42 cells = 6 clusters): 14S <- 13S <- 12S <- 11S <- 10S <- 9S -->
-          <rect x="80" y="178" width="70" height="48" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="115" y="206" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">14S (+Z)</text>
-          <rect x="156" y="178" width="70" height="48" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="191" y="206" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">13S (-Z)</text>
-          <rect x="232" y="178" width="70" height="48" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="267" y="206" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">12S (+Z)</text>
-          <rect x="308" y="178" width="70" height="48" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="343" y="206" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">11S (-Z)</text>
-          <rect x="384" y="178" width="70" height="48" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="419" y="206" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">10S (+Z)</text>
-          <rect x="460" y="178" width="70" height="48" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="495" y="206" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">9S (-Z)</text>
+          <!-- Tier 2 (Rows 3-4: 18+17=35 cells = 5 blocks): 11S <- 10S <- 9S <- 8S <- 7S -->
+          <rect x="80" y="208" width="76" height="44" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="118" y="234" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">11S (-Z)</text>
+          <rect x="162" y="208" width="76" height="44" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="200" y="234" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">10S (+Z)</text>
+          <rect x="244" y="208" width="76" height="44" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="282" y="234" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">9S (-Z)</text>
+          <rect x="326" y="208" width="76" height="44" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="364" y="234" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">8S (+Z)</text>
+          <rect x="408" y="208" width="76" height="44" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="446" y="234" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">7S (-Z)</text>
 
           <!-- FR4 Barrier 1 -->
-          <line x1="75" y1="234" x2="575" y2="234" stroke="#d99b26" stroke-width="3" stroke-dasharray="8,3"/>
+          <line x1="75" y1="258" x2="565" y2="258" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
 
-          <!-- Zone 1 (Bottom along Downtube, Rows 1..3, 56 cells = 8 clusters): 1S -> 2S -> ... -> 8S -->
-          <rect x="80" y="242" width="56" height="68" fill="#08243c" stroke="#00D2FF" stroke-width="2"/>
-          <text x="108" y="280" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">1S [B-]</text>
-          <rect x="142" y="242" width="56" height="68" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="170" y="280" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">2S (+Z)</text>
-          <rect x="204" y="242" width="56" height="68" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="232" y="280" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">3S (-Z)</text>
-          <rect x="266" y="242" width="56" height="68" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="294" y="280" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">4S (+Z)</text>
-          <rect x="328" y="242" width="56" height="68" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="356" y="280" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">5S (-Z)</text>
-          <rect x="390" y="242" width="56" height="68" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="418" y="280" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">6S (+Z)</text>
-          <rect x="452" y="242" width="56" height="68" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="480" y="280" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">7S (-Z)</text>
-          <rect x="514" y="242" width="56" height="68" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="542" y="280" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">8S (+Z)</text>
+          <!-- Tier 1 (Rows 1-2 along Downtube: 22+20=42 cells = 6 blocks): 1S -> 2S -> 3S -> 4S -> 5S -> 6S -->
+          <rect x="80" y="264" width="74" height="58" fill="#08243c" stroke="#00D2FF" stroke-width="2"/>
+          <text x="117" y="297" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">1S [B- 0V]</text>
+          <rect x="160" y="264" width="74" height="58" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="197" y="297" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">2S (+Z)</text>
+          <rect x="240" y="264" width="74" height="58" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="277" y="297" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">3S (-Z)</text>
+          <rect x="320" y="264" width="74" height="58" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="357" y="297" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">4S (+Z)</text>
+          <rect x="400" y="264" width="74" height="58" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
+          <text x="437" y="297" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">5S (-Z)</text>
+          <rect x="480" y="264" width="74" height="58" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
+          <text x="517" y="297" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">6S (+Z)</text>
 
           <!-- Power Cables Routing -->
-          <path d="M 80 295 L 42 295 L 42 56 L 210 56 L 210 50" fill="none" stroke="#00D2FF" stroke-width="3.5"/>
+          <path d="M 80 305 L 42 305 L 42 52 L 210 52 L 210 46" fill="none" stroke="#00D2FF" stroke-width="3.5"/>
           <text x="32" y="185" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" transform="rotate(-90 32 185)" text-anchor="middle">СИНИЙ 6AWG B- (ОТ 1S К BMS B-)</text>
-          <line x1="115" y1="68" x2="115" y2="50" stroke="#ff3b1f" stroke-width="3.5"/>
-          <line x1="190" y1="30" x2="165" y2="30" stroke="#ffffff" stroke-width="3"/>
+          <line x1="238" y1="58" x2="135" y2="46" stroke="#ff3b1f" stroke-width="3.5"/>
+          <line x1="190" y1="28" x2="165" y2="28" stroke="#ffffff" stroke-width="3"/>
 
           <!-- Legend Box -->
-          <rect x="585" y="66" width="160" height="252" fill="#0e1116" stroke="#2c3340" stroke-width="1"/>
-          <text x="665" y="88" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПРАВИЛА СВАРКИ</text>
-          <text x="595" y="112" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5">● Зеленые кластеры:</text>
-          <text x="595" y="126" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Мост на ЛЕВОЙ (+Z)</text>
-          <text x="595" y="150" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5">● Синие кластеры:</text>
-          <text x="595" y="164" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Мост на ПРАВОЙ (-Z)</text>
-          <text x="595" y="190" fill="#d99b26" font-family="JetBrains Mono" font-size="9.5">● Перегородки FR4:</text>
-          <text x="595" y="204" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Стеклотекстолит 1.5 мм</text>
-          <text x="595" y="218" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">+ кольца Fishpaper</text>
-          <text x="595" y="244" fill="#ff3b1f" font-family="JetBrains Mono" font-size="9.5">● Никель + Медь:</text>
-          <text x="595" y="258" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Штампованный никель 0.2</text>
-          <text x="595" y="272" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">(6 точек сварки/полюс)</text>
-          <text x="595" y="286" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">+ шина Cu 3×1.5 мм</text>
+          <rect x="575" y="58" width="170" height="264" fill="#0e1116" stroke="#2c3340" stroke-width="1"/>
+          <text x="660" y="80" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">5 ЯРУСОВ (6+5+4+3+2)</text>
+          <text x="585" y="104" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5">● Блок 7P (4 + 3):</text>
+          <text x="585" y="118" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">2 ряда (4+3 банки)</text>
+          <text x="585" y="132" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Никель 0.15×8.5 мм</text>
+          <text x="585" y="156" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5">● Мосты секций:</text>
+          <text x="585" y="170" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Нечет (1S→2S): ПРАВО (-Z)</text>
+          <text x="585" y="184" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Чет (2S→3S): ЛЕВО (+Z)</text>
+          <text x="585" y="208" fill="#e09f24" font-family="JetBrains Mono" font-size="9.5">● 4 полосы FR4:</text>
+          <text x="585" y="222" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Стеклотекстолит 1.5 мм</text>
+          <text x="585" y="236" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">+ изоляторы Fishpaper</text>
+          <text x="585" y="260" fill="#ff3b1f" font-family="JetBrains Mono" font-size="9.5">● Шина Медь+Никель:</text>
+          <text x="585" y="274" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Паяная шина Cu 2.5 мм²</text>
+          <text x="585" y="288" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">поверх никеля (120А)</text>
         </svg>
       </div>
 
@@ -318,16 +324,16 @@ export const ENGINEERING_MODALS = {
           <th>Как соединять (Пошаговая инструкция)</th>
         </tr>
         <tr>
-          <td>1. Треугольная сотовая матрица (12 рядов = 140 банок)</td>
-          <td>Банки уложены в 12 рядов параллельно нижней трубе рамы (<code>20, 19, 17, 16, 14, 12, 11, 10, 9, 6, 4, 2</code>), образуя монолитный треугольник. Плюсовые торцы защищены зелеными кольцами электрокартона <strong>Fishpaper</strong>, а ярусы разделены текстолитом <strong>FR4</strong>.</td>
+          <td>1. 5 двухрядных ярусов (6+5+4+3+2 = 20 секций = 140 банок)</td>
+          <td>Банки уложены в 10 гексагональных рядов параллельно нижней трубе рамы (<code>22, 20, 18, 17, 15, 13, 11, 10, 8, 6</code>), разделенных 4 полосами желтого текстолита <strong>FR4</strong> на 5 двухрядных ярусов. В каждом ярусе секции <code>7P</code> имеют одинаковую сотовую форму <code>4 + 3 = 7 банок</code>.</td>
         </tr>
         <tr>
-          <td>2. Компактные сотовые кластеры 7P (1S..20S)</td>
-          <td>Каждая из 20 секций состоит из <strong>7 соседних касающихся банок</strong>, объединенных фигурной пластиной из чистого никеля <strong>0.2 мм</strong> (по 6 точек сварки на полюс = 1680 точек) и пропаянных медной шиной <strong>Cu 3.0 × 1.5 мм</strong> с оловянно-свинцовыми галтелями ПОС-61.</td>
+          <td>2. Двухрядные пластины никеля 7P + медная шина 2.5 мм²</td>
+          <td>Внутри каждого блока <code>7P</code> вдоль ряда из 4 банок и ряда из 3 банок приварены две параллельные шины из чистого никеля <strong>0.15 × 8.5 мм</strong> с 3 поперечными перемычками, поверх которых напаян луженый медный позвоночник <strong>Cu 3.0 × 1.2 мм</strong>.</td>
         </tr>
         <tr>
-          <td>3. Двойные последовательные мосты и выводы 6AWG</td>
-          <td>Между соседними кластерами <code>s → s+1</code> приварены сдвоенные медно-никелевые мосты (поочередно на <code>-Z</code> и <code>+Z</code>). От <code>1S(-)</code> у каретки идет синий силовой кабель <strong>6AWG (B-)</strong> к <strong>Bisida BMS 120A</strong>, а от <code>20S(+)</code> в верхней вершине треугольника — красный кабель <strong>6AWG (B+ 84V)</strong> на разъем <strong>Amass XT90-S</strong>.</td>
+          <td>3. Чередующиеся последовательные мосты (1S -> 20S) и жгут BMS</td>
+          <td>Внутри яруса соседние блоки соединяются 2 параллельными медно-никелевыми мостами, а при переходе через перегородку FR4 на следующий ярус (<code>6S→7S</code>, <code>11S→12S</code>, <code>15S→16S</code>, <code>18S→19S</code>) — 3 вертикальными мостами. Балансировочный жгут <code>B0..B20</code> уложен в аккуратную магистраль вдоль верхней трубы.</td>
         </tr>
       </table>
     `
