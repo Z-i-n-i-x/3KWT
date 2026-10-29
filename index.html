@@ -15,9 +15,10 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/",
-      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+      "three": "data:text/javascript,const T=window.THREE;export default T;export const {Scene,PerspectiveCamera,WebGLRenderer,PMREMGenerator,AmbientLight,DirectionalLight,SpotLight,PointLight,Group,Object3D,Mesh,InstancedMesh,Line,Points,BufferGeometry,BufferAttribute,PlaneGeometry,BoxGeometry,CylinderGeometry,SphereGeometry,ConeGeometry,TorusGeometry,CircleGeometry,RingGeometry,ExtrudeGeometry,TubeGeometry,LatheGeometry,Shape,Path,Curve,CatmullRomCurve3,LineCurve3,QuadraticBezierCurve3,CubicBezierCurve3,Vector2,Vector3,Color,Euler,Quaternion,Matrix4,Raycaster,FogExp2,CanvasTexture,DataTexture,MeshStandardMaterial,MeshPhysicalMaterial,MeshBasicMaterial,ShadowMaterial,LineBasicMaterial,LineDashedMaterial,PointsMaterial,DoubleSide,FrontSide,BackSide,AdditiveBlending,NormalBlending,RepeatWrapping,ClampToEdgeWrapping,LinearFilter,LinearMipmapLinearFilter,SRGBColorSpace,ACESFilmicToneMapping,PCFSoftShadowMap}=T;",
+      "three/addons/controls/OrbitControls.js": "data:text/javascript,export const OrbitControls=window.THREE.OrbitControls;",
+      "three/addons/environments/RoomEnvironment.js": "data:text/javascript,export const RoomEnvironment=window.THREE.RoomEnvironment;",
+      "gsap": "data:text/javascript,export const gsap=window.gsap;export default window.gsap;"
     }
   }
   </script>
@@ -1152,17 +1153,180 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
+
+    /* ======================================================================
+       OPEN-WORLD LOCATION & CAMERA BAR + REAR WHEEL PIP VIEWPORT (320x200)
+       ====================================================================== */
+    .openworld-dock {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(12, 15, 20, 0.90);
+      border: 1px solid rgba(0, 210, 255, 0.35);
+      border-left: 3px solid var(--accent-cyan);
+      padding: 6px 10px;
+      margin-top: 6px;
+      pointer-events: auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .ow-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .ow-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      letter-spacing: 0.8px;
+      margin-right: 4px;
+      text-transform: uppercase;
+    }
+
+    .ow-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #dbe4f0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 8px;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .ow-btn:hover {
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      background: rgba(0, 210, 255, 0.14);
+    }
+
+    .ow-btn.active {
+      background: rgba(0, 255, 102, 0.18);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      box-shadow: 0 0 12px rgba(0, 255, 102, 0.25);
+    }
+
+    .ow-btn.cam-active {
+      background: rgba(255, 85, 0, 0.22);
+      border-color: var(--accent-orange);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 85, 0, 0.3);
+    }
+
+    /* TOP-RIGHT REAR WHEEL PIP CAMERA FRAME (320 x 200 PX) */
+    .pip-rear-wheel-box {
+      position: fixed;
+      top: 174px;
+      right: 344px;
+      width: 320px;
+      height: 200px;
+      border: 2px solid var(--accent-orange);
+      background: transparent;
+      z-index: 18;
+      pointer-events: none;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .pip-rear-wheel-box.hidden {
+      display: none !important;
+    }
+
+    .pip-header {
+      background: rgba(8, 10, 14, 0.86);
+      border-bottom: 1px solid rgba(255, 85, 0, 0.45);
+      padding: 4px 8px;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--accent-orange);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.4px;
+      pointer-events: auto;
+    }
+
+    .pip-footer {
+      background: rgba(8, 10, 14, 0.82);
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 3px 8px;
+      font-size: 9px;
+      color: var(--accent-green);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drive-pad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 1180px) {
+      .pip-rear-wheel-box {
+        width: 240px;
+        height: 150px;
+        top: auto;
+        bottom: 295px;
+        right: 12px;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .openworld-dock {
+        padding: 5px 6px;
+        gap: 4px;
+      }
+      .ow-btn {
+        font-size: 8.5px;
+        padding: 4px 5px;
+      }
+      .pip-rear-wheel-box {
+        width: 185px;
+        height: 116px;
+        top: 136px;
+        bottom: auto;
+        right: 10px;
+      }
+      .pip-header, .pip-footer {
+        font-size: 7.5px;
+        padding: 2px 5px;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="webgl-container"></div>
   <div id="hotspot-markers"></div>
 
+  <!-- TOP-RIGHT REAR WHEEL PIP CAMERA OVERLAY (320 x 200 WEBGL SCISSOR PORT) -->
+  <div class="pip-rear-wheel-box" id="pip-rear-wheel-box">
+    <div class="pip-header">
+      <span>КАМЕРА ЗАДНЕГО КОЛЕСА: MTX39 3000W + ТОРМОЗ ZOOM</span>
+      <span id="pip-status-tag" style="color:#00ff66;">● LIVE PiP</span>
+    </div>
+    <div class="pip-footer">
+      <span id="pip-rpm-readout">RPM: 0 • ЦЕПЬ 38T/16T</span>
+      <span id="pip-brake-readout">РОТОР 180ММ • СТОП: ВЫКЛ</span>
+    </div>
+  </div>
+
   <!-- LIVE SW900 LCD ON-BOARD COMPUTER WIDGET (1:1 WITH REAL INSTRUMENT + ODO + WATTMETER) -->
   <div class="sw900-hud-widget" id="sw900-hud-widget">
     <div class="sw900-widget-header">
       <span>БОРТОВОЙ КОМПЬЮТЕР SW900 (LIVE 60 FPS)</span>
-      <span id="sw900-pov-badge">РУЛЬ + HUD</span>
+      <span id="sw900-pov-badge">W/A/S/D + SPACE</span>
     </div>
     <div class="sw900-canvas-wrap">
       <div class="sw900-remote-pad" title="Пульт SW900 на левой грипсе">
@@ -1174,12 +1338,18 @@
     </div>
     <div class="sw900-sim-controls">
       <div class="sw900-throttle-row">
-        <span id="throttle-label">ГАЗ: 0%</span>
+        <span id="throttle-label">ГАЗ (W): 0%</span>
         <input id="slider-throttle" type="range" class="tactical-slider" min="0" max="100" value="0" step="1" />
       </div>
       <div class="sw900-action-row">
-        <button id="btn-regen-brake" class="sw900-mini-btn">[ ТОРМОЗ + E-ABS ]</button>
-        <button id="btn-pov-rider" class="sw900-mini-btn">[ 👁️ ВИД ОТ 1-ГО ЛИЦА POV ]</button>
+        <button id="btn-regen-brake" class="sw900-mini-btn">[ ТОРМОЗ S + E-ABS ]</button>
+        <button id="btn-pov-rider" class="sw900-mini-btn">[ 👀 ВИД ОТ 1-ГО ЛИЦА POV ]</button>
+      </div>
+      <div class="drive-pad-grid">
+        <button id="btn-drive-left" class="sw900-mini-btn" title="Поворот влево (A / ←)">◀ ВЛЕВО (A)</button>
+        <button id="btn-drive-right" class="sw900-mini-btn" title="Поворот вправо (D / →)">ВПРАВО (D) ▶</button>
+        <button id="btn-drive-wheelie" class="sw900-mini-btn" title="Козление / Вилли (SPACE)">🔥 ВИЛЛИ (SPACE)</button>
+        <button id="btn-drive-horn" class="sw900-mini-btn" title="Мото-гудок 105 дБ (B)">🔊 ГУДОК (B)</button>
       </div>
     </div>
   </div>
@@ -1187,32 +1357,54 @@
   <!-- STEALTH HUB TACTICAL UI -->
   <div class="hud-layer" id="hud-layer">
     <!-- TOP HEADER -->
-    <header class="hud-header">
-      <div class="brand-block">
-        <div class="brand-tag">
-          <span class="status-dot"></span>
-          CAD BUILD // STERN DYNAMIC 1.0 18" MOD (RAL 9005 STEALTH)
+    <header class="hud-header" style="flex-direction:column;align-items:stretch;gap:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;width:100%;">
+        <div class="brand-block">
+          <div class="brand-tag">
+            <span class="status-dot"></span>
+            CAD BUILD &amp; 3D SIMULATOR // STERN DYNAMIC 1.0 18" MOD (RAL 9005 STEALTH)
+          </div>
+          <div class="brand-title">STEALTH SUR-RON 72V 3000W</div>
+          <div class="brand-sub">МАСШТАБ 1:1 (1 ЕД = 1 М) • 20S7P (140× EVE 50E) • W/A/S/D ЕЗДА + ВИЛЛИ + ЧЕРТЕЖИ</div>
         </div>
-        <div class="brand-title">STEALTH SUR-RON 72V 3000W</div>
-        <div class="brand-sub">МАСШТАБ 1:1 (1 ЕД = 1 М) • 20S7P (140× EVE 50E) • FOXSID-X2 • MTX39</div>
+
+        <div class="telemetry-strip">
+          <div class="metric-card">
+            <div class="metric-label">НАПРЯЖЕНИЕ / МОЩНОСТЬ</div>
+            <div class="metric-val" id="top-metric-volt">84.0V / 0W</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">ЕМКОСТЬ 20S7P</div>
+            <div class="metric-val">35.0 Ah (2.94 kWh)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">СКОРОСТЬ / РЕЖИМ</div>
+            <div class="metric-val orange" id="top-metric-speed">0.0 КМ/Ч (PAS 5)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">ОДОМЕТР ODO</div>
+            <div class="metric-val" id="top-metric-odo">128.45 KM</div>
+          </div>
+        </div>
       </div>
 
-      <div class="telemetry-strip">
-        <div class="metric-card">
-          <div class="metric-label">НАПРЯЖЕНИЕ / ПИК</div>
-          <div class="metric-val" id="top-metric-volt">72.0V / 84.0V</div>
+      <!-- OPEN-WORLD 3D LOCATION & CAMERA SWITCHER BAR -->
+      <div class="openworld-dock" id="openworld-dock">
+        <div class="ow-group">
+          <span class="ow-label">🌍 3D-ЛОКАЦИИ:</span>
+          <button class="ow-btn active" data-loc="studio">[🏟️ СТУДИЯ CAD]</button>
+          <button class="ow-btn" data-loc="highway">[🏙️ УЛИЦА / ТРАССА МОСТОВАЯ — ЦИЛЬНА]</button>
+          <button class="ow-btn" data-loc="forest">[🌲 ЛЕС И БАЗА У ГОЛУБОГО ОЗЕРА]</button>
+          <button class="ow-btn" data-loc="field">[🌾 ПОЛЕ И ГРЕЙДЕР СВИЯГИ]</button>
+          <button class="ow-btn" data-loc="night">[🌑 НОЧНОЙ СТЕЛС (ТЕМНОТА)]</button>
         </div>
-        <div class="metric-card">
-          <div class="metric-label">ЕМКОСТЬ 20S7P</div>
-          <div class="metric-val">35.0 Ah (2.94 kWh)</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">КОНТРОЛЛЕР / BMS</div>
-          <div class="metric-val orange">60A SIN / 120A</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">ОДОМЕТР ODO</div>
-          <div class="metric-val" id="top-metric-odo">128.45 KM</div>
+        <div class="ow-group">
+          <span class="ow-label">🎥 КАМЕРА:</span>
+          <button class="ow-btn" data-cammode="pov" id="btn-cam-pov">[👀 ВИД ОТ 1-ГО ЛИЦА (POV COCKPIT)]</button>
+          <button class="ow-btn" data-cammode="chase" id="btn-cam-chase">[🏍️ КАМЕРА ПОГОНИ (GTA CHASE CAM)]</button>
+          <button class="ow-btn cam-active" data-cammode="orbit" id="btn-cam-orbit">[🎥 СВОБОДНАЯ СТУДИЯ 360° (ORBIT)]</button>
+          <button class="ow-btn active" id="btn-toggle-pip" title="Камера заднего колеса 320x200">[📷 PiP КОЛЕСО]</button>
+          <button class="ow-btn" id="btn-hide-labels" title="Горячая клавиша H">[👁️ СКРЫТЬ НАДПИСИ (H)]</button>
         </div>
       </div>
 
@@ -1220,7 +1412,7 @@
       <div class="mobile-toolbar">
         <button id="btn-mob-nodes" class="mob-tab-btn">[ УЗЛЫ CAD (9) ]</button>
         <button id="btn-mob-docs" class="mob-tab-btn">[ 📐 ЧЕРТЕЖИ (6) ]</button>
-        <button id="btn-mob-pins" class="mob-tab-btn active">[ 3D МЕТКИ ]</button>
+        <button id="btn-mob-pins" class="mob-tab-btn active">[ 3D МЕТКИ (H) ]</button>
       </div>
     </header>
 
@@ -1279,8 +1471,8 @@
           <div class="xray-title" id="xray-group-title">СЕКЦИЯ: НАВЕДИТЕ ИЛИ НАЖМИТЕ (1S..20S)</div>
           <div class="xray-grid">
             <div>
-              <div class="xray-item-label">ЯЧЕЙКА</div>
-              <div class="xray-item-val">EVE INR21700-50E</div>
+              <div class="xray-item-label">ЯЧЕЙКА / ТОК БАНКИ</div>
+              <div class="xray-item-val" id="xray-cell-current">EVE 50E • 8.57A</div>
             </div>
             <div>
               <div class="xray-item-label">КОНФИГУРАЦИЯ</div>
@@ -1288,7 +1480,7 @@
             </div>
             <div>
               <div class="xray-item-label">НАПРЯЖЕНИЕ СЕКЦИИ</div>
-              <div class="xray-item-val" id="xray-group-volt">3.6..4.2V (84V)</div>
+              <div class="xray-item-val" id="xray-group-volt">4.20V (84.0V)</div>
             </div>
             <div>
               <div class="xray-item-label">ЕМКОСТЬ ГРУППЫ</div>
@@ -1350,7 +1542,7 @@
       <!-- FLOATING MOBILE X-RAY TELEMETRY BAR -->
       <div id="mobile-xray-banner" class="mobile-xray-banner">
         <span class="title" id="mob-xray-title">X-RAY 20S7P: ТАПНИТЕ НА СЕКЦИЮ 1S..20S</span>
-        <span id="mob-xray-val">84.0V • 35Ah</span>
+        <span id="mob-xray-val">84.0V • 35Ah • 8.57A</span>
       </div>
 
       <div class="controls-bar">
@@ -1375,7 +1567,11 @@
         </button>
 
         <button id="btn-lights" class="tactical-btn">
-          <span>[ТЕСТ ТОРМОЗА И СВЕТА]</span>
+          <span>[💡 ФАРА L / СТОП S]</span>
+        </button>
+
+        <button id="btn-horn-bottom" class="tactical-btn">
+          <span>[🔊 ГУДОК 105дБ (B)]</span>
         </button>
 
         <button id="btn-reset-cam" class="tactical-btn">

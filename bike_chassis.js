@@ -376,35 +376,41 @@ export function buildFrameNode(mats) {
   const instPins = new THREE.InstancedMesh(pinRivGeom, mats.MAT_GOLD_BRASS || mats.MAT_STEEL_ROTOR, totalLinks);
 
   const dummyC = new THREE.Object3D();
-  for (let i = 0; i < totalLinks; i++) {
-    const u = i / totalLinks;
-    const pt = chainLoopCurve.getPointAt(u);
-    const tang = chainLoopCurve.getTangentAt(u);
-    const angZ = Math.atan2(tang.y, tang.x);
-    const zSpread = i % 2 === 0 ? 0.0028 : 0.0020;
+  function updateChainAtOffset(phaseOffset = 0) {
+    for (let i = 0; i < totalLinks; i++) {
+      const u = ((i / totalLinks) + phaseOffset) % 1.0;
+      const uNorm = u < 0 ? u + 1.0 : u;
+      const pt = chainLoopCurve.getPointAt(uNorm);
+      const tang = chainLoopCurve.getTangentAt(uNorm);
+      const angZ = Math.atan2(tang.y, tang.x);
+      const zSpread = i % 2 === 0 ? 0.0028 : 0.0020;
 
-    dummyC.position.set(pt.x, pt.y, pt.z + zSpread);
-    dummyC.rotation.set(0, 0, angZ);
-    dummyC.scale.set(1, i % 2 === 0 ? 1.06 : 0.92, 1);
-    dummyC.updateMatrix();
-    instPlatesL.setMatrixAt(i, dummyC.matrix);
+      dummyC.position.set(pt.x, pt.y, pt.z + zSpread);
+      dummyC.rotation.set(0, 0, angZ);
+      dummyC.scale.set(1, i % 2 === 0 ? 1.06 : 0.92, 1);
+      dummyC.updateMatrix();
+      instPlatesL.setMatrixAt(i, dummyC.matrix);
 
-    dummyC.position.set(pt.x, pt.y, pt.z - zSpread);
-    dummyC.updateMatrix();
-    instPlatesR.setMatrixAt(i, dummyC.matrix);
+      dummyC.position.set(pt.x, pt.y, pt.z - zSpread);
+      dummyC.updateMatrix();
+      instPlatesR.setMatrixAt(i, dummyC.matrix);
 
-    dummyC.position.set(pt.x, pt.y, pt.z);
-    dummyC.rotation.set(0, 0, 0);
-    dummyC.scale.set(1, 1, 1);
-    dummyC.updateMatrix();
-    instRollers.setMatrixAt(i, dummyC.matrix);
-    instPins.setMatrixAt(i, dummyC.matrix);
+      dummyC.position.set(pt.x, pt.y, pt.z);
+      dummyC.rotation.set(0, 0, 0);
+      dummyC.scale.set(1, 1, 1);
+      dummyC.updateMatrix();
+      instRollers.setMatrixAt(i, dummyC.matrix);
+      instPins.setMatrixAt(i, dummyC.matrix);
+    }
+    instPlatesL.instanceMatrix.needsUpdate = true;
+    instPlatesR.instanceMatrix.needsUpdate = true;
+    instRollers.instanceMatrix.needsUpdate = true;
+    instPins.instanceMatrix.needsUpdate = true;
   }
-  instPlatesL.instanceMatrix.needsUpdate = true;
-  instPlatesR.instanceMatrix.needsUpdate = true;
-  instRollers.instanceMatrix.needsUpdate = true;
-  instPins.instanceMatrix.needsUpdate = true;
+  updateChainAtOffset(0);
   crankGroup.add(instPlatesL, instPlatesR, instRollers, instPins);
+  frameGroup.userData.updateChainAtOffset = updateChainAtOffset;
+  frameGroup.userData.crankGroup = crankGroup;
 
   // Add CNC Rear Chain Tensioner Roller on Right Dropout & BB External Cup Splines + M5 Water Bottle Bosses
   [-0.036, 0.036].forEach((zCup) => {
@@ -449,6 +455,10 @@ export function buildForkNode(mats) {
   const forkGroup = new THREE.Group();
   forkGroup.name = 'NODE_01_FORK_FOXSID_X2';
 
+  const forkLowersGroup = new THREE.Group();
+  forkLowersGroup.name = 'FORK_LOWERS_SUSPENSION_GROUP';
+  forkGroup.add(forkLowersGroup);
+
   // Head Tube axis reference: Top (0.390, 0.565, 0) -> Bottom (0.425, 0.450, 0)
   const pHeadTop = new THREE.Vector3(0.390, 0.565, 0);
   const pHeadBot = new THREE.Vector3(0.425, 0.450, 0);
@@ -482,6 +492,7 @@ export function buildForkNode(mats) {
 
   // Front Axle Center: (0.610, 0.015, 0) — exact wheelbase & clearance to downtube controller (Photo #3)
   const pFrontAxle = new THREE.Vector3(0.610, 0.015, 0);
+  let mainLegAxis = forkDownDir.clone();
 
   // Stanchion spacing: z = ±0.065 (130mm crown center-to-center)
   [-1, 1].forEach((side) => {
@@ -489,6 +500,7 @@ export function buildForkNode(mats) {
     const pLegCrown = new THREE.Vector3(pCrownCenter.x, pCrownCenter.y, zLeg).addScaledVector(forkDownDir, 0.008);
     const pAxleDrop = new THREE.Vector3(pFrontAxle.x, pFrontAxle.y, side * 0.056);
     const legAxis = pAxleDrop.clone().sub(pLegCrown).normalize();
+    mainLegAxis = new THREE.Vector3(legAxis.x, legAxis.y, 0).normalize();
 
     const crownSocket = createCylinderBetween(
       pLegCrown.clone().addScaledVector(legAxis, -0.016),
@@ -545,7 +557,7 @@ export function buildForkNode(mats) {
     }
 
     // 32mm Black Anodized Stanchions (120mm visible travel)
-    const pStanchionEnd = pLegCrown.clone().addScaledVector(legAxis, 0.185);
+    const pStanchionEnd = pLegCrown.clone().addScaledVector(legAxis, 0.245);
     const stanchion = createCylinderBetween(
       pLegCrown,
       pStanchionEnd,
@@ -589,7 +601,7 @@ export function buildForkNode(mats) {
     const topLipSpring = new THREE.Mesh(new THREE.TorusGeometry(0.0185, 0.0006, 8, 24), mats.MAT_STEEL_ROTOR);
     topLipSpring.position.copy(pLowerTop.clone().addScaledVector(legAxis, -0.0115));
     topLipSpring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), legAxis);
-    forkGroup.add(wiper, garterSpring, topLipSpring);
+    forkLowersGroup.add(wiper, garterSpring, topLipSpring);
 
     // Solid 42mm Matte Black Magnesium Lower Leg (base mesh)
     const pLowerBot = pAxleDrop.clone().addScaledVector(legAxis, 0.012);
@@ -601,7 +613,7 @@ export function buildForkNode(mats) {
       mats.MAT_FRAME_RAL9005,
       32
     );
-    forkGroup.add(lowerLegSolid);
+    forkLowersGroup.add(lowerLegSolid);
 
     // Outer Decal Shell with "32" + "XSD" + "FOXSID AIR FORK" facing outward (1:1 as on Photo #4)
     const lowerLegDecal = createCylinderBetween(
@@ -613,17 +625,17 @@ export function buildForkNode(mats) {
       32
     );
     lowerLegDecal.rotateY(side === 1 ? 0 : Math.PI);
-    forkGroup.add(lowerLegDecal);
+    forkLowersGroup.add(lowerLegDecal);
 
     // Sculpted Forward-Offset Axle Dropout Clevis + Pinch Bolts at the bottom of the lower leg
     const dropoutLug = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.032, 0.016), mats.MAT_FRAME_RAL9005);
     dropoutLug.position.set(pAxleDrop.x, pAxleDrop.y, side * 0.056);
-    forkGroup.add(dropoutLug);
+    forkLowersGroup.add(dropoutLug);
 
     const pinchBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0028, 0.0028, 0.024, 10), mats.MAT_STEEL_ROTOR);
     pinchBolt.rotation.z = Math.PI / 2;
     pinchBolt.position.set(pAxleDrop.x + 0.008, pAxleDrop.y - 0.009, side * 0.056);
-    forkGroup.add(pinchBolt);
+    forkLowersGroup.add(pinchBolt);
 
     // Bottom Rebound Adjuster Knob (Red Anodized on right leg bottom, 1:1 as on Photo #4!)
     const footBolt = createCylinderBetween(
@@ -634,7 +646,7 @@ export function buildForkNode(mats) {
       side === -1 ? mats.MAT_RED_ANODIZED : mats.MAT_ANODIZED_BLACK,
       18
     );
-    forkGroup.add(footBolt);
+    forkLowersGroup.add(footBolt);
   });
 
   // 2.3 Fork Arch (Gorilla) connecting left and right lowers with sculpted structural pocket ribs
@@ -648,7 +660,7 @@ export function buildForkNode(mats) {
   const archGeom = new THREE.TubeGeometry(archCurve, 32, 0.0115, 18, false);
   const archMesh = new THREE.Mesh(archGeom, mats.MAT_FRAME_RAL9005);
   archMesh.castShadow = true;
-  forkGroup.add(archMesh);
+  forkLowersGroup.add(archMesh);
 
   // Brake hose guide clamp + M4 stainless screw on left side of fork arch (visible in Reference Photo #4)
   const hoseGuideClamp = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.012, 0.010), mats.MAT_ANODIZED_BLACK);
@@ -656,7 +668,7 @@ export function buildForkNode(mats) {
   const hoseGuideBoss = new THREE.Mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.012, 10), mats.MAT_STEEL_ROTOR);
   hoseGuideBoss.rotation.z = Math.PI / 2;
   hoseGuideBoss.position.set(0.532, 0.274, 0.054);
-  forkGroup.add(hoseGuideClamp, hoseGuideBoss);
+  forkLowersGroup.add(hoseGuideClamp, hoseGuideBoss);
 
   // 2.4 Compact Black Plastic Mudguard zipped directly under the Fork Arch + 4 Nylon Zip-Ties
   const mudguardCurve = new THREE.CatmullRomCurve3([
@@ -674,14 +686,14 @@ export function buildForkNode(mats) {
   });
   const mudguardMesh = new THREE.Mesh(fenderExtrude, mats.MAT_PETG_HOLDER);
   mudguardMesh.castShadow = true;
-  forkGroup.add(mudguardMesh);
+  forkLowersGroup.add(mudguardMesh);
 
   // 4 Zip-ties fastening the mudguard to the fork arch and lower legs
   [-0.024, 0.024].forEach((zt) => {
     const archTie = new THREE.Mesh(new THREE.TorusGeometry(0.0125, 0.0014, 8, 16), mats.MAT_VELCRO_STRAP);
     archTie.position.set(0.546, 0.288, zt);
     archTie.rotation.y = Math.PI / 2;
-    forkGroup.add(archTie);
+    forkLowersGroup.add(archTie);
   });
 
   // 2.5 Left Lower Leg Post Mount (PM 160) bosses + CNC Black F/R-180 Adapter + Front ZOOM HB-890E Caliper
@@ -690,7 +702,7 @@ export function buildForkNode(mats) {
   const pmAdapter = new THREE.Mesh(pmAdapterGeom, mats.MAT_ANODIZED_BLACK);
   pmAdapter.position.set(0.540, 0.074, 0.054);
   pmAdapter.rotation.z = -0.36;
-  forkGroup.add(pmAdapter);
+  forkLowersGroup.add(pmAdapter);
 
   // Cast Post-Mount (PM) Standoffs on Left Fork Lower Leg + 2 Stainless M6 Socket Cap Bolts with Spherical Washers
   [0.048, 0.102].forEach((yBoss) => {
@@ -705,13 +717,16 @@ export function buildForkNode(mats) {
     const m6Head = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.008, 12), mats.MAT_STEEL_ROTOR);
     m6Head.rotation.z = Math.PI / 2 - 0.36;
     m6Head.position.set(0.534, yBoss, 0.050);
-    forkGroup.add(standoff, m6Head);
+    forkLowersGroup.add(standoff, m6Head);
   });
 
   const frontCaliper = buildZoomCaliperMesh(mats);
   frontCaliper.position.copy(pFrontCaliper);
   frontCaliper.rotation.z = -0.36;
-  forkGroup.add(frontCaliper);
+  forkLowersGroup.add(frontCaliper);
+
+  forkGroup.userData.forkLowersGroup = forkLowersGroup;
+  forkGroup.userData.legAxis = mainLegAxis;
 
   return forkGroup;
 }
@@ -1051,15 +1066,23 @@ export function buildCockpitNode(mats) {
     mats.MAT_RUBBER_KENDA,
     28
   );
+  cockpitGroup.add(leftGrip);
+
+  // Right Side Half-Twist Throttle 20X Assembly (rotates around grip axis when accelerating!)
+  const throttleTwistGroup = new THREE.Group();
+  throttleTwistGroup.name = 'THROTTLE_20X_TWIST_GROUP';
+  const throttlePivot = new THREE.Vector3(0.372, 0.656, -0.295);
+  throttleTwistGroup.position.copy(throttlePivot);
+
   const rightGrip = createCylinderBetween(
-    new THREE.Vector3(0.374, 0.656, -0.275),
-    new THREE.Vector3(0.365, 0.658, -0.370),
+    new THREE.Vector3(0.374, 0.656, -0.275).sub(throttlePivot),
+    new THREE.Vector3(0.365, 0.658, -0.370).sub(throttlePivot),
     0.016,
     0.016,
     mats.MAT_RUBBER_KENDA,
     28
   );
-  cockpitGroup.add(leftGrip, rightGrip);
+  throttleTwistGroup.add(rightGrip);
 
   // 18 Tactile 3D Ribbed Grip Rings per grip + CNC Lock-On Collar Rings + Bar-End Plugs
   for (let r = 0; r < 16; r++) {
@@ -1069,10 +1092,10 @@ export function buildCockpitNode(mats) {
     ribL.position.copy(pGL);
     cockpitGroup.add(ribL);
 
-    const pGR = new THREE.Vector3(0.374, 0.656, -0.275).lerp(new THREE.Vector3(0.365, 0.658, -0.370), tL);
+    const pGR = new THREE.Vector3(0.374, 0.656, -0.275).lerp(new THREE.Vector3(0.365, 0.658, -0.370), tL).sub(throttlePivot);
     const ribR = new THREE.Mesh(new THREE.TorusGeometry(0.0162, 0.0009, 8, 20), mats.MAT_RUBBER_KENDA);
     ribR.position.copy(pGR);
-    cockpitGroup.add(ribR);
+    throttleTwistGroup.add(ribR);
   }
   [-0.371, 0.371].forEach((zPlug) => {
     const plug = new THREE.Mesh(new THREE.CylinderGeometry(0.0168, 0.0168, 0.005, 20), mats.MAT_ANODIZED_BLACK);
@@ -1083,33 +1106,41 @@ export function buildCockpitNode(mats) {
 
   // Right Side Half-Twist Throttle 20X with Knurled Grip ridges & Curved Cable Barrel Adjuster
   const throttleBody = createCylinderBetween(
-    new THREE.Vector3(0.382, 0.654, -0.220),
-    new THREE.Vector3(0.374, 0.656, -0.275),
+    new THREE.Vector3(0.382, 0.654, -0.220).sub(throttlePivot),
+    new THREE.Vector3(0.374, 0.656, -0.275).sub(throttlePivot),
     0.021,
     0.019,
     mats.MAT_ANODIZED_BLACK,
     28
   );
   const throttleRing = createCylinderBetween(
-    new THREE.Vector3(0.380, 0.655, -0.232),
-    new THREE.Vector3(0.378, 0.655, -0.242),
+    new THREE.Vector3(0.380, 0.655, -0.232).sub(throttlePivot),
+    new THREE.Vector3(0.378, 0.655, -0.242).sub(throttlePivot),
     0.0225,
     0.0225,
     mats.MAT_STEEL_ROTOR,
     24
   );
-  cockpitGroup.add(throttleBody, throttleRing);
+  // Visual red index dot on 20X twist collar so rotation is clearly visible in POV
+  const throttleIndexDot = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.004, 0.036), mats.MAT_RED_ANODIZED);
+  throttleIndexDot.position.set(-0.012, 0.018, 0.035);
+  throttleTwistGroup.add(throttleBody, throttleRing, throttleIndexDot);
+  cockpitGroup.add(throttleTwistGroup);
+  cockpitGroup.userData.throttleTwistGroup = throttleTwistGroup;
 
   // Left Side 2-in-1 Switch Block (Headlight toggle + Red 105 dB Moto Horn Button)
   const switchBlock = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.038, 0.024), mats.MAT_ANODIZED_BLACK);
   switchBlock.position.set(0.380, 0.655, 0.234);
   const yellowLightBtn = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.009, 0.012), mats.MAT_XT90_YELLOW);
   yellowLightBtn.position.set(0.365, 0.662, 0.234);
+  yellowLightBtn.userData = { sw900Button: 'LIGHT' };
   const redHornBtn = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.010, 0.012), mats.MAT_RED_ANODIZED);
   redHornBtn.position.set(0.365, 0.648, 0.234);
+  redHornBtn.userData = { sw900Button: 'HORN' };
   cockpitGroup.add(switchBlock, yellowLightBtn, redHornBtn);
 
   // ZOOM HB-890E Hydraulic Brake Levers with mineral oil reservoirs & Red Julet E-Brake Cutoff Plugs (Photo #5)
+  const brakeBladeGroups = [];
   [-1, 1].forEach((side) => {
     const zBase = side * 0.195;
     const leverGroup = new THREE.Group();
@@ -1158,20 +1189,28 @@ export function buildCockpitNode(mats) {
     );
     leverGroup.add(juletBody, juletRedTip);
 
-    // Ergonomic 2-finger CNC brake blade with ball tip
+    // Ergonomic 2-finger CNC brake blade with ball tip (pivots when braking!)
+    const bladePivotGroup = new THREE.Group();
+    const pBladePivot = new THREE.Vector3(0.024, -0.005, -side * 0.025);
+    bladePivotGroup.position.copy(pBladePivot);
+    bladePivotGroup.userData = { side };
+
     const bladeCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.024, -0.005, -side * 0.025),
-      new THREE.Vector3(0.048, -0.018, side * 0.035),
-      new THREE.Vector3(0.042, -0.024, side * 0.095)
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.024, -0.013, side * 0.060),
+      new THREE.Vector3(0.018, -0.019, side * 0.120)
     ]);
     const bladeGeom = new THREE.TubeGeometry(bladeCurve, 20, 0.0052, 12, false);
     const blade = new THREE.Mesh(bladeGeom, mats.MAT_ANODIZED_BLACK);
     const ballEnd = new THREE.Mesh(new THREE.SphereGeometry(0.0072, 12, 12), mats.MAT_ANODIZED_BLACK);
-    ballEnd.position.set(0.042, -0.024, side * 0.095);
-    leverGroup.add(blade, ballEnd);
+    ballEnd.position.set(0.018, -0.019, side * 0.120);
+    bladePivotGroup.add(blade, ballEnd);
+    leverGroup.add(bladePivotGroup);
+    brakeBladeGroups.push(bladePivotGroup);
 
     cockpitGroup.add(leverGroup);
   });
+  cockpitGroup.userData.brakeBladeGroups = brakeBladeGroups;
 
   // Braided Hydraulic Brake Hoses + Spiral Cable Wrap Loom descending down fork & frame
   const frontHoseCurve = new THREE.CatmullRomCurve3([
@@ -1488,104 +1527,79 @@ export function buildFrontWheelNode(mats) {
 }
 
 /**
- * 5. NODE 3B: REAR WHEEL 26" MTX39 + 72V 3000W DIRECT DRIVE MOTOR (216mm OD, Radial Cooling Fins,
- *    Circumferential Stator Heat-Sink Grooves, 18x M4 Bolts, 12G Heavy Spokes, Helical Anti-Kink Spring)
+ * 5. NODE 3B: REAR WHEEL 26" MTX39 + 72V 3000W DIRECT DRIVE MOTOR
+ *    Strictly per Spec 1.1: Smooth, flat-sided matte black cylinder Ø245mm (R=0.1225m),
+ *    width 80mm between dropouts (NO cooling fins or radiators!), with a ring of 18x M4 hex bolts around the cover edge!
  */
 export function buildRearWheelNode(mats) {
   const rearWheel = buildWheelBase26(mats);
   rearWheel.name = 'NODE_03B_REAR_WHEEL_3000W';
   rearWheel.position.set(-0.438, 0.015, 0);
 
-  // Massive 72V 3000W Direct Drive Hub Motor: OD 216mm (R = 0.108m), Stator width 64mm
-  const R_motor = 0.108;
-  const motorStator = createCylinderBetween(
-    new THREE.Vector3(0, 0, -0.032),
-    new THREE.Vector3(0, 0, 0.032),
+  // Smooth flat-sided 72V 3000W Direct Drive Hub Motor: OD 245mm (R = 0.1225m), width 78mm (-0.039..+0.039)
+  const R_motor = 0.1225;
+  const motorCylinder = createCylinderBetween(
+    new THREE.Vector3(0, 0, -0.036),
+    new THREE.Vector3(0, 0, 0.036),
     R_motor,
     R_motor,
     mats.MAT_FRAME_RAL9005,
-    64
+    72
   );
-  rearWheel.add(motorStator);
+  rearWheel.add(motorCylinder);
 
-  // 7 Circumferential Heat-Dissipation Cooling Fins machined around the 64mm Stator Ring
-  for (let gf = -3; gf <= 3; gf++) {
-    const finRing = createCylinderBetween(
-      new THREE.Vector3(0, 0, gf * 0.0075 - 0.0012),
-      new THREE.Vector3(0, 0, gf * 0.0075 + 0.0012),
-      R_motor + 0.0014,
-      R_motor + 0.0014,
-      mats.MAT_ANODIZED_BLACK,
-      64
-    );
-    rearWheel.add(finRing);
-  }
-
-  // Left & Right Anodized Side Covers + 24 Machined Radial Cooling Fins + Ring of 18 M4 Hex Bolts per side
+  // Smooth flat matte-black side covers + Ring of 18x M4 stainless socket-head hex bolts per side (NO fins/ribs!)
   [-1, 1].forEach((side) => {
-    const zCover = side * 0.032;
-    const cover = createCylinderBetween(
+    const zCover = side * 0.036;
+    const flatCover = createCylinderBetween(
       new THREE.Vector3(0, 0, zCover),
-      new THREE.Vector3(0, 0, zCover + side * 0.006),
+      new THREE.Vector3(0, 0, zCover + side * 0.0035),
       R_motor * 0.96,
-      R_motor * 0.78,
-      mats.MAT_ANODIZED_BLACK,
+      R_motor * 0.92,
+      mats.MAT_FRAME_RAL9005,
       64
     );
-    rearWheel.add(cover);
+    rearWheel.add(flatCover);
 
-    // Stepped center bearing boss & rubber lip oil seal
+    // Compact center bearing boss & rubber lip oil seal
     const bearingBoss = createCylinderBetween(
-      new THREE.Vector3(0, 0, zCover + side * 0.006),
-      new THREE.Vector3(0, 0, zCover + side * 0.011),
-      0.028,
-      0.024,
-      mats.MAT_FRAME_RAL9005,
+      new THREE.Vector3(0, 0, zCover + side * 0.0035),
+      new THREE.Vector3(0, 0, zCover + side * 0.0085),
+      0.026,
+      0.022,
+      mats.MAT_ANODIZED_BLACK,
       32
     );
     rearWheel.add(bearingBoss);
 
-    // 24 Radial CNC heat-dissipation ribs on motor cover face
-    const ribGeom = new THREE.BoxGeometry(0.052, 0.0024, 0.0028);
-    for (let f = 0; f < 24; f++) {
-      const fAng = (f / 24) * Math.PI * 2;
-      const rib = new THREE.Mesh(ribGeom, mats.MAT_FRAME_RAL9005);
-      rib.position.set(
-        Math.cos(fAng) * (R_motor * 0.50),
-        Math.sin(fAng) * (R_motor * 0.50),
-        zCover + side * 0.0064
-      );
-      rib.rotation.z = fAng;
-      rearWheel.add(rib);
-    }
-
-    const boltRadius = R_motor * 0.87;
+    // 18x M4 stainless steel hex bolts around perimeter of the black motor cover
+    const boltRadius = R_motor * 0.86;
     for (let b = 0; b < 18; b++) {
       const ang = (b / 18) * Math.PI * 2;
       const bolt = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.0025, 0.0025, 0.0045, 10),
+        new THREE.CylinderGeometry(0.0026, 0.0026, 0.0042, 6),
         mats.MAT_STEEL_ROTOR
       );
       bolt.rotation.x = Math.PI / 2;
       bolt.position.set(
         Math.cos(ang) * boltRadius,
         Math.sin(ang) * boltRadius,
-        zCover + side * 0.0066
+        zCover + side * 0.0040
       );
       rearWheel.add(bolt);
     }
   });
 
-  // 36 Thick Short Black 12G (2.6mm -> R=0.0013m) Spokes with J-Bend Heads & Heavy Nipples
+  // 36 Thick Short Black 12G (2.6mm -> R=0.0013m) Spokes in 1-Cross pattern from Ø245mm motor flange to MTX39 rim
   const R_rim = 0.214;
-  const R_flange = 0.102;
+  const R_flange = 0.118;
   for (let i = 0; i < 36; i++) {
     const side = i % 2 === 0 ? 1 : -1;
     const crossDir = i % 4 < 2 ? 1 : -1;
     const rimAngle = (i / 36) * Math.PI * 2;
-    const hubAngle = rimAngle + crossDir * 0.26;
+    const hubAngle = rimAngle + crossDir * 0.22;
 
-    const pHub = new THREE.Vector3(Math.cos(hubAngle) * R_flange, Math.sin(hubAngle) * R_flange, side * 0.031);
+    const pHub = new THREE.Vector3(Math.cos(hubAngle) * R_flange, Math.sin(hubAngle) * R_flange, side * 0.034);
     const pRim = new THREE.Vector3(Math.cos(rimAngle) * R_rim, Math.sin(rimAngle) * R_rim, side * 0.003);
 
     const spoke = createCylinderBetween(pHub, pRim, 0.00135, 0.00135, mats.MAT_ANODIZED_BLACK, 8);
@@ -1595,7 +1609,7 @@ export function buildRearWheelNode(mats) {
     jHead.position.copy(pHub);
     rearWheel.add(jHead);
 
-    const pNippleStart = pRim.clone().lerp(pHub, 0.080);
+    const pNippleStart = pRim.clone().lerp(pHub, 0.085);
     const nipple = createCylinderBetween(pNippleStart, pRim, 0.0020, 0.0020, mats.MAT_STEEL_ROTOR, 8);
     rearWheel.add(nipple);
   }

@@ -42,7 +42,7 @@ function createMicroGrainTexture(size = 512, contrast = 0.25) {
  * 2. High-Definition Ballistic Nylon CORDURA 1000D 2x2 Basketweave Texture
  * Scaled for meter-space ExtrudeGeometry UVs (repeat = 26x26 per meter -> ~1.9mm yarn pitch)
  */
-function createCorduraWeaveTextures(size = 512) {
+function createCorduraWeaveTextures(size = 1024) {
   const colorCanvas = document.createElement('canvas');
   colorCanvas.width = size;
   colorCanvas.height = size;
@@ -60,7 +60,7 @@ function createCorduraWeaveTextures(size = 512) {
   bCtx.fillStyle = '#121212';
   bCtx.fillRect(0, 0, size, size);
 
-  // 32x32 distinct 2x2 basketweave 1000D nylon filament bundles per 512x512 tile
+  // 64x64 distinct 2x2 basketweave 1000D nylon filament bundles per 1024x1024 tile
   const cell = 16;
   for (let y = 0; y < size; y += cell) {
     for (let x = 0; x < size; x += cell) {
@@ -71,11 +71,11 @@ function createCorduraWeaveTextures(size = 512) {
         // Vertical 1000D ballistic nylon twin-filament bundle
         const gradC = cCtx.createLinearGradient(x, y, x + cell, y);
         gradC.addColorStop(0.0, '#070809');
-        gradC.addColorStop(0.20, '#141619');
-        gradC.addColorStop(0.45, '#1f2226');
-        gradC.addColorStop(0.50, '#0b0c0e'); // center groove between twin 1000D yarns
-        gradC.addColorStop(0.55, '#1f2226');
-        gradC.addColorStop(0.80, '#141619');
+        gradC.addColorStop(0.20, '#131518');
+        gradC.addColorStop(0.45, '#1b1e22');
+        gradC.addColorStop(0.50, '#0a0b0d'); // center groove between twin 1000D yarns
+        gradC.addColorStop(0.55, '#1b1e22');
+        gradC.addColorStop(0.80, '#131518');
         gradC.addColorStop(1.0, '#070809');
         cCtx.fillStyle = gradC;
         cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
@@ -94,11 +94,11 @@ function createCorduraWeaveTextures(size = 512) {
         // Horizontal 1000D ballistic nylon twin-filament bundle
         const gradC = cCtx.createLinearGradient(x, y, x, y + cell);
         gradC.addColorStop(0.0, '#060708');
-        gradC.addColorStop(0.20, '#121316');
-        gradC.addColorStop(0.45, '#1b1d21');
-        gradC.addColorStop(0.50, '#0a0b0d');
-        gradC.addColorStop(0.55, '#1b1d21');
-        gradC.addColorStop(0.80, '#121316');
+        gradC.addColorStop(0.20, '#111316');
+        gradC.addColorStop(0.45, '#191b1f');
+        gradC.addColorStop(0.50, '#090a0c');
+        gradC.addColorStop(0.55, '#191b1f');
+        gradC.addColorStop(0.80, '#111316');
         gradC.addColorStop(1.0, '#060708');
         cCtx.fillStyle = gradC;
         cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
@@ -743,7 +743,7 @@ export function createBatterySeriesLabelMaterial(seriesId, polarityOnThisSide) {
  */
 export function createStealthMaterials() {
   const microGrainTex = createMicroGrainTexture(512, 0.28);
-  const { colorTex: corduraColorTex, bumpTex: corduraBumpTex } = createCorduraWeaveTextures(512);
+  const { colorTex: corduraColorTex, bumpTex: corduraBumpTex } = createCorduraWeaveTextures(1024);
   const rotorTex = createRotorBrushedTexture(512);
   const motoVinylTex = createMotoVinylBumpTexture(512);
   const mtxDecalTex = createMtx39DecalTexture();
@@ -762,20 +762,21 @@ export function createStealthMaterials() {
     roughnessMap: microGrainTex
   });
 
-  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — deep matte black 1000D basketweave)
+  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — deep matte black 1000D basketweave, ZERO plastic shine)
   const MAT_CORDURA_1000D = new THREE.MeshPhysicalMaterial({
     name: 'MAT_CORDURA_1000D',
     color: 0xffffff,
     map: corduraColorTex,
-    roughness: 0.92,
-    metalness: 0.02,
+    roughness: 0.98,
+    metalness: 0.0,
+    clearcoat: 0.0,
     bumpMap: corduraBumpTex,
-    bumpScale: 0.0038,
+    bumpScale: 0.0042,
     roughnessMap: corduraBumpTex,
-    envMapIntensity: 0.28,
-    sheen: 0.22,
-    sheenRoughness: 0.86,
-    sheenColor: new THREE.Color(0x181a1e),
+    envMapIntensity: 0.1,
+    sheen: 0.12,
+    sheenRoughness: 0.95,
+    sheenColor: new THREE.Color(0x141619),
     transparent: false,
     depthWrite: true,
     opacity: 1.0
@@ -812,14 +813,14 @@ export function createStealthMaterials() {
     bumpScale: 0.0008
   });
 
-  // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike 530mm moto saddle)
+  // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike 530mm moto saddle — matte anti-slip skin roughness: 0.85)
   const MAT_MOTO_VINYL = new THREE.MeshPhysicalMaterial({
     name: 'MAT_MOTO_VINYL',
     color: 0x17181b,
-    roughness: 0.78,
-    metalness: 0.05,
+    roughness: 0.85,
+    metalness: 0.03,
     bumpMap: motoVinylTex,
-    bumpScale: 0.0025
+    bumpScale: 0.0028
   });
 
   const MAT_VELCRO_STRAP = new THREE.MeshPhysicalMaterial({

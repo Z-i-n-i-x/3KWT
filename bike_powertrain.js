@@ -222,9 +222,9 @@ export function buildBatterySystemNode(mats) {
   evaCocoonMesh.position.set(0.005, 0.010, 0);
   corduraCenterGroup.add(evaCocoonMesh);
 
-  // 45mm Wide Matte Black Velcro Straps around Toptube & Seat Tube + Reinforced D-Ring Buckles (1:1 as on Reference Photo #3!)
-  const strapWidth = 0.042;
-  [0.44, 0.66].forEach((t) => {
+  // 7 Wide 45mm Matte Black Velcro Straps around Toptube (3), Seat Tube (2) & Downtube (2) + Reinforced D-Ring Buckles (Spec 1.3 & Photo #3!)
+  const strapWidth = 0.045;
+  [0.24, 0.48, 0.72].forEach((t) => {
     const p1 = new THREE.Vector3(-0.135, 0.415, 0).lerp(new THREE.Vector3(0.395, 0.545, 0), t);
     const dir = new THREE.Vector3(0.530, 0.130, 0).normalize();
     const p2 = p1.clone().addScaledVector(dir, strapWidth);
@@ -232,7 +232,7 @@ export function buildBatterySystemNode(mats) {
     corduraCenterGroup.add(strap);
 
     // Anodized Metal Cinch Buckle on Left side of each strap
-    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.008, 0.004), mats.MAT_ANODIZED_BLACK);
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.008, 0.004), mats.MAT_ANODIZED_BLACK);
     buckle.position.copy(p1.clone().lerp(p2, 0.5)).add(new THREE.Vector3(0, -0.018, 0.042));
     buckle.rotation.z = Math.atan2(dir.y, dir.x);
     corduraCenterGroup.add(buckle);
@@ -245,8 +245,22 @@ export function buildBatterySystemNode(mats) {
     const strap = createBiOvalTubeBetween(p1, p2, 0.021, 0.042, mats.MAT_VELCRO_STRAP, 28);
     corduraCenterGroup.add(strap);
 
-    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.008, 0.004), mats.MAT_ANODIZED_BLACK);
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.008, 0.004), mats.MAT_ANODIZED_BLACK);
     buckle.position.copy(p1.clone().lerp(p2, 0.5)).add(new THREE.Vector3(0.016, 0, 0.041));
+    buckle.rotation.z = Math.atan2(dir.y, dir.x);
+    corduraCenterGroup.add(buckle);
+  });
+
+  // 2 Additional 45mm Velcro Straps wrapping the Cordura bag around the Downtube (Total = 3 + 2 + 2 = 7 Velcro straps on the bag!)
+  [0.38, 0.74].forEach((t) => {
+    const p1 = new THREE.Vector3(0.015, 0.015, 0).lerp(new THREE.Vector3(0.415, 0.465, 0), t);
+    const dir = new THREE.Vector3(0.400, 0.450, 0).normalize();
+    const p2 = p1.clone().addScaledVector(dir, strapWidth);
+    const strap = createBiOvalTubeBetween(p1, p2, 0.026, 0.043, mats.MAT_VELCRO_STRAP, 28);
+    corduraCenterGroup.add(strap);
+
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.008, 0.004), mats.MAT_ANODIZED_BLACK);
+    buckle.position.copy(p1.clone().lerp(p2, 0.5)).add(new THREE.Vector3(-0.012, 0.012, 0.042));
     buckle.rotation.z = Math.atan2(dir.y, dir.x);
     corduraCenterGroup.add(buckle);
   });
@@ -1114,66 +1128,83 @@ export function buildUnderTubeModuleNode(mats) {
 }
 
 /**
- * 3. NODE 7: LOW-PROFILE MOTO SADDLE (SUR-RON / PITBIKE 530 MM) + COMPACT 2-BOLT STEEL SUBFRAME
- *    + SLEEK REAR TAIL FENDER WITH LED BRAKE LIGHT (1:1 AS ON REFERENCE PHOTO #3 & #1!)
+ * 3. NODE 7: LOW-PROFILE MOTO SADDLE (SUR-RON / PITBIKE 530 MM) + EXACT STEEL SUBFRAME STRUTS
+ *    Strictly per Spec 1.2:
+ *      1) Front short steel post from top of seat tube (-0.145, 0.39, 0) forward-up to saddle base (-0.19, 0.45, 0)
+ *      2) Two rear thin Ø16mm steel diagonal struts from rear saddle pan (-0.42, 0.47, ±0.045) angled forward-down
+ *         STRICTLY INTO THE MIDDLE OF UPPER SEATSTAYS at (-0.27, 0.25, ±0.045)!
  */
 export function buildMotoSaddleAndSubframeNode(mats) {
   const saddleRoot = new THREE.Group();
   saddleRoot.name = 'NODE_07_MOTO_SADDLE_AND_SUBFRAME';
 
-  // 3.1 Welded Steel Subframe (compact, tucked right under the saddle pan + 2-bolt Seatstay strut as on Photo #3!)
   const subframeGroup = new THREE.Group();
   subframeGroup.name = 'EXPLODE_STEEL_SUBFRAME';
 
-  [-1, 1].forEach((side) => {
-    const zFront = side * 0.020;
-    const zRear = side * 0.032;
-    const zStay = side * 0.030;
+  // 1) Front short steel post from top of seat tube (-0.145, 0.39, 0) forward-up into center of saddle pan (-0.19, 0.45, 0)
+  const frontShortPost = createBiOvalTubeBetween(
+    new THREE.Vector3(-0.145, 0.39, 0),
+    new THREE.Vector3(-0.19, 0.45, 0),
+    0.012,
+    0.014,
+    mats.MAT_FRAME_RAL9005,
+    20
+  );
+  subframeGroup.add(frontShortPost);
 
-    const upperRail = createCylinderBetween(
-      new THREE.Vector3(-0.125, 0.408, zFront),
-      new THREE.Vector3(-0.445, 0.492, zRear),
-      0.0085,
-      0.0075,
+  // 2) Two rear Ø16mm (R=0.008m) steel diagonal struts from (-0.42, 0.47, ±0.045) strictly to MIDDLE OF UPPER SEATSTAYS (-0.27, 0.25, ±0.045)
+  [-1, 1].forEach((side) => {
+    const zFront = side * 0.024;
+    const zRear = side * 0.045;
+
+    // Longitudinal 20x20mm steel subframe rail under the saddle pan
+    const upperRail = createBiOvalTubeBetween(
+      new THREE.Vector3(-0.145, 0.412, zFront),
+      new THREE.Vector3(-0.445, 0.486, zRear),
+      0.010,
+      0.010,
       mats.MAT_FRAME_RAL9005,
       20
     );
     subframeGroup.add(upperRail);
 
-    // Main compact diagonal strut from upper Seatstay (-0.198, 0.315, zStay) up to Saddle Subframe (-0.162, 0.402, zFront)
-    const mainStrut = createBiOvalTubeBetween(
-      new THREE.Vector3(-0.198, 0.315, zStay),
-      new THREE.Vector3(-0.162, 0.402, zFront),
-      0.011,
-      0.007,
+    // Exact Ø16mm (R=0.008m) rear diagonal strut from (-0.42, 0.47, ±0.045) to middle of upper seatstays (-0.27, 0.25, ±0.045)
+    const rearStrut16mm = createCylinderBetween(
+      new THREE.Vector3(-0.42, 0.47, zRear),
+      new THREE.Vector3(-0.27, 0.25, zRear),
+      0.008,
+      0.008,
       mats.MAT_FRAME_RAL9005,
-      20
+      24
     );
-    subframeGroup.add(mainStrut);
+    subframeGroup.add(rearStrut16mm);
 
-    // Two bright M6 Stainless Allen Bolts + Washers on the main Seatstay subframe strut (1:1 as on Photo #3!)
+    // Steel mounting clamp ears & M6 Stainless Allen Bolts at middle of upper seatstays (-0.27, 0.25, ±0.045) and saddle tail (-0.42, 0.47, ±0.045)
     [
-      [-0.196, 0.320, zStay + side * 0.005],
-      [-0.166, 0.392, zFront + side * 0.005]
+      [-0.27, 0.25, zRear + side * 0.006],
+      [-0.42, 0.47, zRear + side * 0.006]
     ].forEach(([bx, by, bz]) => {
-      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0044, 0.0044, 0.006, 12), mats.MAT_STEEL_ROTOR);
+      const clampEar = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 0.008), mats.MAT_FRAME_RAL9005);
+      clampEar.position.set(bx, by, bz - side * 0.004);
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.007, 12), mats.MAT_STEEL_ROTOR);
       bolt.position.set(bx, by, bz);
       bolt.rotation.x = Math.PI / 2;
-      const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.0015, 16), mats.MAT_STEEL_ROTOR);
+      const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.0015, 16), mats.MAT_STEEL_ROTOR);
       washer.position.set(bx, by, bz - side * 0.002);
       washer.rotation.x = Math.PI / 2;
-      subframeGroup.add(bolt, washer);
+      subframeGroup.add(clampEar, bolt, washer);
     });
   });
 
   // Cross-bridges between left and right subframe rails
-  [-0.18, -0.34, -0.43].forEach((cx, idx) => {
-    const cy = idx === 0 ? 0.418 : idx === 1 ? 0.462 : 0.488;
+  [-0.19, -0.32, -0.42].forEach((cx, idx) => {
+    const cy = idx === 0 ? 0.435 : idx === 1 ? 0.456 : 0.472;
+    const hw = idx === 0 ? 0.026 : idx === 1 ? 0.036 : 0.045;
     const bridge = createCylinderBetween(
-      new THREE.Vector3(cx, cy, -0.026),
-      new THREE.Vector3(cx, cy, 0.026),
-      0.0065,
-      0.0065,
+      new THREE.Vector3(cx, cy, -hw),
+      new THREE.Vector3(cx, cy, hw),
+      0.007,
+      0.007,
       mats.MAT_FRAME_RAL9005,
       14
     );
@@ -1182,7 +1213,7 @@ export function buildMotoSaddleAndSubframeNode(mats) {
 
   saddleRoot.add(subframeGroup);
 
-  // 3.2 Explodable Moto-Saddle (530mm length) + Sleek Rear Pitbike Tail Fender + LED Brake Light
+  // 3.2 Explodable Moto-Saddle (530mm length) with front U-channel (40x70mm) + Sleek Rear Pitbike Tail Fender + LED Brake Light
   const saddleAndFenderGroup = new THREE.Group();
   saddleAndFenderGroup.name = 'EXPLODE_MOTO_SADDLE_AND_FENDER';
 
