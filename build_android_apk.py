@@ -258,26 +258,27 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
             str_to_idx[elem_name],
         )
 
-    # Assemble XML hierarchy (attributes with resource IDs are ordered by ascending resId!)
+    # Assemble XML hierarchy (attributes with resource IDs MUST come before attributes without resource IDs,
+    # and must be ordered by strictly ascending resource ID!)
     xml_chunks = [
         make_start_ns("android", "http://schemas.android.com/apk/res/android", 2),
-        # <manifest package="com.stealth.surron.cad" android:versionCode="1" android:versionName="1.0">
+        # <manifest android:versionCode="1" android:versionName="1.0" package="com.stealth.surron.cad">
         make_start_element(
             "manifest",
             2,
             [
-                make_attr(NO_NS, "package", TYPE_STRING, str_to_idx[package_name], package_name),
                 make_attr(NS_ANDROID, "versionCode", TYPE_INT_DEC, 1),
                 make_attr(NS_ANDROID, "versionName", TYPE_STRING, str_to_idx["1.0"], "1.0"),
+                make_attr(NO_NS, "package", TYPE_STRING, str_to_idx[package_name], package_name),
             ],
         ),
-        # <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="28" />
+        # <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="33" />
         make_start_element(
             "uses-sdk",
             3,
             [
-                make_attr(NS_ANDROID, "minSdkVersion", TYPE_INT_DEC, 21),
-                make_attr(NS_ANDROID, "targetSdkVersion", TYPE_INT_DEC, 28),
+                make_attr(NS_ANDROID, "minSdkVersion", TYPE_INT_DEC, 24),
+                make_attr(NS_ANDROID, "targetSdkVersion", TYPE_INT_DEC, 33),
             ],
         ),
         make_end_element("uses-sdk", 3),
@@ -945,19 +946,19 @@ def build_apk_v2_signing_block(
     )
 
     # Signer = length-prefixed(signed_data) + length-prefixed(signatures) + length-prefixed(public_key)
-    signer = lp_prefixed(lp_prefixed(signed_data) + signatures_seq + lp_prefixed(spki_der))
-    signers_seq = lp_prefixed(signer)
-    v2_block_value = lp_prefixed(signers_seq)
+    signer_body = lp_prefixed(signed_data) + signatures_seq + lp_prefixed(spki_der)
+    signer = lp_prefixed(signer_body)
+    # APK Signature Scheme v2 Block value is length-prefixed sequence of length-prefixed signers:
+    v2_block_value = lp_prefixed(signer)
 
     # ID-value pair: uint64_len + uint32_id (0x7109871a) + value
     pair = struct.pack("<QI", 4 + len(v2_block_value), 0x7109871A) + v2_block_value
 
     # Pad block so total APK Signing Block is a multiple of 4096 bytes (Android page-alignment best practice)
     # Total block = 8 (size_of_block_head) + len(pairs) + 8 (size_of_block_tail) + 16 (magic)
-    # Add dummy padding pair (ID 0x42726577 = VERITY_PADDING_BLOCK_ID) if needed
     rem = (8 + len(pair) + 24) % 4096
     if rem != 0:
-        pad_needed = (4096 - rem)
+        pad_needed = 4096 - rem
         if pad_needed < 12:
             pad_needed += 4096
         pad_val_len = pad_needed - 12
