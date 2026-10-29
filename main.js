@@ -34,15 +34,24 @@ const camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerH
 // Studio telephoto 3/4 front-left angle matching Reference Photo #1 without wide-angle wheel distortion
 const DEFAULT_CAM_POS = new THREE.Vector3(1.42, 0.48, 2.15);
 const DEFAULT_CAM_TARGET = new THREE.Vector3(0.06, 0.21, 0.0);
-camera.position.copy(DEFAULT_CAM_POS);
 
+function getViewportAdjustedPos(basePos, targetVec) {
+  const aspect = window.innerWidth / Math.max(window.innerHeight, 1);
+  // On portrait mobile screens (aspect < 1.25), pull the camera back proportionally so the horizontal bike fits 100%
+  const distScale = aspect < 1.25 ? Math.min(2.72, 1.32 / Math.max(aspect, 0.40)) : 1.0;
+  return targetVec.clone().add(basePos.clone().sub(targetVec).multiplyScalar(distScale));
+}
+
+camera.position.copy(getViewportAdjustedPos(DEFAULT_CAM_POS, DEFAULT_CAM_TARGET));
+
+const isMobileDevice = window.innerWidth <= 920 || ('ontouchstart' in window);
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true,
   powerPreference: 'high-performance'
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobileDevice ? 1.75 : 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 renderer.shadowMap.enabled = true;
@@ -63,8 +72,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(DEFAULT_CAM_TARGET);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
-controls.maxDistance = 5.5;
-controls.minDistance = 0.22;
+controls.maxDistance = 8.5;
+controls.minDistance = 0.20;
 controls.maxPolarAngle = Math.PI * 0.52; // Prevent going far below the studio floor
 
 // ----------------------------------------------------------------------------
@@ -429,12 +438,16 @@ const xrayGroupTitle = document.getElementById('xray-group-title');
 const xrayGroupCfg = document.getElementById('xray-group-cfg');
 const xrayGroupVolt = document.getElementById('xray-group-volt');
 const xrayGroupTemp = document.getElementById('xray-group-temp');
+const mobileXRayBanner = document.getElementById('mobile-xray-banner');
+const mobXRayTitle = document.getElementById('mob-xray-title');
+const mobXRayVal = document.getElementById('mob-xray-val');
 
 function setXRayMode(enable) {
   isXRayMode = enable;
   if (enable) {
     btnXRay.classList.add('active-green');
     xrayPassport.classList.add('visible');
+    if (mobileXRayBanner) mobileXRayBanner.classList.add('visible');
 
     // Hide outer Cordura side covers & PETG honeycomb shells so all 140 cells,
     // 1S..20S badges, serpentine copper/nickel busbars, and 21 balance wires are 100% clear!
@@ -445,15 +458,18 @@ function setXRayMode(enable) {
     batterySys.holderLeftGroup.visible = false;
     batterySys.holderRightGroup.visible = false;
 
-    // Show all 20 sections (140 cells) at full opacity on entry; hovering any section highlights it!
+    // Show all 20 sections (140 cells) at full opacity on entry; hovering/tapping any section highlights it!
     resetAllBatterySeriesMaterials();
-    xrayGroupTitle.textContent = '20S7P (140× 21700): НАВЕДИТЕ НА СЕКЦИЮ 1S..20S';
+    xrayGroupTitle.textContent = '20S7P (140× 21700): НАЖМИТЕ НА СЕКЦИЮ 1S..20S';
+    if (mobXRayTitle) mobXRayTitle.textContent = 'X-RAY 20S7P: ТАПНИТЕ СЕКЦИЮ 1S..20S';
+    if (mobXRayVal) mobXRayVal.textContent = '84.0V • 35Ah';
 
     // Fly camera smoothly to frame triangle
     flyCameraTo(new THREE.Vector3(0.14, 0.28, 0.68), new THREE.Vector3(0.14, 0.27, 0.0));
   } else {
     btnXRay.classList.remove('active-green');
     xrayPassport.classList.remove('visible');
+    if (mobileXRayBanner) mobileXRayBanner.classList.remove('visible');
 
     mats.MAT_CORDURA_1000D.depthWrite = true;
     gsap.to(mats.MAT_CORDURA_1000D, { opacity: 1.0, duration: 0.5 });
@@ -507,6 +523,9 @@ function highlightBatterySeriesGroup(seriesId) {
       xrayGroupCfg.textContent = `${s}S7P (${polSideStr})`;
       xrayGroupVolt.textContent = `4.20 V (∑ ${(s * 4.2).toFixed(1)}V)`;
       xrayGroupTemp.textContent = `NTC ${sGroup.userData.ntcTemp}°C / Cu 2.5мм²`;
+
+      if (mobXRayTitle) mobXRayTitle.textContent = `СЕКЦИЯ ${s}S (ЯРУС #${row} • #${(s - 1) * 7 + 1}..#${s * 7})`;
+      if (mobXRayVal) mobXRayVal.textContent = `4.2V (∑${(s * 4.2).toFixed(1)}V) • ${sGroup.userData.ntcTemp}°C`;
     } else {
       // Other 133 cells fade into semi-transparent glass (opacity: 0.16)
       cellMat.color.setHex(0x3b82a6);
@@ -529,15 +548,15 @@ btnXRay.addEventListener('click', () => {
   }
 });
 
-// Raycaster for hovering over any of the 20 groups (1S..20S) in X-Ray or Exploded mode
+// Raycaster for hovering (desktop) or tapping (mobile) any of the 20 groups (1S..20S) in X-Ray or Exploded mode
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-window.addEventListener('pointermove', (e) => {
-  if (!isXRayMode && explodeState.factor < 0.25) return;
+function inspectBatteryAtClientXY(clientX, clientY) {
+  if (!isXRayMode && explodeState.factor < 0.25) return false;
 
-  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(pointer, camera);
   const intersects = raycaster.intersectObjects(batterySys.seriesGroups, true);
@@ -546,14 +565,29 @@ window.addEventListener('pointermove', (e) => {
     const hitObj = intersects[0].object;
     const sId = hitObj.userData.seriesId || (hitObj.parent && hitObj.parent.userData.seriesId);
     if (sId) {
-      if (!isXRayMode) xrayPassport.classList.add('visible');
+      if (!isXRayMode) {
+        xrayPassport.classList.add('visible');
+        if (mobileXRayBanner) mobileXRayBanner.classList.add('visible');
+      }
       highlightBatterySeriesGroup(sId);
       document.body.style.cursor = 'pointer';
-      return;
+      return true;
     }
   }
   resetAllBatterySeriesMaterials();
   document.body.style.cursor = 'default';
+  return false;
+}
+
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;
+  inspectBatteryAtClientXY(e.clientX, e.clientY);
+});
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch' || window.innerWidth <= 920) {
+    inspectBatteryAtClientXY(e.clientX, e.clientY);
+  }
 });
 
 // ----------------------------------------------------------------------------
@@ -583,13 +617,14 @@ btnLights.addEventListener('click', () => {
 });
 
 // ----------------------------------------------------------------------------
-// 8. CAMERA PRESETS & 3D SCREEN-SPACE INTERACTIVE HOTSPOTS
+// 8. CAMERA PRESETS, MOBILE DRAWERS & 3D SCREEN-SPACE INTERACTIVE HOTSPOTS
 // ----------------------------------------------------------------------------
 function flyCameraTo(posVec, targetVec) {
+  const adjustedPos = getViewportAdjustedPos(posVec, targetVec);
   gsap.to(camera.position, {
-    x: posVec.x,
-    y: posVec.y,
-    z: posVec.z,
+    x: adjustedPos.x,
+    y: adjustedPos.y,
+    z: adjustedPos.z,
     duration: 1.15,
     ease: 'power3.out'
   });
@@ -613,8 +648,51 @@ const CAMERA_PRESETS = {
   saddle: { pos: new THREE.Vector3(-0.28, 0.65, 0.88), target: new THREE.Vector3(-0.34, 0.50, 0.0), code: 'SDL-07' }
 };
 
+// Mobile Drawers & Pin Toggles
+const leftSidePanel = document.getElementById('left-side-panel');
+const rightHotspotDock = document.getElementById('right-hotspot-dock');
+const btnMobNodes = document.getElementById('btn-mob-nodes');
+const btnMobDocs = document.getElementById('btn-mob-docs');
+const btnMobPins = document.getElementById('btn-mob-pins');
+const closeLeftDrawerBtn = document.getElementById('close-left-drawer');
+const closeRightDrawerBtn = document.getElementById('close-right-drawer');
+let arePinsVisible = true;
+
+function closeMobileDrawers() {
+  if (leftSidePanel) leftSidePanel.classList.remove('mobile-open');
+  if (rightHotspotDock) rightHotspotDock.classList.remove('mobile-open');
+  if (btnMobNodes) btnMobNodes.classList.remove('active');
+  if (btnMobDocs) btnMobDocs.classList.remove('active');
+}
+
+if (btnMobNodes) {
+  btnMobNodes.addEventListener('click', () => {
+    const isOpen = leftSidePanel.classList.contains('mobile-open');
+    closeMobileDrawers();
+    if (!isOpen) {
+      leftSidePanel.classList.add('mobile-open');
+      btnMobNodes.classList.add('active');
+    }
+  });
+}
+
+if (btnMobDocs) {
+  btnMobDocs.addEventListener('click', () => {
+    const isOpen = rightHotspotDock.classList.contains('mobile-open');
+    closeMobileDrawers();
+    if (!isOpen) {
+      rightHotspotDock.classList.add('mobile-open');
+      btnMobDocs.classList.add('active');
+    }
+  });
+}
+
+if (closeLeftDrawerBtn) closeLeftDrawerBtn.addEventListener('click', closeMobileDrawers);
+if (closeRightDrawerBtn) closeRightDrawerBtn.addEventListener('click', closeMobileDrawers);
+
 const nodeButtons = document.querySelectorAll('.node-btn');
 const activeNodeIndicator = document.getElementById('active-node-indicator');
+let currentCameraPresetKey = 'default';
 
 nodeButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -623,14 +701,18 @@ nodeButtons.forEach((btn) => {
     const key = btn.getAttribute('data-cam');
     const preset = CAMERA_PRESETS[key];
     if (preset) {
+      currentCameraPresetKey = key;
       activeNodeIndicator.textContent = preset.code;
       flyCameraTo(preset.pos, preset.target);
+      closeMobileDrawers();
     }
   });
 });
 
 document.getElementById('btn-reset-cam').addEventListener('click', () => {
   if (isXRayMode) setXRayMode(false);
+  currentCameraPresetKey = 'default';
+  closeMobileDrawers();
   flyCameraTo(DEFAULT_CAM_POS, DEFAULT_CAM_TARGET);
 });
 
@@ -643,6 +725,7 @@ const modalClose = document.getElementById('modal-close');
 function openEngineeringModal(modalKey) {
   const data = ENGINEERING_MODALS[modalKey];
   if (!data) return;
+  closeMobileDrawers();
   modalTitle.textContent = data.title;
   modalBody.innerHTML = data.html;
   modalBackdrop.classList.add('open');
@@ -710,8 +793,22 @@ HOTSPOT_DEFS.forEach((h) => {
   h.element = el;
 });
 
+if (btnMobPins) {
+  btnMobPins.addEventListener('click', () => {
+    arePinsVisible = !arePinsVisible;
+    btnMobPins.classList.toggle('active', arePinsVisible);
+    hotspotContainer.style.display = arePinsVisible ? 'block' : 'none';
+  });
+}
+
 function updateHotspotScreenPositions() {
+  if (!arePinsVisible) return;
   const tempV = new THREE.Vector3();
+  const isCompact = window.innerWidth <= 920;
+  const marginX = isCompact ? 88 : 24;
+  const minY = isCompact ? 136 : 80;
+  const maxY = window.innerHeight - (isCompact ? 148 : 80);
+
   HOTSPOT_DEFS.forEach((h) => {
     tempV.copy(h.localPos);
     h.parent.localToWorld(tempV);
@@ -721,8 +818,10 @@ function updateHotspotScreenPositions() {
       h.element.style.display = 'none';
       return;
     }
-    const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-(tempV.y * 0.5) + 0.5) * window.innerHeight;
+    const rawX = (tempV.x * 0.5 + 0.5) * window.innerWidth;
+    const rawY = (-(tempV.y * 0.5) + 0.5) * window.innerHeight;
+    const x = Math.max(marginX, Math.min(window.innerWidth - marginX, rawX));
+    const y = Math.max(minY, Math.min(maxY, rawY));
     h.element.style.display = 'flex';
     h.element.style.left = `${x}px`;
     h.element.style.top = `${y}px`;
@@ -743,7 +842,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
 if (modeParam === 'xray') {
   setXRayMode(true);
-  camera.position.set(0.13, 0.27, 0.88);
+  camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.13, 0.27, 0.88), new THREE.Vector3(0.12, 0.26, 0.0)));
   controls.target.set(0.12, 0.26, 0.0);
   controls.update();
 } else if (modeParam === 'explode') {
@@ -751,11 +850,11 @@ if (modeParam === 'xray') {
 } else if (modeParam === 'xray_explode') {
   setXRayMode(true);
   applyExplodeFactor(0.55, false);
-  camera.position.set(0.14, 0.27, 0.92);
+  camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.14, 0.27, 0.92), new THREE.Vector3(0.12, 0.26, 0.0)));
   controls.target.set(0.12, 0.26, 0.0);
   controls.update();
 } else if (modeParam === 'side') {
-  camera.position.set(0.08, 0.24, 1.98);
+  camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.08, 0.24, 1.98), new THREE.Vector3(0.08, 0.24, 0.0)));
   controls.target.set(0.08, 0.24, 0.0);
   controls.update();
 }

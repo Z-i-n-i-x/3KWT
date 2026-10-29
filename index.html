@@ -2,7 +2,11 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>STEALTH SUR-RON 72V 3000W | High-Poly Procedural CAD & Telemetry Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,12 +41,15 @@
       margin: 0;
       padding: 0;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html, body {
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
+      touch-action: none;
       background-color: var(--bg-void);
       background-image: radial-gradient(circle at 50% 45%, #16181c 0%, #090a0c 55%, #050505 100%);
       font-family: var(--font-mono);
@@ -56,6 +63,14 @@
       width: 100%;
       height: 100%;
       z-index: 1;
+      touch-action: none;
+    }
+
+    #webgl-container canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
     }
 
     /* TACTICAL HUD OVERLAY */
@@ -517,6 +532,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .spec-table {
@@ -537,9 +554,293 @@
       color: var(--accent-orange);
     }
 
-    @media (max-width: 1024px) {
+    /* MOBILE QUICK-TOGGLE TOOLBAR & FLOATING X-RAY TOAST (HIDDEN ON DESKTOP) */
+    .mobile-toolbar {
+      display: none;
+      gap: 6px;
+      pointer-events: auto;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .mob-tab-btn {
+      flex: 1;
+      background: rgba(18, 19, 23, 0.92);
+      border: 1px solid var(--border-dim);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 8px 6px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    .mob-tab-btn.active {
+      background: rgba(255, 85, 0, 0.22);
+      border-color: var(--accent-orange);
+      color: #fff;
+    }
+
+    .drawer-close-btn {
+      display: none;
+      background: rgba(255, 85, 0, 0.15);
+      border: 1px solid var(--accent-orange);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      cursor: pointer;
+    }
+
+    .mobile-xray-banner {
+      display: none;
+      background: rgba(8, 20, 14, 0.92);
+      border: 1px solid var(--accent-green);
+      padding: 7px 10px;
+      font-size: 10px;
+      color: #fff;
+      pointer-events: auto;
+      width: 100%;
+      margin-bottom: 6px;
+      backdrop-filter: blur(10px);
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mobile-xray-banner .title {
+      color: var(--accent-green);
+      font-weight: 800;
+    }
+
+    .hud-layer.hud-minimal .side-panel,
+    .hud-layer.hud-minimal .hotspot-dock,
+    .hud-layer.hud-minimal .telemetry-strip {
+      display: none !important;
+    }
+
+    @media (max-width: 1080px) {
       .side-panel, .hotspot-dock {
-        width: 260px;
+        width: 265px;
+      }
+    }
+
+    /* SMARTPHONE & COMPACT TABLET RESPONSIVE ADAPTATION */
+    @media (max-width: 920px) {
+      .hud-layer {
+        padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)) 10px;
+      }
+
+      .hud-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+
+      .brand-block {
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand-tag {
+        font-size: 8px;
+        letter-spacing: 1.2px;
+        margin-bottom: 2px;
+      }
+
+      .brand-title {
+        font-size: 14px;
+      }
+
+      .brand-sub {
+        font-size: 9px;
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .telemetry-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+      }
+
+      .metric-card {
+        min-width: 0;
+        padding: 5px 6px;
+      }
+
+      .metric-label {
+        font-size: 7px;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .metric-val {
+        font-size: 8.5px;
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mobile-toolbar {
+        display: flex;
+      }
+
+      .drawer-close-btn {
+        display: inline-block;
+      }
+
+      .hud-middle {
+        position: relative;
+        margin: 6px 0;
+      }
+
+      .side-panel,
+      .hotspot-dock {
+        position: fixed;
+        top: 132px;
+        bottom: 142px;
+        width: min(88vw, 330px);
+        max-height: none;
+        z-index: 45;
+        background: rgba(12, 13, 16, 0.96);
+        border: 1px solid var(--accent-orange);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+      }
+
+      .side-panel {
+        left: 10px;
+        transform: translateX(-110%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .side-panel.mobile-open {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .hotspot-dock {
+        right: 10px;
+        transform: translateX(110%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .hotspot-dock.mobile-open {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .mobile-xray-banner.visible {
+        display: flex;
+      }
+
+      .hud-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+      }
+
+      .controls-bar {
+        width: 100%;
+        padding: 8px 10px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .slider-group {
+        grid-column: 1 / -1;
+        order: -1;
+        min-width: 0;
+        margin-bottom: 2px;
+      }
+
+      input[type="range"].tactical-slider {
+        height: 8px;
+      }
+
+      input[type="range"].tactical-slider::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+        border-radius: 2px;
+      }
+
+      .tactical-btn {
+        font-size: 10px;
+        padding: 9px 8px;
+        justify-content: center;
+        text-align: center;
+        letter-spacing: 0.3px;
+      }
+
+      .hotspot-pin {
+        padding: 3px 6px;
+        font-size: 8px;
+        gap: 4px;
+      }
+
+      .modal-backdrop {
+        padding: 8px;
+      }
+
+      .modal-window {
+        max-height: 92dvh;
+      }
+
+      .modal-header {
+        padding: 10px 12px;
+      }
+
+      .modal-title {
+        font-size: 11px;
+      }
+
+      .modal-body {
+        padding: 12px;
+        font-size: 11px;
+      }
+
+      .svg-blueprint-box {
+        padding: 8px;
+        justify-content: flex-start;
+      }
+
+      .svg-blueprint-box svg {
+        min-width: 540px;
+      }
+    }
+
+    /* LANDSCAPE PHONE COMPACT MODE */
+    @media (max-height: 520px) and (orientation: landscape) {
+      .telemetry-strip,
+      .brand-sub {
+        display: none;
+      }
+      .side-panel,
+      .hotspot-dock {
+        top: 86px;
+        bottom: 92px;
+      }
+      .controls-bar {
+        grid-template-columns: repeat(4, 1fr);
+        padding: 6px 8px;
       }
     }
   </style>
@@ -549,7 +850,7 @@
   <div id="hotspot-markers"></div>
 
   <!-- STEALTH HUB TACTICAL UI -->
-  <div class="hud-layer">
+  <div class="hud-layer" id="hud-layer">
     <!-- TOP HEADER -->
     <header class="hud-header">
       <div class="brand-block">
@@ -579,15 +880,25 @@
           <div class="metric-val">3000W DD / MTX39</div>
         </div>
       </div>
+
+      <!-- MOBILE QUICK TOOLBAR (SHOWN ON SMARTPHONES/TABLETS) -->
+      <div class="mobile-toolbar">
+        <button id="btn-mob-nodes" class="mob-tab-btn">[ УЗЛЫ CAD (8) ]</button>
+        <button id="btn-mob-docs" class="mob-tab-btn">[ ЧЕРТЕЖИ 1:1 (5) ]</button>
+        <button id="btn-mob-pins" class="mob-tab-btn active">[ 3D МЕТКИ ]</button>
+      </div>
     </header>
 
     <!-- MIDDLE PANELS -->
     <div class="hud-middle">
       <!-- LEFT INSPECTOR -->
-      <aside class="side-panel">
+      <aside class="side-panel" id="left-side-panel">
         <div class="panel-title">
           <span>ИНЖЕНЕРНЫЕ УЗЛЫ (CAD)</span>
-          <span id="active-node-indicator">ALL</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span id="active-node-indicator">ALL</span>
+            <button class="drawer-close-btn" id="close-left-drawer">×</button>
+          </div>
         </div>
         <div class="node-list">
           <button class="node-btn active" data-cam="default">
@@ -626,7 +937,7 @@
 
         <!-- X-RAY CELL PASSPORT -->
         <div id="xray-passport" class="xray-passport">
-          <div class="xray-title" id="xray-group-title">СЕКЦИЯ: НАВЕДИТЕ КУРСОР (1S..20S)</div>
+          <div class="xray-title" id="xray-group-title">СЕКЦИЯ: НАВЕДИТЕ ИЛИ НАЖМИТЕ (1S..20S)</div>
           <div class="xray-grid">
             <div>
               <div class="xray-item-label">ЯЧЕЙКА</div>
@@ -657,10 +968,13 @@
       </aside>
 
       <!-- RIGHT BLUEPRINT DOCK -->
-      <aside class="hotspot-dock">
+      <aside class="hotspot-dock" id="right-hotspot-dock">
         <div class="panel-title">
           <span>ЧЕРТЕЖИ И ТЕХКАРТЫ (1:1)</span>
-          <span>CAD DOCS</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span>CAD DOCS</span>
+            <button class="drawer-close-btn" id="close-right-drawer">×</button>
+          </div>
         </div>
         <button class="blueprint-btn" data-modal="battery">
           <span>СХЕМА: СБОРКА АКБ 20S7P (140 ЯЧЕЕК)</span>
@@ -687,6 +1001,12 @@
 
     <!-- BOTTOM CONTROLS -->
     <footer class="hud-footer">
+      <!-- FLOATING MOBILE X-RAY TELEMETRY BAR -->
+      <div id="mobile-xray-banner" class="mobile-xray-banner">
+        <span class="title" id="mob-xray-title">X-RAY 20S7P: ТАПНИТЕ НА СЕКЦИЮ 1S..20S</span>
+        <span id="mob-xray-val">84.0V • 35Ah</span>
+      </div>
+
       <div class="controls-bar">
         <button id="btn-explode" class="tactical-btn">
           <span>[EXPLODED VIEW / РАЗБОРКА]</span>
