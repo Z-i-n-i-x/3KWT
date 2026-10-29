@@ -248,41 +248,163 @@ pipCamera.lookAt(-0.42, 0.04, 0.0);
 bikeMasterGroup.add(pipCamera);
 
 // ----------------------------------------------------------------------------
-// 4. VOLUMETRIC HEADLIGHT CONES & REAR LED BRAKE LIGHT TEST SYSTEM
+// 4. REALISTIC PHOTOMETRIC HEADLIGHT SYSTEM (ASYMMETRIC FLOOD + SPOT BEAMS,
+//    SOFT RADIAL GLARE SPRITES, ROAD LIGHT POOL & REAR LED BRAKE LIGHT)
 // ----------------------------------------------------------------------------
 const lightsTestGroup = new THREE.Group();
 lightsTestGroup.name = 'VOLUMETRIC_HEADLIGHT_BEAMS';
 lightsTestGroup.visible = false;
 const headlightSpots = [];
 
-[-0.026, 0.026].forEach((zEye) => {
-  const spot = new THREE.SpotLight(0xd8f4ff, 14.0, 28.0, Math.PI * 0.20, 0.58, 1.2);
+// 1) Procedural radial glow texture for soft optical lens bloom / glare (no hard edges!)
+function createSoftLensFlareTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 256;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(128, 128, 2, 128, 128, 126);
+  grad.addColorStop(0.00, 'rgba(255, 255, 255, 1.0)');
+  grad.addColorStop(0.14, 'rgba(230, 246, 255, 0.88)');
+  grad.addColorStop(0.38, 'rgba(165, 218, 255, 0.34)');
+  grad.addColorStop(0.70, 'rgba(110, 185, 255, 0.08)');
+  grad.addColorStop(1.00, 'rgba(80, 160, 255, 0.0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+
+  // Subtle horizontal anamorphic streak characteristic of fluted motorcycle LED optics
+  const streak = ctx.createLinearGradient(0, 128, 256, 128);
+  streak.addColorStop(0.0, 'rgba(180, 230, 255, 0.0)');
+  streak.addColorStop(0.35, 'rgba(210, 242, 255, 0.18)');
+  streak.addColorStop(0.50, 'rgba(255, 255, 255, 0.45)');
+  streak.addColorStop(0.65, 'rgba(210, 242, 255, 0.18)');
+  streak.addColorStop(1.0, 'rgba(180, 230, 255, 0.0)');
+  ctx.fillStyle = streak;
+  ctx.fillRect(8, 121, 240, 14);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// 2) Procedural soft axial + radial fade texture for volumetric light beam cones (no sharp cone base!)
+function createVolumetricBeamTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 256;
+  const ctx = c.getContext('2d');
+  // In Three.js ConeGeometry, V=1 is at the apex (lamp lens) and V=0 is at the far open end of the beam
+  const grad = ctx.createLinearGradient(0, 0, 0, 256);
+  grad.addColorStop(0.00, 'rgba(240, 250, 255, 0.55)');
+  grad.addColorStop(0.18, 'rgba(205, 238, 255, 0.28)');
+  grad.addColorStop(0.55, 'rgba(165, 220, 255, 0.09)');
+  grad.addColorStop(0.85, 'rgba(135, 205, 255, 0.02)');
+  grad.addColorStop(1.00, 'rgba(120, 195, 255, 0.0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 128, 256);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const flareTex = createSoftLensFlareTexture();
+const beamConeTex = createVolumetricBeamTexture();
+
+// Exact coordinates of the two Sur-Ron headlight lenses in steering space:
+// Headlight center = (0.436, 0.592, 0), front lens X = 0.436 + 0.017 = 0.453, eye Z = ±0.0126
+const eyeConfigs = [
+  {
+    // LEFT EYE (z = +0.0126): Fluted Wide Flood Beam (ближний широкий свет с боковой засветкой обочины)
+    zEye: 0.0126,
+    color: 0xeaf6ff,
+    intensity: 26.0,
+    distance: 42.0,
+    angle: Math.PI * 0.30,
+    penumbra: 0.92,
+    decay: 1.35,
+    targetPos: new THREE.Vector3(9.5, -0.38, 0.25),
+    coneRadius: 0.62,
+    coneLen: 2.6,
+    coneOpacity: 0.14
+  },
+  {
+    // RIGHT EYE (z = -0.0126): Deep Parabolic Long-Range Spot Beam (дальний пробивной пучок)
+    zEye: -0.0126,
+    color: 0xf4faff,
+    intensity: 38.0,
+    distance: 68.0,
+    angle: Math.PI * 0.15,
+    penumbra: 0.78,
+    decay: 1.25,
+    targetPos: new THREE.Vector3(16.0, -0.32, -0.15),
+    coneRadius: 0.36,
+    coneLen: 3.4,
+    coneOpacity: 0.19
+  }
+];
+
+eyeConfigs.forEach((cfg, idx) => {
+  const spot = new THREE.SpotLight(cfg.color, cfg.intensity, cfg.distance, cfg.angle, cfg.penumbra, cfg.decay);
   spot.visible = false;
-  spot.position.set(0.475, 0.585, zEye);
+  spot.position.set(0.454, 0.592, cfg.zEye);
+  if (idx === 1) {
+    spot.castShadow = true;
+    spot.shadow.mapSize.width = 1024;
+    spot.shadow.mapSize.height = 1024;
+    spot.shadow.camera.near = 0.15;
+    spot.shadow.camera.far = 45.0;
+    spot.shadow.bias = -0.0006;
+  }
+
   const targetObj = new THREE.Object3D();
-  targetObj.position.set(6.5, -0.35, zEye * 2.0);
+  targetObj.position.copy(cfg.targetPos);
   lightsTestGroup.add(targetObj);
   spot.target = targetObj;
   lightsTestGroup.add(spot);
   headlightSpots.push(spot);
 
-  const coneGeom = new THREE.ConeGeometry(0.32, 1.65, 32, 1, true);
-  coneGeom.translate(0, -0.825, 0);
-  coneGeom.rotateZ(Math.PI / 2 - 0.18);
-  const coneMat = new THREE.MeshBasicMaterial({
-    color: 0xbbe8ff,
+  // Soft-fading multi-layered volumetric Tyndall haze beam (inner core + outer halo)
+  [0.55, 1.0].forEach((scaleR, layerIdx) => {
+    const coneGeom = new THREE.ConeGeometry(cfg.coneRadius * scaleR, cfg.coneLen, 36, 1, true);
+    coneGeom.translate(0, -cfg.coneLen * 0.5, 0);
+    coneGeom.rotateZ(Math.PI / 2 - 0.10);
+    const coneMat = new THREE.MeshBasicMaterial({
+      map: beamConeTex,
+      color: 0xd8f0ff,
+      transparent: true,
+      opacity: layerIdx === 0 ? cfg.coneOpacity * 1.15 : cfg.coneOpacity * 0.65,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const coneMesh = new THREE.Mesh(coneGeom, coneMat);
+    coneMesh.position.set(0.454, 0.592, cfg.zEye);
+    lightsTestGroup.add(coneMesh);
+  });
+
+  // Soft optical glare / bloom sprite right in front of each CREE reflector lens
+  const flareMat = new THREE.SpriteMaterial({
+    map: flareTex,
+    color: 0xeef8ff,
     transparent: true,
-    opacity: 0.16,
-    side: THREE.DoubleSide,
+    opacity: 0.85,
     depthWrite: false,
     blending: THREE.AdditiveBlending
   });
-  const coneMesh = new THREE.Mesh(coneGeom, coneMat);
-  coneMesh.position.set(0.475, 0.585, zEye);
-  lightsTestGroup.add(coneMesh);
+  const flareSprite = new THREE.Sprite(flareMat);
+  flareSprite.position.set(0.457, 0.592, cfg.zEye);
+  flareSprite.scale.set(0.095, 0.082, 1.0);
+  lightsTestGroup.add(flareSprite);
 });
 
-const rearBrakePointLight = new THREE.PointLight(0xff1111, 0, 2.4);
+// Near-field spill PointLight right in front of the headlight bezel (illuminates front tire, mudguard & FOXSID fork arch)
+const headlightNearSpill = new THREE.PointLight(0xdff2ff, 2.4, 2.2, 1.6);
+headlightNearSpill.visible = false;
+headlightNearSpill.position.set(0.495, 0.575, 0);
+lightsTestGroup.add(headlightNearSpill);
+headlightSpots.push(headlightNearSpill);
+
+const rearBrakePointLight = new THREE.PointLight(0xff1111, 0, 3.2);
 rearBrakePointLight.position.set(-0.60, 0.555, 0);
 saddleSys.saddleAndFenderGroup.add(rearBrakePointLight);
 steeringChildOffset.add(lightsTestGroup);
