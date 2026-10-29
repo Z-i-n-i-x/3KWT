@@ -6390,15 +6390,23 @@ const ENGINEERING_MODALS = {
 const container = document.getElementById('webgl-container');
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 0.02, 40);
+const initAspect = window.innerWidth / Math.max(window.innerHeight, 1);
+const camera = new THREE.PerspectiveCamera(initAspect < 1.0 ? 44 : 28, initAspect, 0.02, 40);
 // Studio telephoto 3/4 front-left angle matching Reference Photo #1 without wide-angle wheel distortion
 const DEFAULT_CAM_POS = new THREE.Vector3(1.42, 0.48, 2.15);
-const DEFAULT_CAM_TARGET = new THREE.Vector3(0.06, 0.21, 0.0);
+const DEFAULT_CAM_TARGET = new THREE.Vector3(0.11, 0.21, 0.0);
 
 function getViewportAdjustedPos(basePos, targetVec) {
   const aspect = window.innerWidth / Math.max(window.innerHeight, 1);
-  // On portrait mobile screens (aspect < 1.25), pull the camera back proportionally so the horizontal bike fits 100%
-  const distScale = aspect < 1.25 ? Math.min(2.72, 1.32 / Math.max(aspect, 0.40)) : 1.0;
+  camera.fov = aspect < 1.0 ? 44 : 28;
+  camera.updateProjectionMatrix();
+  if (aspect < 1.0 && basePos === DEFAULT_CAM_POS) {
+    // On 20:9 portrait smartphones (e.g. iQOO Z10r 393x852), use a balanced 3/4 side-front vector so both 26" wheels fit 100% symmetrically
+    const portraitDir = new THREE.Vector3(0.56, 0.25, 2.88);
+    const scale = Math.min(2.85, 1.04 / Math.max(aspect, 0.38));
+    return targetVec.clone().add(portraitDir.multiplyScalar(scale));
+  }
+  const distScale = aspect < 1.25 ? Math.min(2.55, 1.08 / Math.max(aspect, 0.42)) : 1.0;
   return targetVec.clone().add(basePos.clone().sub(targetVec).multiplyScalar(distScale));
 }
 
@@ -7114,30 +7122,35 @@ const HOTSPOT_DEFS = [
   {
     id: 'battery',
     label: '[ АКБ 20S7P (140× 21700) + СХЕМА ]',
+    mobileLabel: '[ АКБ 20S7P • СХЕМА ]',
     parent: batterySys.corduraCenterGroup,
     localPos: new THREE.Vector3(0.14, 0.28, 0.045)
   },
   {
     id: 'saddle',
     label: '[ МОТО-СЕДЛО + ПОДРАМНИК ]',
+    mobileLabel: '[ СЕДЛО + ПОДРАМНИК ]',
     parent: saddleSys.saddleAndFenderGroup,
     localPos: new THREE.Vector3(-0.28, 0.49, 0.0)
   },
   {
     id: 'dropout',
     label: '[ ДРОПАУТ 6 ММ М14 + ZOOM ]',
+    mobileLabel: '[ ДРОПАУТ 6ММ + ZOOM ]',
     parent: rearDropoutNode,
     localPos: new THREE.Vector3(-0.438, 0.08, 0.08)
   },
   {
     id: 'motor',
     label: '[ МОТОР 3000W + ПМС-100 ]',
+    mobileLabel: '[ МОТОР 3000W • ПМС ]',
     parent: rearWheelNode,
     localPos: new THREE.Vector3(0.0, -0.08, 0.06)
   },
   {
     id: 'wiring',
     label: '[ 3D-КОРОБ + DC-DC + ГУДОК 105ДБ ]',
+    mobileLabel: '[ 3D-КОРОБ 12V + ГУДОК ]',
     parent: underTubeSys.controllerAndLidGroup,
     localPos: new THREE.Vector3(0.11, 0.08, 0.04)
   }
@@ -7147,10 +7160,14 @@ const hotspotContainer = document.getElementById('hotspot-markers');
 HOTSPOT_DEFS.forEach((h) => {
   const el = document.createElement('div');
   el.className = 'hotspot-pin';
-  el.innerHTML = `<span class="dot"></span><span>${h.label}</span>`;
+  const textSpan = document.createElement('span');
+  textSpan.textContent = window.innerWidth <= 640 ? h.mobileLabel : h.label;
+  el.innerHTML = `<span class="dot"></span>`;
+  el.appendChild(textSpan);
   el.addEventListener('click', () => openEngineeringModal(h.id));
   hotspotContainer.appendChild(el);
   h.element = el;
+  h.textSpan = textSpan;
 });
 
 if (btnMobPins) {
@@ -7165,11 +7182,17 @@ function updateHotspotScreenPositions() {
   if (!arePinsVisible) return;
   const tempV = new THREE.Vector3();
   const isCompact = window.innerWidth <= 920;
-  const marginX = isCompact ? 88 : 24;
-  const minY = isCompact ? 136 : 80;
-  const maxY = window.innerHeight - (isCompact ? 148 : 80);
+  const isPhone = window.innerWidth <= 640;
+  const marginX = isPhone ? 68 : (isCompact ? 88 : 24);
+  const minY = isCompact ? 142 : 80;
+  const maxY = window.innerHeight - (isCompact ? 152 : 80);
 
+  const placed = [];
   HOTSPOT_DEFS.forEach((h) => {
+    if (h.textSpan) {
+      const targetText = isPhone ? h.mobileLabel : h.label;
+      if (h.textSpan.textContent !== targetText) h.textSpan.textContent = targetText;
+    }
     tempV.copy(h.localPos);
     h.parent.localToWorld(tempV);
     tempV.project(camera);
@@ -7181,7 +7204,18 @@ function updateHotspotScreenPositions() {
     const rawX = (tempV.x * 0.5 + 0.5) * window.innerWidth;
     const rawY = (-(tempV.y * 0.5) + 0.5) * window.innerHeight;
     const x = Math.max(marginX, Math.min(window.innerWidth - marginX, rawX));
-    const y = Math.max(minY, Math.min(maxY, rawY));
+    let y = Math.max(minY, Math.min(maxY, rawY));
+
+    // Prevent vertical pin overlap on compact mobile screens
+    if (isCompact) {
+      for (let i = 0; i < placed.length; i++) {
+        if (Math.abs(x - placed[i].x) < 135 && Math.abs(y - placed[i].y) < 24) {
+          y = Math.min(maxY, placed[i].y + 25);
+        }
+      }
+      placed.push({ x, y });
+    }
+
     h.element.style.display = 'flex';
     h.element.style.left = `${x}px`;
     h.element.style.top = `${y}px`;
@@ -7192,7 +7226,9 @@ function updateHotspotScreenPositions() {
 // 9. RESIZE HANDLER & MAIN RENDER LOOP
 // ----------------------------------------------------------------------------
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  const aspect = window.innerWidth / Math.max(window.innerHeight, 1);
+  camera.aspect = aspect;
+  camera.fov = aspect < 1.0 ? 44 : 28;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });

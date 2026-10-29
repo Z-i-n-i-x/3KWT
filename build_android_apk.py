@@ -798,8 +798,8 @@ def generate_signing_key_and_cert():
         .issuer_name(issuer)
         .public_key(private_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(now - datetime.timedelta(days=1))
-        .not_valid_after(now + datetime.timedelta(days=3650))
+        .not_valid_before(datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
+        .not_valid_after(datetime.datetime(2050, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
         .sign(private_key, hashes.SHA256())
     )
     cert_der = cert.public_bytes(serialization.Encoding.DER)
@@ -808,30 +808,29 @@ def generate_signing_key_and_cert():
 
 def build_jar_v1_signature_files(entries_dict: dict, private_key, cert) -> tuple:
     """Builds META-INF/MANIFEST.MF, META-INF/CERT.SF, and META-INF/CERT.RSA."""
-    manifest_lines = [
-        "Manifest-Version: 1.0",
-        "Created-By: 1.0 (Stealth Sur-Ron CAD Builder)",
-        "",
-    ]
+    manifest_header = (
+        "Manifest-Version: 1.0\r\n"
+        "Created-By: 1.0 (Stealth Sur-Ron CAD Builder)\r\n\r\n"
+    )
+    manifest_sections = []
     sf_sections = []
 
     for name, raw_bytes in entries_dict.items():
         b64_sha256 = base64.b64encode(hashlib.sha256(raw_bytes).digest()).decode("ascii")
         section = f"Name: {name}\r\nSHA-256-Digest: {b64_sha256}\r\n\r\n"
-        manifest_lines.append(section.rstrip("\r\n"))
-        manifest_lines.append("")
+        manifest_sections.append(section)
 
         sec_digest = base64.b64encode(hashlib.sha256(section.encode("utf-8")).digest()).decode("ascii")
         sf_sections.append(f"Name: {name}\r\nSHA-256-Digest: {sec_digest}\r\n\r\n")
 
-    manifest_bytes = "\r\n".join(manifest_lines).encode("utf-8")
+    manifest_bytes = (manifest_header + "".join(manifest_sections)).encode("utf-8")
     manifest_digest = base64.b64encode(hashlib.sha256(manifest_bytes).digest()).decode("ascii")
 
     sf_header = (
         "Signature-Version: 1.0\r\n"
         "Created-By: 1.0 (Stealth Sur-Ron CAD Builder)\r\n"
         f"SHA-256-Digest-Manifest: {manifest_digest}\r\n"
-        "X-Android-APK-Signed: 2\r\n\r\n"
+        "X-Android-APK-Signed: 2, 3\r\n\r\n"
     )
     sf_bytes = sf_header.encode("utf-8") + "".join(sf_sections).encode("utf-8")
 
@@ -885,7 +884,7 @@ def build_jar_v1_signature_files(entries_dict: dict, private_key, cert) -> tuple
 
 def compute_apk_v2_chunk_digest(sections: list) -> bytes:
     """
-    Computes the APK Signature Scheme v2 SHA-256 digest over the 3 ZIP sections
+    Computes the APK Signature Scheme v2/v3 SHA-256 digest over the 3 ZIP sections
     split into 1 MB (1048576-byte) chunks.
     """
     CHUNK_SIZE = 1024 * 1024
@@ -916,7 +915,9 @@ def build_apk_v2_signing_block(
     before_cd: bytes, central_dir: bytes, eocd: bytes, private_key, cert_der: bytes
 ) -> bytes:
     """
-    Constructs the APK Signature Scheme v2 Signing Block ('APK Sig Block 42', ID 0x7109871a).
+    Constructs the APK Signing Block ('APK Sig Block 42') containing BOTH:
+      - APK Signature Scheme v2 (ID 0x7109871a)
+      - APK Signature Scheme v3 (ID 0xf05368c0)
     """
     SIG_ALGO_RSA_PKCS1_V1_5_SHA256 = 0x0103
 
@@ -932,40 +933,45 @@ def build_apk_v2_signing_block(
     # Additional attributes (empty)
     additional_attrs = lp_prefixed(b"")
 
-    # signed_data = digests + certificates + additional_attributes
-    signed_data = digests_seq + certs_seq + additional_attrs
-
-    # Sign signed_data using RSASSA-PKCS1-v1_5 with SHA-256
-    signature_bytes = private_key.sign(signed_data, padding.PKCS1v15(), hashes.SHA256())
-    sig_entry = lp_prefixed(struct.pack("<I", SIG_ALGO_RSA_PKCS1_V1_5_SHA256) + lp_prefixed(signature_bytes))
-    signatures_seq = lp_prefixed(sig_entry)
-
     # PublicKey (SubjectPublicKeyInfo DER)
     spki_der = private_key.public_key().public_bytes(
         serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
-    # Signer = length-prefixed(signed_data) + length-prefixed(signatures) + length-prefixed(public_key)
-    signer_body = lp_prefixed(signed_data) + signatures_seq + lp_prefixed(spki_der)
-    signer = lp_prefixed(signer_body)
-    # APK Signature Scheme v2 Block value is length-prefixed sequence of length-prefixed signers:
-    v2_block_value = lp_prefixed(signer)
+    # --- 1. APK Signature Scheme v2 Block (ID 0x7109871a) ---
+    v2_signed_data = digests_seq + certs_seq + additional_attrs
+    v2_sig_bytes = private_key.sign(v2_signed_data, padding.PKCS1v15(), hashes.SHA256())
+    v2_sig_entry = lp_prefixed(struct.pack("<I", SIG_ALGO_RSA_PKCS1_V1_5_SHA256) + lp_prefixed(v2_sig_bytes))
+    v2_sigs_seq = lp_prefixed(v2_sig_entry)
+    v2_signer_body = lp_prefixed(v2_signed_data) + v2_sigs_seq + lp_prefixed(spki_der)
+    v2_block_value = lp_prefixed(lp_prefixed(v2_signer_body))
+    pair_v2 = struct.pack("<QI", 4 + len(v2_block_value), 0x7109871A) + v2_block_value
 
-    # ID-value pair: uint64_len + uint32_id (0x7109871a) + value
-    pair = struct.pack("<QI", 4 + len(v2_block_value), 0x7109871A) + v2_block_value
+    # --- 2. APK Signature Scheme v3 Block (ID 0xf05368c0) ---
+    min_sdk = 24
+    max_sdk = 0x7FFFFFFF
+    sdk_range = struct.pack("<II", min_sdk, max_sdk)
+    v3_signed_data = digests_seq + certs_seq + sdk_range + additional_attrs
+    v3_sig_bytes = private_key.sign(v3_signed_data, padding.PKCS1v15(), hashes.SHA256())
+    v3_sig_entry = lp_prefixed(struct.pack("<I", SIG_ALGO_RSA_PKCS1_V1_5_SHA256) + lp_prefixed(v3_sig_bytes))
+    v3_sigs_seq = lp_prefixed(v3_sig_entry)
+    v3_signer_body = lp_prefixed(v3_signed_data) + sdk_range + v3_sigs_seq + lp_prefixed(spki_der)
+    v3_block_value = lp_prefixed(lp_prefixed(v3_signer_body))
+    pair_v3 = struct.pack("<QI", 4 + len(v3_block_value), 0xF05368C0) + v3_block_value
+
+    pairs_core = pair_v2 + pair_v3
 
     # Pad block so total APK Signing Block is a multiple of 4096 bytes (Android page-alignment best practice)
-    # Total block = 8 (size_of_block_head) + len(pairs) + 8 (size_of_block_tail) + 16 (magic)
-    rem = (8 + len(pair) + 24) % 4096
+    rem = (8 + len(pairs_core) + 24) % 4096
     if rem != 0:
         pad_needed = 4096 - rem
         if pad_needed < 12:
             pad_needed += 4096
         pad_val_len = pad_needed - 12
         padding_pair = struct.pack("<QI", 4 + pad_val_len, 0x42726577) + (b"\x00" * pad_val_len)
-        pairs_blob = pair + padding_pair
+        pairs_blob = pairs_core + padding_pair
     else:
-        pairs_blob = pair
+        pairs_blob = pairs_core
 
     size_of_block = len(pairs_blob) + 24  # includes tail uint64 size + 16-byte magic
     return (
@@ -977,7 +983,7 @@ def build_apk_v2_signing_block(
 
 
 # ==============================================================================
-# 6. ASSEMBLE ZIPALIGNED + DUAL-SIGNED ANDROID .APK
+# 6. ASSEMBLE ZIPALIGNED + TRIPLE-SIGNED (V1 + V2 + V3) ANDROID .APK
 # ==============================================================================
 def build_signed_apk(standalone_html_path: str, out_apk_path: str):
     with open(standalone_html_path, "rb") as f:
@@ -991,7 +997,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
     payload_files = {
         "AndroidManifest.xml": (manifest_xml, True),
         "resources.arsc": (resources_arsc, False),  # Must be uncompressed & 4-byte aligned!
-        "classes.dex": (classes_dex, True),
+        "classes.dex": (classes_dex, False),        # Uncompressed & 4-byte aligned for direct ART mmap!
         "res/drawable/icon.png": (icon_png, False),  # Uncompressed & 4-byte aligned!
         "assets/index.html": (html_bytes, True),
     }
@@ -1004,7 +1010,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
     all_entries = [
         ("AndroidManifest.xml", manifest_xml, True),
         ("resources.arsc", resources_arsc, False),
-        ("classes.dex", classes_dex, True),
+        ("classes.dex", classes_dex, False),
         ("res/drawable/icon.png", icon_png, False),
         ("assets/index.html", html_bytes, True),
         ("META-INF/MANIFEST.MF", manifest_mf, True),
