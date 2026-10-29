@@ -111,17 +111,19 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
     """
     # 1. Attribute names mapped to android.R.attr.* resource IDs (sorted by resId!)
     attr_defs = [
-        ("theme", 0x01010000),               # idx 0
-        ("label", 0x01010001),               # idx 1
-        ("icon", 0x01010002),                # idx 2
-        ("name", 0x01010003),                # idx 3
-        ("exported", 0x01010010),            # idx 4
-        ("configChanges", 0x0101001F),       # idx 5
-        ("minSdkVersion", 0x0101020C),       # idx 6
-        ("versionCode", 0x0101021B),         # idx 7
-        ("versionName", 0x0101021C),         # idx 8
-        ("targetSdkVersion", 0x01010270),    # idx 9
-        ("hardwareAccelerated", 0x010102D3), # idx 10
+        ("theme", 0x01010000),                     # idx 0
+        ("label", 0x01010001),                     # idx 1
+        ("icon", 0x01010002),                      # idx 2
+        ("name", 0x01010003),                      # idx 3
+        ("exported", 0x01010010),                  # idx 4
+        ("configChanges", 0x0101001F),             # idx 5
+        ("minSdkVersion", 0x0101020C),             # idx 6
+        ("versionCode", 0x0101021B),               # idx 7
+        ("versionName", 0x0101021C),               # idx 8
+        ("targetSdkVersion", 0x01010270),          # idx 9
+        ("hardwareAccelerated", 0x010102D3),       # idx 10
+        ("compileSdkVersion", 0x01010572),         # idx 11
+        ("compileSdkVersionCodename", 0x01010573), # idx 12
     ]
 
     extra_strings = [
@@ -130,7 +132,10 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
         "manifest",
         "package",
         package_name,
-        "1.0",
+        "2.0",
+        "14",
+        "platformBuildVersionCode",
+        "platformBuildVersionName",
         "uses-sdk",
         "application",
         "STEALTH SUR-RON 72V 3000W",
@@ -262,33 +267,37 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
     # and must be ordered by strictly ascending resource ID!)
     xml_chunks = [
         make_start_ns("android", "http://schemas.android.com/apk/res/android", 2),
-        # <manifest android:versionCode="1" android:versionName="1.0" package="com.stealth.surron.cad">
+        # <manifest android:versionCode="2" android:versionName="2.0" android:compileSdkVersion="34" ...>
         make_start_element(
             "manifest",
             2,
             [
-                make_attr(NS_ANDROID, "versionCode", TYPE_INT_DEC, 1),
-                make_attr(NS_ANDROID, "versionName", TYPE_STRING, str_to_idx["1.0"], "1.0"),
+                make_attr(NS_ANDROID, "versionCode", TYPE_INT_DEC, 2),
+                make_attr(NS_ANDROID, "versionName", TYPE_STRING, str_to_idx["2.0"], "2.0"),
+                make_attr(NS_ANDROID, "compileSdkVersion", TYPE_INT_DEC, 34),
+                make_attr(NS_ANDROID, "compileSdkVersionCodename", TYPE_STRING, str_to_idx["14"], "14"),
                 make_attr(NO_NS, "package", TYPE_STRING, str_to_idx[package_name], package_name),
+                make_attr(NO_NS, "platformBuildVersionCode", TYPE_INT_DEC, 34),
+                make_attr(NO_NS, "platformBuildVersionName", TYPE_INT_DEC, 14),
             ],
         ),
-        # <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="33" />
+        # <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
         make_start_element(
             "uses-sdk",
-            3,
+            6,
             [
                 make_attr(NS_ANDROID, "minSdkVersion", TYPE_INT_DEC, 24),
-                make_attr(NS_ANDROID, "targetSdkVersion", TYPE_INT_DEC, 33),
+                make_attr(NS_ANDROID, "targetSdkVersion", TYPE_INT_DEC, 34),
             ],
         ),
-        make_end_element("uses-sdk", 3),
+        make_end_element("uses-sdk", 6),
         # <application android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
         #              android:label="STEALTH SUR-RON 72V 3000W"
         #              android:icon="@drawable/icon"
         #              android:hardwareAccelerated="true">
         make_start_element(
             "application",
-            4,
+            7,
             [
                 make_attr(NS_ANDROID, "theme", TYPE_REFERENCE, 0x01030007),
                 make_attr(
@@ -305,7 +314,7 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
         # <activity android:label="..." android:name="..." android:exported="true" android:configChanges="0x04a0">
         make_start_element(
             "activity",
-            5,
+            12,
             [
                 make_attr(
                     NS_ANDROID,
@@ -326,11 +335,11 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
             ],
         ),
         # <intent-filter>
-        make_start_element("intent-filter", 6, []),
+        make_start_element("intent-filter", 17, []),
         # <action android:name="android.intent.action.MAIN" />
         make_start_element(
             "action",
-            7,
+            18,
             [
                 make_attr(
                     NS_ANDROID,
@@ -341,11 +350,11 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
                 )
             ],
         ),
-        make_end_element("action", 7),
+        make_end_element("action", 18),
         # <category android:name="android.intent.category.LAUNCHER" />
         make_start_element(
             "category",
-            8,
+            19,
             [
                 make_attr(
                     NS_ANDROID,
@@ -356,10 +365,10 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
                 )
             ],
         ),
-        make_end_element("category", 8),
-        make_end_element("intent-filter", 6),
-        make_end_element("activity", 5),
-        make_end_element("application", 4),
+        make_end_element("category", 19),
+        make_end_element("intent-filter", 17),
+        make_end_element("activity", 12),
+        make_end_element("application", 7),
         make_end_element("manifest", 2),
         make_end_ns("android", "http://schemas.android.com/apk/res/android", 2),
     ]
@@ -373,8 +382,29 @@ def build_binary_android_manifest(package_name: str = "com.stealth.surron.cad") 
 # ==============================================================================
 def build_resources_arsc(package_name: str = "com.stealth.surron.cad") -> bytes:
     """
-    Builds a valid binary resources.arsc table mapping 0x7f010000 -> res/drawable/icon.png.
+    Builds a binary resources.arsc table matching official Android SDK aapt2 output,
+    mapping 0x7f010000 -> res/drawable/icon.png.
     """
+    def make_utf8_string_pool(strings: list) -> bytes:
+        enc_list = []
+        offsets = []
+        cur = 0
+        for s in strings:
+            offsets.append(cur)
+            u8 = s.encode("utf-8")
+            blob = bytes([len(s), len(u8)]) + u8 + b"\x00"
+            enc_list.append(blob)
+            cur += len(blob)
+        s_blob = b"".join(enc_list)
+        while len(s_blob) % 4 != 0:
+            s_blob += b"\x00"
+        count = len(strings)
+        s_start = 28 + count * 4
+        total = s_start + len(s_blob)
+        hdr = struct.pack("<HHIIIIII", 0x0001, 28, total, count, 0, 0x0100, s_start, 0)
+        offs = b"".join(struct.pack("<I", o) for o in offsets)
+        return hdr + offs + s_blob
+
     def make_utf16_string_pool(strings: list) -> bytes:
         enc_list = []
         offsets = []
@@ -395,33 +425,29 @@ def build_resources_arsc(package_name: str = "com.stealth.surron.cad") -> bytes:
         offs = b"".join(struct.pack("<I", o) for o in offsets)
         return hdr + offs + s_blob
 
-    # 1. Global value string pool: ["res/drawable/icon.png"]
-    global_pool = make_utf16_string_pool(["res/drawable/icon.png"])
+    # 1. Global value string pool (UTF-8, flags=0x100): ["res/drawable/icon.png"]
+    global_pool = make_utf8_string_pool(["res/drawable/icon.png"])
 
-    # 2. Package string pools: typeStrings = ["drawable"], keyStrings = ["icon"]
+    # 2. Package string pools: typeStrings (UTF-16) = ["drawable"], keyStrings (UTF-8) = ["icon"]
     type_pool = make_utf16_string_pool(["drawable"])
-    key_pool = make_utf16_string_pool(["icon"])
+    key_pool = make_utf8_string_pool(["icon"])
 
     # 3. ResTable_typeSpec (RES_TABLE_TYPE_SPEC_TYPE = 0x0202)
-    # headerSize = 16, size = 20 (1 entry), id = 1 (drawable), res0 = 0, res1 = 0, entryCount = 1
     type_spec = struct.pack("<HHIBBHII", 0x0202, 16, 20, 1, 0, 0, 1, 0)
 
     # 4. ResTable_type (RES_TABLE_TYPE_TYPE = 0x0201)
-    # ResTable_config is 52 bytes (size=52 + 48 zero bytes), so ResTable_type headerSize = 20 + 52 = 72
-    # 1 entry offset (4 bytes) + 1 ResTable_entry (8 bytes: <HHI) + 1 Res_value (8 bytes: <HBBI) = 20 bytes
-    res_config = struct.pack("<I", 52) + b"\x00" * 48
-    res_entry = struct.pack("<HHIHBBI", 8, 0, 0, 8, 0, 0x03, 0)  # key=0 ("icon"), TYPE_STRING(0x03), data=0 ("res/drawable/icon.png")
-    type_chunk_size = 72 + 4 + len(res_entry)
+    # 64-byte ResTable_config (matching modern aapt2): headerSize = 20 + 64 = 84, entriesStart = 88
+    res_config = struct.pack("<I", 64) + b"\x00" * 60
+    res_entry = struct.pack("<HHIHBBI", 8, 0, 0, 8, 0, 0x03, 0)
+    type_chunk_size = 84 + 4 + len(res_entry)
     type_chunk = (
-        struct.pack("<HHIBBHII", 0x0201, 72, type_chunk_size, 1, 0, 0, 1, 76)
+        struct.pack("<HHIBBHII", 0x0201, 84, type_chunk_size, 1, 0, 0, 1, 88)
         + res_config
         + struct.pack("<I", 0)
         + res_entry
     )
 
     # 5. ResTable_package (RES_TABLE_PACKAGE_TYPE = 0x0200)
-    # headerSize = 288 bytes (type=2, headerSize=2, size=4, id=4, name=256 (128x char16_t),
-    # typeStrings=4, lastPublicType=4, keyStrings=4, lastPublicKey=4, typeIdOffset=4)
     pkg_name_u16 = package_name.encode("utf-16le")[:254].ljust(256, b"\x00")
     pkg_hdr_size = 288
     type_strings_off = pkg_hdr_size
@@ -432,7 +458,7 @@ def build_resources_arsc(package_name: str = "com.stealth.surron.cad") -> bytes:
     pkg_hdr = (
         struct.pack("<HHII", 0x0200, pkg_hdr_size, pkg_total_size, 0x7F)
         + pkg_name_u16
-        + struct.pack("<IIIII", type_strings_off, 1, key_strings_off, 1, 0)
+        + struct.pack("<IIIII", type_strings_off, 0, key_strings_off, 0, 0)
     )
     pkg_chunk = pkg_hdr + pkg_body
 
@@ -469,8 +495,6 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
               WebSettings ws = wv.getSettings();
               ws.setJavaScriptEnabled(true);
               ws.setDomStorageEnabled(true);
-              ws.setAllowFileAccess(true);
-              ws.setAllowUniversalAccessFromFileURLs(true);
               this.setContentView(wv);
               wv.loadUrl("file:///android_asset/index.html");
           }
@@ -499,8 +523,6 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
         "getSettings",
         "loadUrl",
         "onCreate",
-        "setAllowFileAccess",
-        "setAllowUniversalAccessFromFileURLs",
         "setContentView",
         "setDomStorageEnabled",
         "setJavaScriptEnabled",
@@ -544,8 +566,6 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
         ("Landroid/app/Activity;", "<init>", ("V", ())),
         ("Landroid/app/Activity;", "onCreate", ("V", ("Landroid/os/Bundle;",))),
         ("Landroid/app/Activity;", "setContentView", ("V", ("Landroid/view/View;",))),
-        ("Landroid/webkit/WebSettings;", "setAllowFileAccess", ("V", ("Z",))),
-        ("Landroid/webkit/WebSettings;", "setAllowUniversalAccessFromFileURLs", ("V", ("Z",))),
         ("Landroid/webkit/WebSettings;", "setDomStorageEnabled", ("V", ("Z",))),
         ("Landroid/webkit/WebSettings;", "setJavaScriptEnabled", ("V", ("Z",))),
         ("Landroid/webkit/WebView;", "<init>", ("V", ("Landroid/content/Context;",))),
@@ -574,8 +594,6 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
     m_wv_settings = m_idx[("Landroid/webkit/WebView;", "getSettings", ("Landroid/webkit/WebSettings;", ()))]
     m_set_js = m_idx[("Landroid/webkit/WebSettings;", "setJavaScriptEnabled", ("V", ("Z",)))]
     m_set_dom = m_idx[("Landroid/webkit/WebSettings;", "setDomStorageEnabled", ("V", ("Z",)))]
-    m_set_file = m_idx[("Landroid/webkit/WebSettings;", "setAllowFileAccess", ("V", ("Z",)))]
-    m_set_univ = m_idx[("Landroid/webkit/WebSettings;", "setAllowUniversalAccessFromFileURLs", ("V", ("Z",)))]
     m_set_content = m_idx[("Landroid/app/Activity;", "setContentView", ("V", ("Landroid/view/View;",)))]
     s_asset_url = s_idx["file:///android_asset/index.html"]
     m_load_url = m_idx[("Landroid/webkit/WebView;", "loadUrl", ("V", ("Ljava/lang/String;",)))]
@@ -597,10 +615,6 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
         0x206E, m_set_js, 0x0031,
         # invoke-virtual {v1, v3}, Landroid/webkit/WebSettings;->setDomStorageEnabled(Z)V
         0x206E, m_set_dom, 0x0031,
-        # invoke-virtual {v1, v3}, Landroid/webkit/WebSettings;->setAllowFileAccess(Z)V
-        0x206E, m_set_file, 0x0031,
-        # invoke-virtual {v1, v3}, Landroid/webkit/WebSettings;->setAllowUniversalAccessFromFileURLs(Z)V
-        0x206E, m_set_univ, 0x0031,
         # invoke-virtual {v2, v0}, Landroid/app/Activity;->setContentView(Landroid/view/View;)V
         0x206E, m_set_content, 0x0002,
         # const-string v1, "file:///android_asset/index.html"
@@ -632,7 +646,16 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
         while (off_data_start + len(data_buf)) % alignment != 0:
             data_buf.append(0)
 
-    # 1. type_list items for protos with parameters
+    # 1. code_item for <init> and onCreate (placed first in data section, matching d8/dx)
+    align_data(4)
+    off_code_init = off_data_start + len(data_buf)
+    data_buf.extend(code_item_init)
+
+    align_data(4)
+    off_code_oncreate = off_data_start + len(data_buf)
+    data_buf.extend(code_item_oncreate)
+
+    # 2. type_list items for protos with parameters
     proto_param_offsets = []
     for shorty, ret_t, params in protos:
         if not params:
@@ -644,16 +667,6 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
             data_buf.extend(struct.pack("<I", len(params)))
             for pt in params:
                 data_buf.extend(struct.pack("<H", t_idx[pt]))
-            align_data(4)
-
-    # 2. code_item for <init> and onCreate
-    align_data(4)
-    off_code_init = off_data_start + len(data_buf)
-    data_buf.extend(code_item_init)
-
-    align_data(4)
-    off_code_oncreate = off_data_start + len(data_buf)
-    data_buf.extend(code_item_oncreate)
 
     # 3. string_data_item entries
     string_data_offsets = []
@@ -696,8 +709,8 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
         (0x0003, len(protos), off_proto_ids),
         (0x0005, len(methods), off_method_ids),
         (0x0006, 1, off_class_defs),
-        (0x1001, len(non_zero_param_offs), non_zero_param_offs[0]),
         (0x2001, 2, off_code_init),
+        (0x1001, len(non_zero_param_offs), non_zero_param_offs[0]),
         (0x2002, len(strings), string_data_offsets[0]),
         (0x2000, 1, off_class_data),
         (0x1000, 1, off_map_list),
@@ -780,26 +793,24 @@ def build_classes_dex(package_name: str = "com.stealth.surron.cad") -> bytes:
 
 
 # ==============================================================================
-# 5. SIGN APK WITH JAR V1 (META-INF) + APK SIGNATURE SCHEME V2 (APK Sig Block 42)
+# 5. SIGN APK WITH JAR V1 (META-INF) + APK SIGNATURE SCHEME V2/V3 (APK Sig Block 42)
 # ==============================================================================
 def generate_signing_key_and_cert():
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = issuer = x509.Name(
         [
-            x509.NameAttribute(NameOID.COUNTRY_NAME, "RU"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Stealth Sur-Ron CAD Engineering"),
             x509.NameAttribute(NameOID.COMMON_NAME, "Stealth Sur-Ron 72V 3000W"),
         ]
     )
-    now = datetime.datetime.now(datetime.timezone.utc)
+    # Use UTCTime dates (< 2050) and 64-bit positive serial number matching Android keytool/apksigner
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
         .issuer_name(issuer)
         .public_key(private_key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
-        .not_valid_after(datetime.datetime(2050, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
+        .serial_number(0x535552524F4E3732)
+        .not_valid_before(datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
+        .not_valid_after(datetime.datetime(2048, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc))
         .sign(private_key, hashes.SHA256())
     )
     cert_der = cert.public_bytes(serialization.Encoding.DER)
@@ -810,7 +821,7 @@ def build_jar_v1_signature_files(entries_dict: dict, private_key, cert) -> tuple
     """Builds META-INF/MANIFEST.MF, META-INF/CERT.SF, and META-INF/CERT.RSA."""
     manifest_header = (
         "Manifest-Version: 1.0\r\n"
-        "Created-By: 1.0 (Stealth Sur-Ron CAD Builder)\r\n\r\n"
+        "Created-By: 1.0 (Android)\r\n\r\n"
     )
     manifest_sections = []
     sf_sections = []
@@ -828,7 +839,7 @@ def build_jar_v1_signature_files(entries_dict: dict, private_key, cert) -> tuple
 
     sf_header = (
         "Signature-Version: 1.0\r\n"
-        "Created-By: 1.0 (Stealth Sur-Ron CAD Builder)\r\n"
+        "Created-By: 1.0 (Android)\r\n"
         f"SHA-256-Digest-Manifest: {manifest_digest}\r\n"
         "X-Android-APK-Signed: 2, 3\r\n\r\n"
     )
@@ -916,10 +927,12 @@ def build_apk_v2_signing_block(
 ) -> bytes:
     """
     Constructs the APK Signing Block ('APK Sig Block 42') containing BOTH:
-      - APK Signature Scheme v2 (ID 0x7109871a)
+      - APK Signature Scheme v2 (ID 0x7109871a, with ATTR_APK_SIGNATURE_SCHEME_V3_STRIPPING_PROTECTION = 3)
       - APK Signature Scheme v3 (ID 0xf05368c0)
+      - Verity padding block (ID 0x42726577) aligning Central Directory to 4096 bytes.
     """
     SIG_ALGO_RSA_PKCS1_V1_5_SHA256 = 0x0103
+    ATTR_V3_STRIPPING_PROTECTION = 0xBEEFF00D
 
     top_digest = compute_apk_v2_chunk_digest([before_cd, central_dir, eocd])
 
@@ -930,16 +943,16 @@ def build_apk_v2_signing_block(
     # Certificates sequence: sequence of length-prefixed X.509 DER certificates
     certs_seq = lp_prefixed(lp_prefixed(cert_der))
 
-    # Additional attributes (empty)
-    additional_attrs = lp_prefixed(b"")
-
     # PublicKey (SubjectPublicKeyInfo DER)
     spki_der = private_key.public_key().public_bytes(
         serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
     # --- 1. APK Signature Scheme v2 Block (ID 0x7109871a) ---
-    v2_signed_data = digests_seq + certs_seq + additional_attrs
+    # Mandatory V3 stripping protection attribute (0xbeeff00d -> 3) required when V3 block is present!
+    v2_stripping_attr = lp_prefixed(struct.pack("<II", ATTR_V3_STRIPPING_PROTECTION, 3))
+    v2_additional_attrs = lp_prefixed(v2_stripping_attr)
+    v2_signed_data = digests_seq + certs_seq + v2_additional_attrs + struct.pack("<I", 0)
     v2_sig_bytes = private_key.sign(v2_signed_data, padding.PKCS1v15(), hashes.SHA256())
     v2_sig_entry = lp_prefixed(struct.pack("<I", SIG_ALGO_RSA_PKCS1_V1_5_SHA256) + lp_prefixed(v2_sig_bytes))
     v2_sigs_seq = lp_prefixed(v2_sig_entry)
@@ -951,7 +964,8 @@ def build_apk_v2_signing_block(
     min_sdk = 24
     max_sdk = 0x7FFFFFFF
     sdk_range = struct.pack("<II", min_sdk, max_sdk)
-    v3_signed_data = digests_seq + certs_seq + sdk_range + additional_attrs
+    v3_additional_attrs = lp_prefixed(b"")
+    v3_signed_data = digests_seq + certs_seq + sdk_range + v3_additional_attrs
     v3_sig_bytes = private_key.sign(v3_signed_data, padding.PKCS1v15(), hashes.SHA256())
     v3_sig_entry = lp_prefixed(struct.pack("<I", SIG_ALGO_RSA_PKCS1_V1_5_SHA256) + lp_prefixed(v3_sig_bytes))
     v3_sigs_seq = lp_prefixed(v3_sig_entry)
@@ -961,7 +975,8 @@ def build_apk_v2_signing_block(
 
     pairs_core = pair_v2 + pair_v3
 
-    # Pad block so total APK Signing Block is a multiple of 4096 bytes (Android page-alignment best practice)
+    # Pad block so total APK Signing Block size (8 + len(pairs_blob) + 24) is an exact multiple of 4096 bytes
+    # (Mandatory requirement of Android's ApkSigningBlockUtils when VERITY_PADDING_BLOCK_ID 0x42726577 is present!)
     rem = (8 + len(pairs_core) + 24) % 4096
     if rem != 0:
         pad_needed = 4096 - rem
@@ -1028,7 +1043,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
 
         if compress:
             comp_obj = zlib.compressobj(9, zlib.DEFLATED, -zlib.MAX_WBITS)
-            comp_data = comp_obj.flush(zlib.Z_FINISH) if False else (comp_obj.compress(raw_data) + comp_obj.flush())
+            comp_data = comp_obj.compress(raw_data) + comp_obj.flush()
             method = 8  # DEFLATED
         else:
             comp_data = raw_data
@@ -1091,6 +1106,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
         )
         central_dir_chunks.extend(cd_header)
 
+    # Pad before_cd so APK Signing Block starts at a 4096-byte page boundary (if needed by extra field on last entry? No, APK Signing Block size is padded so cd_offset_final % 4096 == 0)
     before_cd = bytes(local_chunks)
     central_dir = bytes(central_dir_chunks)
     cd_offset_initial = len(before_cd)
@@ -1108,7 +1124,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
         0,
     )
 
-    # Build APK Signature Scheme v2 Block and insert before Central Directory
+    # Build APK Signature Scheme v2 + v3 Block and insert before Central Directory
     v2_sig_block = build_apk_v2_signing_block(
         before_cd, central_dir, eocd_initial, private_key, cert_der
     )
@@ -1130,7 +1146,7 @@ def build_signed_apk(standalone_html_path: str, out_apk_path: str):
     with open(out_apk_path, "wb") as f:
         f.write(final_apk)
 
-    print(f"[OK] Built {out_apk_path} ({len(final_apk):,} bytes, zipaligned + v1/v2 dual-signed Android APK)")
+    print(f"[OK] Built {out_apk_path} ({len(final_apk):,} bytes, zipaligned + v1/v2/v3 triple-signed Android APK)")
 
 
 if __name__ == "__main__":
