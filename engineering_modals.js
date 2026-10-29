@@ -8,7 +8,7 @@ export const CAD_SHEETS = [
     id: 1,
     title: 'ЧЕРТЕЖ №1: МОНОЛИТНЫЙ ДРОПАУТ М14 + КРЕПЛЕНИЕ ТОРМОЗА IS 51 ММ (СТАЛЬ 6 ММ, МАСШТАБ 1:1)',
     shortTitle: '1. ДРОПАУТ М14 + IS 51',
-    material: 'Сталь 40Х / 45 (Лист 6.0 мм, термообработка 32-35 HRC)',
+    specSummary: 'Сталь 40Х / 45 (Лист 6.0 мм, термообработка 32-35 HRC)',
     desc: 'Усиленный монолитный дропаут под ось мотор-колеса 3000W с лысками 10.0 мм и резьбой М14x1.5. Интегрированные ушки стандарта IS (межцентровое 51.0 мм, 2x М6) под переходник IS-PM Rear 180 и 4-поршневой калипер ZOOM HB-890E. Накладной монтаж поверх заводского 5-мм дропаута рамы Stern с периметральной сваркой толстое к толстому (шов Т3 катет 4 мм) без прогрева тонкостенной трубки пера Ø18×1.2 мм.',
     svg: `<svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" class="cad-sheet-svg">
       <defs>
@@ -130,7 +130,7 @@ export const CAD_SHEETS = [
     id: 2,
     title: 'ЧЕРТЕЖ №2: СХЕМА УКЛАДКИ И СВАРКИ 140 БАНОК 21700 (20S7P) В ТРЕУГОЛЬНИКЕ 560×490×360 ММ',
     shortTitle: '2. СХЕМА АКБ 20S7P (140 ЯЧЕЕК)',
-    material: '140x EVE INR21700-50E (5000mAh, 15A) + Никель 0.15x8мм + Медь 2.5мм² + Bisida BMS 20S 120A',
+    specSummary: '140x EVE INR21700-50E (5000mAh, 15A) + Никель 0.15x8мм + Медь 2.5мм² + Bisida BMS 20S 120A',
     desc: 'Точная топология 140 банок 21700 в 9 рядах (22+21+19+18+16+15+13+9+7 = 140) с гексагональным шагом сот 22.7 мм и шагом рядов 19.66 мм. 20 связных параллельных групп 7P (1S..20S) с чередованием полярности змейкой. Никелевые шины 0.15x8 мм с 4 точками сварки на пятак + напаянные медные шины 2.5 мм² на переходах серий. Распайка 21 провода балансировки к гребенке Bisida BMS 120A и силовых выводов 8 AWG к разъему Amass XT90-S.',
     svg: `<svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" class="cad-sheet-svg">
       <defs>
@@ -298,7 +298,7 @@ export const CAD_SHEETS = [
     id: 3,
     title: 'ЧЕРТЕЖ №3: СТАЛЬНОЙ ПОДРАМНИК И ПОСАДКА ДЛИННОГО МОТО-СЕДЛА SUR-RON / ПИТБАЙК',
     shortTitle: '3. ПОДРАМНИК И СЕДЛО SUR-RON',
-    material: 'Профильная труба 20x20x2.0 мм + труба Ø16x2.0 мм (Сталь 20) + мото-седло 530 мм',
+    specSummary: 'Профильная труба 20x20x2.0 мм + труба Ø16x2.0 мм (Сталь 20) + мото-седло 530 мм',
     desc: 'Сварной пространственный подрамник для интеграции 2-местного седла Sur-Ron/CRF110 (длина 530 мм, ПВВ 55 кг/м³). Передний упор заходит в подседельную трубу рамы с фрезерованным П-образным пазом 40x70 мм в носике седла. Две наклонные задние распорки Ø16 мм с косым срезом 38° сходятся к середине верхних перьев рамы с болтовым креплением 2x М6.',
     svg: `<svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" class="cad-sheet-svg">
       <defs>
@@ -393,7 +393,7 @@ export const CAD_SHEETS = [
     id: 4,
     title: 'ЧЕРТЕЖ №4: ПОЛНАЯ ЦВЕТНАЯ ЭЛЕКТРОСХЕМА БОРТОВОЙ СЕТИ 72V И 12V (СВЕТ + ГУДОК + СТОП + EBS)',
     shortTitle: '4. ЭЛЕКТРОСХЕМА 72V / 12V',
-    material: 'Провода 8 AWG (силовые 72V) + 16-22 AWG (12V) + разъемы Julet & Amass XT90-S',
+    specSummary: 'Провода 8 AWG (силовые 72V) + 16-22 AWG (12V) + разъемы Julet & Amass XT90-S',
     desc: 'Полная наглядная цветная электросхема без абстрактных ГОСТ-символов. 1) Силовой контур 72V: АКБ 20S7P -> Bisida BMS 120A -> XT90-S -> Синусный контроллер 60A -> Мотор 3000W MTX39 (перемычка припоем EBS->GND активирует электродинамическое торможение рекуперацией E-ABS -1650W от левой ручки тормоза). 2) Контур 12V: DC-DC 36-120V->12V 10A через предохранитель 5A -> кнопка 2-в-1 -> Фара Sur-Ron 20W и гудок 105 дБ. 3) Контур СТОП: +12V через геркон правой ручки тормоза ZOOM HB-890E -> стоп-сигнал крыла.',
     svg: `<svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" class="cad-sheet-svg">
       <defs>
@@ -526,7 +526,7 @@ export const CAD_SHEETS = [
     id: 5,
     title: 'ЧЕРТЕЖ №5: ВЫКРОЙКА ТАКТИЧЕСКОЙ СУМКИ ИЗ ТКАНИ CORDURA 1000D И ДЕМПФЕРНОГО КОКОНА',
     shortTitle: '5. ВЫКРОЙКА СУМКИ CORDURA 1000D',
-    material: 'Cordura 1000D PU 1000мм + EVA-пена 15 мм + стропы Velcro 45 мм + молния YKK Aquaguard',
+    specSummary: 'Cordura 1000D PU 1000мм + EVA-пена 15 мм + стропы Velcro 45 мм + молния YKK Aquaguard',
     desc: 'Точный портновский раскрой на листе ткани 1000x1000 мм. 1) Левая и правая треугольные боковины 560x490x360 мм с передним мостиком 70 мм и припусками на швы 15 мм. 2) Центральная обечайка шириной 85 мм под влагозащитную молнию. 3) Разметка 7 силовых строп Velcro 45 мм с двойной крестообразной прошивкой Box-X.',
     svg: `<svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" class="cad-sheet-svg">
       <defs>
@@ -608,7 +608,7 @@ export const CAD_SHEETS = [
     id: 6,
     title: 'ЧЕРТЕЖ №6: 3D-ПЕЧАТНЫЙ ГЕРМЕТИЧНЫЙ КОРОБ ПОД НИЖНЮЮ ТРУБУ (DC-DC + ГУДОК 105 ДБ)',
     shortTitle: '6. 3D-КОРОБ PETG + ГУДОК 105 dB',
-    material: 'PETG / ABS-CF (3D-печать, стенка 3.2 мм, 4 периметра, заполнение 45% Gyroid)',
+    specSummary: 'PETG / ABS-CF (3D-печать, стенка 3.2 мм, 4 периметра, заполнение 45% Gyroid)',
     desc: 'Герметичный нижний модуль сложной формы (280x88x76 мм) под наклонную трубу рамы. Верхний отсек: фишки фаз и слаботочки контроллера 60А. Средний отсек: посадочное место DC-DC 12V 10A с теплоотводящими направляющими. Нижний акустический резонатор: резьбовая стойка М6 под пружинную пластину гудка 105 дБ и наклонные назад ламели жабр-чешуи (35°), обеспечивающие свободный выход звука 105 дБ и 100% защиту от струй воды и грязи из-под переднего колеса.',
     svg: `<svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" class="cad-sheet-svg">
       <defs>
@@ -758,26 +758,39 @@ export function createCadTabletHtml(activeSheetIndex = 0) {
 export const ENGINEERING_MODALS = {
   cadTablet: {
     title: '📐 КОНСТРУКТОРСКИЙ ПЛАНШЕТ: ИНЖЕНЕРНЫЕ ЧЕРТЕЖИ И СХЕМЫ СБОРКИ (6 ЛИСТОВ)',
-    render: (activeIdx = 0) => createCadTabletHtml(activeIdx)
+    render: (activeIdx = 0) => createCadTabletHtml(activeIdx),
+    html: createCadTabletHtml(0)
   },
   saddle: {
     title: 'ЧЕРТЕЖ УЗЛА 07: МОТО-СЕДЛО SUR-RON (530 ММ) И ПОДРАМНИК',
-    render: () => createCadTabletHtml(2)
+    render: () => createCadTabletHtml(2),
+    html: createCadTabletHtml(2)
   },
   dropout: {
     title: 'ЧЕРТЕЖ УЗЛА 04: МОНОЛИТНАЯ СТАЛЬНАЯ БРОНЕПЛАСТИНА 6 ММ (ОСЬ М14 + IS 51 ММ)',
-    render: () => createCadTabletHtml(0)
+    render: () => createCadTabletHtml(0),
+    html: createCadTabletHtml(0)
   },
   motor: {
     title: 'ЧЕРТЕЖ УЗЛА 03: МОТОР 3000W + ЗАЛИВКА ПМС-100 + ЭЛЕКТРОСХЕМА EBS',
-    render: () => createCadTabletHtml(3)
+    render: () => createCadTabletHtml(3),
+    html: createCadTabletHtml(3)
   },
   wiring: {
     title: 'ЧЕРТЕЖ УЗЛА 06: 3D-КОРОБ PETG ПОД РАМОЙ, DC-DC 12V, ФАРА 20W И ГУДОК 105 dB',
-    render: () => createCadTabletHtml(5)
+    render: () => createCadTabletHtml(5),
+    html: createCadTabletHtml(5)
+  },
+  cordura: {
+    title: 'ЧЕРТЕЖ УЗЛА 05: ВЫКРОЙКА СУМКИ CORDURA 1000D И 15 ММ ДЕМПФЕРА',
+    render: () => createCadTabletHtml(4),
+    html: createCadTabletHtml(4)
   },
   battery: {
     title: 'ЧЕРТЕЖ УЗЛА 05: ТОПОЛОГИЯ И РАСПАЙКА АКБ 20S7P (140 ЯЧЕЕК 21700) + BISIDA BMS 120A',
-    render: () => createCadTabletHtml(1)
+    render: () => createCadTabletHtml(1),
+    html: createCadTabletHtml(1)
   }
 };
+
+export const CAD_SHEETS_6 = CAD_SHEETS;
