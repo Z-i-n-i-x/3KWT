@@ -843,11 +843,346 @@
         padding: 6px 8px;
       }
     }
+
+    /* ======================================================================
+       SW900 LIVE COMPUTER WIDGET & THROTTLE / PAS / REGEN SIMULATOR DOCK
+       ====================================================================== */
+    .sw900-hud-widget {
+      position: fixed;
+      bottom: 84px;
+      right: 18px;
+      width: 286px;
+      background: rgba(10, 12, 16, 0.92);
+      border: 1px solid rgba(0, 210, 255, 0.45);
+      backdrop-filter: blur(12px);
+      padding: 8px 10px;
+      z-index: 25;
+      pointer-events: auto;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.78);
+      transition: transform 0.25s ease, width 0.25s ease;
+    }
+
+    .sw900-hud-widget.pov-enlarged {
+      width: 370px;
+      border-color: var(--accent-green);
+      box-shadow: 0 0 32px rgba(0, 255, 102, 0.25);
+    }
+
+    .sw900-widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .sw900-canvas-wrap {
+      position: relative;
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .sw900-remote-pad {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #14171f;
+      border: 1px solid #323946;
+      border-radius: 4px;
+      padding: 4px;
+      width: 34px;
+      flex-shrink: 0;
+    }
+
+    .sw900-rem-btn {
+      background: #232834;
+      color: #ffffff;
+      border: 1px solid #454f62;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 0;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .sw900-rem-btn:hover {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .sw900-rem-btn.mode-btn {
+      background: #143654;
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    #sw900-hud-canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 512 / 320;
+      border-radius: 4px;
+      border: 1px solid #485260;
+      background: #0e1014;
+      display: block;
+    }
+
+    .sw900-sim-controls {
+      margin-top: 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    .sw900-throttle-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sw900-throttle-row span {
+      min-width: 74px;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .sw900-action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .sw900-mini-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-steel);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 5px 4px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .sw900-mini-btn:hover,
+    .sw900-mini-btn.active {
+      border-color: var(--accent-orange);
+      background: rgba(255, 85, 0, 0.22);
+      color: #fff;
+    }
+
+    /* ======================================================================
+       FULLSCREEN 6-SHEET CAD ENGINEERING TABLET
+       ====================================================================== */
+    .cad-tablet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 15, 0.94);
+      backdrop-filter: blur(14px);
+      z-index: 120;
+      display: none;
+      flex-direction: column;
+      pointer-events: auto;
+    }
+
+    .cad-tablet-backdrop.open {
+      display: flex;
+    }
+
+    .cad-tablet-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #07101e;
+      border-bottom: 1px solid #00d2ff;
+    }
+
+    .cad-tablet-brand {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 800;
+      color: #00ff66;
+      letter-spacing: 0.5px;
+    }
+
+    .cad-tablet-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .cad-action-btn {
+      background: #0e1e36;
+      border: 1px solid #00d2ff;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cad-action-btn:hover {
+      background: #00d2ff;
+      color: #050b14;
+    }
+
+    .cad-action-btn.green {
+      border-color: #00ff66;
+      color: #00ff66;
+    }
+
+    .cad-action-btn.green:hover {
+      background: #00ff66;
+      color: #050b14;
+    }
+
+    .cad-action-btn.close-red {
+      border-color: #ff4444;
+      color: #ff6666;
+    }
+
+    .cad-action-btn.close-red:hover {
+      background: #ff3333;
+      color: #ffffff;
+    }
+
+    .cad-tabs-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      padding: 8px 16px;
+      background: #091426;
+      border-bottom: 1px solid rgba(0, 210, 255, 0.3);
+    }
+
+    .cad-tab-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid #223854;
+      color: #9fb6d0;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 8px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .cad-tab-btn:hover {
+      border-color: #00d2ff;
+      color: #ffffff;
+    }
+
+    .cad-tab-btn.active {
+      background: rgba(0, 210, 255, 0.18);
+      border-color: #00ff66;
+      color: #00ff66;
+      box-shadow: inset 0 0 12px rgba(0, 255, 102, 0.2);
+    }
+
+    .cad-viewport-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #050d1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+
+    .cad-viewport-wrap:active {
+      cursor: grabbing;
+    }
+
+    .cad-sheet-stage {
+      transform-origin: center center;
+      transition: transform 0.06s linear;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    /* White paper theme override for CAD sheets */
+    .cad-sheet-stage.white-theme svg .cad-bg {
+      fill: #f7f9fc !important;
+    }
+    .cad-sheet-stage.white-theme svg text {
+      fill: #0b192c !important;
+    }
+    .cad-sheet-stage.white-theme svg rect[fill="#071224"],
+    .cad-sheet-stage.white-theme svg rect[fill="#0c1e35"],
+    .cad-sheet-stage.white-theme svg rect[fill="#102238"],
+    .cad-sheet-stage.white-theme svg rect[fill="#0d2622"],
+    .cad-sheet-stage.white-theme svg rect[fill="#241018"] {
+      fill: #eef3f8 !important;
+    }
+
+    .cad-tablet-footer {
+      padding: 8px 16px;
+      background: #07101e;
+      border-top: 1px solid rgba(0, 210, 255, 0.35);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #a8c5e5;
+    }
+
+    @media (max-width: 920px) {
+      .sw900-hud-widget {
+        bottom: 148px;
+        right: 10px;
+        width: 220px;
+        padding: 6px;
+      }
+      .cad-tabs-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
   <div id="webgl-container"></div>
   <div id="hotspot-markers"></div>
+
+  <!-- LIVE SW900 LCD ON-BOARD COMPUTER WIDGET (1:1 WITH REAL INSTRUMENT + ODO + WATTMETER) -->
+  <div class="sw900-hud-widget" id="sw900-hud-widget">
+    <div class="sw900-widget-header">
+      <span>БОРТОВОЙ КОМПЬЮТЕР SW900 (LIVE 60 FPS)</span>
+      <span id="sw900-pov-badge">РУЛЬ + HUD</span>
+    </div>
+    <div class="sw900-canvas-wrap">
+      <div class="sw900-remote-pad" title="Пульт SW900 на левой грипсе">
+        <button class="sw900-rem-btn" id="sw900-btn-up" title="Увеличить PAS (▲)">▲</button>
+        <button class="sw900-rem-btn mode-btn" id="sw900-btn-mode" title="Режим ODO / TRIP / MAX / AVG / TIME (M)">M</button>
+        <button class="sw900-rem-btn" id="sw900-btn-down" title="Уменьшить PAS (▼)">▼</button>
+      </div>
+      <canvas id="sw900-hud-canvas" width="512" height="320"></canvas>
+    </div>
+    <div class="sw900-sim-controls">
+      <div class="sw900-throttle-row">
+        <span id="throttle-label">ГАЗ: 0%</span>
+        <input id="slider-throttle" type="range" class="tactical-slider" min="0" max="100" value="0" step="1" />
+      </div>
+      <div class="sw900-action-row">
+        <button id="btn-regen-brake" class="sw900-mini-btn">[ ТОРМОЗ + E-ABS ]</button>
+        <button id="btn-pov-rider" class="sw900-mini-btn">[ 👁️ ВИД ОТ 1-ГО ЛИЦА POV ]</button>
+      </div>
+    </div>
+  </div>
 
   <!-- STEALTH HUB TACTICAL UI -->
   <div class="hud-layer" id="hud-layer">
@@ -865,7 +1200,7 @@
       <div class="telemetry-strip">
         <div class="metric-card">
           <div class="metric-label">НАПРЯЖЕНИЕ / ПИК</div>
-          <div class="metric-val">72.0V / 84.0V</div>
+          <div class="metric-val" id="top-metric-volt">72.0V / 84.0V</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">ЕМКОСТЬ 20S7P</div>
@@ -876,15 +1211,15 @@
           <div class="metric-val orange">60A SIN / 120A</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">ПРИВОД / ОБОДА</div>
-          <div class="metric-val">3000W DD / MTX39</div>
+          <div class="metric-label">ОДОМЕТР ODO</div>
+          <div class="metric-val" id="top-metric-odo">128.45 KM</div>
         </div>
       </div>
 
       <!-- MOBILE QUICK TOOLBAR (SHOWN ON SMARTPHONES/TABLETS) -->
       <div class="mobile-toolbar">
-        <button id="btn-mob-nodes" class="mob-tab-btn">[ УЗЛЫ CAD (8) ]</button>
-        <button id="btn-mob-docs" class="mob-tab-btn">[ ЧЕРТЕЖИ 1:1 (5) ]</button>
+        <button id="btn-mob-nodes" class="mob-tab-btn">[ УЗЛЫ CAD (9) ]</button>
+        <button id="btn-mob-docs" class="mob-tab-btn">[ 📐 ЧЕРТЕЖИ (6) ]</button>
         <button id="btn-mob-pins" class="mob-tab-btn active">[ 3D МЕТКИ ]</button>
       </div>
     </header>
@@ -904,6 +1239,10 @@
           <button class="node-btn active" data-cam="default">
             <span>00. ОБЩИЙ СТУДИЙНЫЙ ВИД</span>
             <span class="code">FULL</span>
+          </button>
+          <button class="node-btn" data-cam="pov">
+            <span>08. ВИД ОТ 1-ГО ЛИЦА (РАЙДЕР POV + SW900)</span>
+            <span class="code">POV-08</span>
           </button>
           <button class="node-btn" data-cam="fork">
             <span>01. ВИЛКА FOXSID-X2 26" (120 ММ)</span>
@@ -949,7 +1288,7 @@
             </div>
             <div>
               <div class="xray-item-label">НАПРЯЖЕНИЕ СЕКЦИИ</div>
-              <div class="xray-item-val" id="xray-group-volt">4.20 V (100%)</div>
+              <div class="xray-item-val" id="xray-group-volt">3.6..4.2V (84V)</div>
             </div>
             <div>
               <div class="xray-item-label">ЕМКОСТЬ ГРУППЫ</div>
@@ -961,7 +1300,7 @@
             </div>
             <div>
               <div class="xray-item-label">ДАТЧИК NTC / ШИНА</div>
-              <div class="xray-item-val" id="xray-group-temp">27.0°C / Cu+Ni</div>
+              <div class="xray-item-val" id="xray-group-temp">27.0°C / Cu 2.5мм²</div>
             </div>
           </div>
         </div>
@@ -970,31 +1309,38 @@
       <!-- RIGHT BLUEPRINT DOCK -->
       <aside class="hotspot-dock" id="right-hotspot-dock">
         <div class="panel-title">
-          <span>ЧЕРТЕЖИ И ТЕХКАРТЫ (1:1)</span>
+          <span>ЧЕРТЕЖИ И СХЕМЫ СБОРКИ (6 ЛИСТОВ)</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            <span>CAD DOCS</span>
+            <span>CAD 1:1</span>
             <button class="drawer-close-btn" id="close-right-drawer">×</button>
           </div>
         </div>
-        <button class="blueprint-btn" data-modal="battery">
-          <span>СХЕМА: СБОРКА АКБ 20S7P (140 ЯЧЕЕК)</span>
-          <small>Змейка 1S→20S • Медь+Никель • Распайка BMS 120A</small>
+        <button id="btn-open-cad-tablet-side" class="tactical-btn active-orange" style="width:100%;justify-content:center;margin-bottom:4px;">
+          <span>[📐 ОТКРЫТЬ ПЛАНШЕТ (6 ЛИСТОВ CAD)]</span>
         </button>
-        <button class="blueprint-btn" data-modal="saddle">
-          <span>ЧЕРТЕЖ: МОТО-СЕДЛО И ПОДРАМНИК</span>
-          <small>П-паз 40×70 мм • Сталь 18×2 мм • Стоп-сигнал</small>
+        <button class="blueprint-btn" data-sheet="0">
+          <span>ЛИСТ №1: МОНОЛИТНЫЙ ДРОПАУТ М14 + IS 51ММ</span>
+          <small>Сталь 6 мм • Паз 10×14 мм • Сварка к дропауту 5 мм</small>
         </button>
-        <button class="blueprint-btn" data-modal="dropout">
-          <span>SVG-ШАБЛОН: БРОНЕПЛАСТИНА 6 ММ</span>
-          <small>Ось М14 (10×14 мм) + Ушки IS 51 мм (2-в-1)</small>
+        <button class="blueprint-btn" data-sheet="1">
+          <span>ЛИСТ №2: СХЕМА 140 БАНОК 21700 (20S7P)</span>
+          <small>9 рядов (22..7) • Медный бутерброд 2.5 мм² • 21 провод BMS</small>
         </button>
-        <button class="blueprint-btn" data-modal="motor">
-          <span>ГАЙД: МОТОР 3000W + ПМС-100 + EBS</span>
-          <small>Заливка 40 мл силикона • Пайка рекуперации</small>
+        <button class="blueprint-btn" data-sheet="2">
+          <span>ЛИСТ №3: ПОДРАМНИК И МОТО-СЕДЛО (530 ММ)</span>
+          <small>П-вырез 40×70 мм • Труба 20×20×2 + распорки Ø16 мм</small>
         </button>
-        <button class="blueprint-btn" data-modal="wiring">
-          <span>СХЕМА: 3D-КОРОБ + DC-DC 12V + ГУДОК</span>
-          <small>Акустические жабры • Фара Sur-Ron 20W • 105 дБ</small>
+        <button class="blueprint-btn" data-sheet="3">
+          <span>ЛИСТ №4: ЦВЕТНАЯ ЭЛЕКТРОСХЕМА 72V И 12V</span>
+          <small>EBS→GND рекуперация • DC-DC 12V • Фара + Гудок + Стоп</small>
+        </button>
+        <button class="blueprint-btn" data-sheet="4">
+          <span>ЛИСТ №5: ВЫКРОЙКА СУМКИ CORDURA 1000D</span>
+          <small>Раскрой на листе 1000×1000 мм • Обечайка 85 мм • 7 строп</small>
+        </button>
+        <button class="blueprint-btn" data-sheet="5">
+          <span>ЛИСТ №6: 3D-ПЕЧАТНЫЙ КОРОБ PETG И ГУДОК</span>
+          <small>3 проекции • Отсек DC-DC • Стойка М6 • Жабры 45° (105 дБ)</small>
         </button>
       </aside>
     </div>
@@ -1008,6 +1354,10 @@
       </div>
 
       <div class="controls-bar">
+        <button id="btn-open-cad-tablet" class="tactical-btn active-orange">
+          <span>[📐 ИНЖЕНЕРНЫЕ ЧЕРТЕЖИ И СХЕМЫ СБОРКИ (6 ЛИСТОВ)]</span>
+        </button>
+
         <button id="btn-explode" class="tactical-btn">
           <span>[EXPLODED VIEW / РАЗБОРКА]</span>
         </button>
@@ -1033,6 +1383,42 @@
         </button>
       </div>
     </footer>
+  </div>
+
+  <!-- FULLSCREEN 6-SHEET ENGINEERING CAD TABLET -->
+  <div id="cad-tablet-backdrop" class="cad-tablet-backdrop">
+    <div class="cad-tablet-topbar">
+      <div class="cad-tablet-brand" id="cad-tablet-title">
+        📐 КОНСТРУКТОРСКИЙ ПЛАНШЕТ ГОСТ / CAD (МАСШТАБ 1:1 В ММ) — 6 ЛИСТОВ
+      </div>
+      <div class="cad-tablet-actions">
+        <button id="btn-cad-zoom-in" class="cad-action-btn">[ + ПРИБЛИЗИТЬ ]</button>
+        <button id="btn-cad-zoom-out" class="cad-action-btn">[ − ОТДАЛИТЬ ]</button>
+        <button id="btn-cad-zoom-reset" class="cad-action-btn">[ 100% СБРОС ]</button>
+        <button id="btn-cad-theme" class="cad-action-btn">[ 🎨 ФОН: МИЛЛИМЕТРОВКА #0a192f / БЕЛЫЙ ]</button>
+        <button id="btn-cad-download-svg" class="cad-action-btn green">[ 💾 СКАЧАТЬ SVG 1:1 ]</button>
+        <button id="btn-cad-download-png" class="cad-action-btn green">[ 💾 СКАЧАТЬ PNG 1:1 ]</button>
+        <button id="btn-cad-close" class="cad-action-btn close-red">[ ✕ ЗАКРЫТЬ ESC ]</button>
+      </div>
+    </div>
+
+    <div class="cad-tabs-bar" id="cad-tabs-bar">
+      <button class="cad-tab-btn active" data-tab="0">ЛИСТ №1: ДРОПАУТ М14 + IS 51ММ</button>
+      <button class="cad-tab-btn" data-tab="1">ЛИСТ №2: 140 ЯЧЕЕК 21700 (20S7P)</button>
+      <button class="cad-tab-btn" data-tab="2">ЛИСТ №3: ПОДРАМНИК И МОТО-СЕДЛО</button>
+      <button class="cad-tab-btn" data-tab="3">ЛИСТ №4: ЭЛЕКТРОСХЕМА 72V + 12V</button>
+      <button class="cad-tab-btn" data-tab="4">ЛИСТ №5: ВЫКРОЙКА СУМКИ CORDURA</button>
+      <button class="cad-tab-btn" data-tab="5">ЛИСТ №6: 3D-КОРОБ PETG И ГУДОК</button>
+    </div>
+
+    <div class="cad-viewport-wrap" id="cad-viewport-wrap">
+      <div class="cad-sheet-stage" id="cad-sheet-stage"></div>
+    </div>
+
+    <div class="cad-tablet-footer">
+      <span id="cad-sheet-summary">Крутите колесико мыши для масштабирования чертежа (Zoom 50%..300%), зажмите ЛКМ для перемещения листа.</span>
+      <span id="cad-zoom-indicator">МАСШТАБ: 100%</span>
+    </div>
   </div>
 
   <!-- MODAL WINDOW FOR BLUEPRINTS & GUIDES -->

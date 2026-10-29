@@ -831,11 +831,346 @@
         padding: 6px 8px;
       }
     }
+
+    /* ======================================================================
+       SW900 LIVE COMPUTER WIDGET & THROTTLE / PAS / REGEN SIMULATOR DOCK
+       ====================================================================== */
+    .sw900-hud-widget {
+      position: fixed;
+      bottom: 84px;
+      right: 18px;
+      width: 286px;
+      background: rgba(10, 12, 16, 0.92);
+      border: 1px solid rgba(0, 210, 255, 0.45);
+      backdrop-filter: blur(12px);
+      padding: 8px 10px;
+      z-index: 25;
+      pointer-events: auto;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.78);
+      transition: transform 0.25s ease, width 0.25s ease;
+    }
+
+    .sw900-hud-widget.pov-enlarged {
+      width: 370px;
+      border-color: var(--accent-green);
+      box-shadow: 0 0 32px rgba(0, 255, 102, 0.25);
+    }
+
+    .sw900-widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .sw900-canvas-wrap {
+      position: relative;
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .sw900-remote-pad {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #14171f;
+      border: 1px solid #323946;
+      border-radius: 4px;
+      padding: 4px;
+      width: 34px;
+      flex-shrink: 0;
+    }
+
+    .sw900-rem-btn {
+      background: #232834;
+      color: #ffffff;
+      border: 1px solid #454f62;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 0;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .sw900-rem-btn:hover {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .sw900-rem-btn.mode-btn {
+      background: #143654;
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    #sw900-hud-canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 512 / 320;
+      border-radius: 4px;
+      border: 1px solid #485260;
+      background: #0e1014;
+      display: block;
+    }
+
+    .sw900-sim-controls {
+      margin-top: 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    .sw900-throttle-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sw900-throttle-row span {
+      min-width: 74px;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .sw900-action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .sw900-mini-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-steel);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 5px 4px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .sw900-mini-btn:hover,
+    .sw900-mini-btn.active {
+      border-color: var(--accent-orange);
+      background: rgba(255, 85, 0, 0.22);
+      color: #fff;
+    }
+
+    /* ======================================================================
+       FULLSCREEN 6-SHEET CAD ENGINEERING TABLET
+       ====================================================================== */
+    .cad-tablet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 15, 0.94);
+      backdrop-filter: blur(14px);
+      z-index: 120;
+      display: none;
+      flex-direction: column;
+      pointer-events: auto;
+    }
+
+    .cad-tablet-backdrop.open {
+      display: flex;
+    }
+
+    .cad-tablet-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #07101e;
+      border-bottom: 1px solid #00d2ff;
+    }
+
+    .cad-tablet-brand {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 800;
+      color: #00ff66;
+      letter-spacing: 0.5px;
+    }
+
+    .cad-tablet-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .cad-action-btn {
+      background: #0e1e36;
+      border: 1px solid #00d2ff;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cad-action-btn:hover {
+      background: #00d2ff;
+      color: #050b14;
+    }
+
+    .cad-action-btn.green {
+      border-color: #00ff66;
+      color: #00ff66;
+    }
+
+    .cad-action-btn.green:hover {
+      background: #00ff66;
+      color: #050b14;
+    }
+
+    .cad-action-btn.close-red {
+      border-color: #ff4444;
+      color: #ff6666;
+    }
+
+    .cad-action-btn.close-red:hover {
+      background: #ff3333;
+      color: #ffffff;
+    }
+
+    .cad-tabs-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      padding: 8px 16px;
+      background: #091426;
+      border-bottom: 1px solid rgba(0, 210, 255, 0.3);
+    }
+
+    .cad-tab-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid #223854;
+      color: #9fb6d0;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 8px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .cad-tab-btn:hover {
+      border-color: #00d2ff;
+      color: #ffffff;
+    }
+
+    .cad-tab-btn.active {
+      background: rgba(0, 210, 255, 0.18);
+      border-color: #00ff66;
+      color: #00ff66;
+      box-shadow: inset 0 0 12px rgba(0, 255, 102, 0.2);
+    }
+
+    .cad-viewport-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #050d1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+
+    .cad-viewport-wrap:active {
+      cursor: grabbing;
+    }
+
+    .cad-sheet-stage {
+      transform-origin: center center;
+      transition: transform 0.06s linear;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    /* White paper theme override for CAD sheets */
+    .cad-sheet-stage.white-theme svg .cad-bg {
+      fill: #f7f9fc !important;
+    }
+    .cad-sheet-stage.white-theme svg text {
+      fill: #0b192c !important;
+    }
+    .cad-sheet-stage.white-theme svg rect[fill="#071224"],
+    .cad-sheet-stage.white-theme svg rect[fill="#0c1e35"],
+    .cad-sheet-stage.white-theme svg rect[fill="#102238"],
+    .cad-sheet-stage.white-theme svg rect[fill="#0d2622"],
+    .cad-sheet-stage.white-theme svg rect[fill="#241018"] {
+      fill: #eef3f8 !important;
+    }
+
+    .cad-tablet-footer {
+      padding: 8px 16px;
+      background: #07101e;
+      border-top: 1px solid rgba(0, 210, 255, 0.35);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #a8c5e5;
+    }
+
+    @media (max-width: 920px) {
+      .sw900-hud-widget {
+        bottom: 148px;
+        right: 10px;
+        width: 220px;
+        padding: 6px;
+      }
+      .cad-tabs-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
   <div id="webgl-container"></div>
   <div id="hotspot-markers"></div>
+
+  <!-- LIVE SW900 LCD ON-BOARD COMPUTER WIDGET (1:1 WITH REAL INSTRUMENT + ODO + WATTMETER) -->
+  <div class="sw900-hud-widget" id="sw900-hud-widget">
+    <div class="sw900-widget-header">
+      <span>БОРТОВОЙ КОМПЬЮТЕР SW900 (LIVE 60 FPS)</span>
+      <span id="sw900-pov-badge">РУЛЬ + HUD</span>
+    </div>
+    <div class="sw900-canvas-wrap">
+      <div class="sw900-remote-pad" title="Пульт SW900 на левой грипсе">
+        <button class="sw900-rem-btn" id="sw900-btn-up" title="Увеличить PAS (▲)">▲</button>
+        <button class="sw900-rem-btn mode-btn" id="sw900-btn-mode" title="Режим ODO / TRIP / MAX / AVG / TIME (M)">M</button>
+        <button class="sw900-rem-btn" id="sw900-btn-down" title="Уменьшить PAS (▼)">▼</button>
+      </div>
+      <canvas id="sw900-hud-canvas" width="512" height="320"></canvas>
+    </div>
+    <div class="sw900-sim-controls">
+      <div class="sw900-throttle-row">
+        <span id="throttle-label">ГАЗ: 0%</span>
+        <input id="slider-throttle" type="range" class="tactical-slider" min="0" max="100" value="0" step="1" />
+      </div>
+      <div class="sw900-action-row">
+        <button id="btn-regen-brake" class="sw900-mini-btn">[ ТОРМОЗ + E-ABS ]</button>
+        <button id="btn-pov-rider" class="sw900-mini-btn">[ 👁️ ВИД ОТ 1-ГО ЛИЦА POV ]</button>
+      </div>
+    </div>
+  </div>
 
   <!-- STEALTH HUB TACTICAL UI -->
   <div class="hud-layer" id="hud-layer">
@@ -853,7 +1188,7 @@
       <div class="telemetry-strip">
         <div class="metric-card">
           <div class="metric-label">НАПРЯЖЕНИЕ / ПИК</div>
-          <div class="metric-val">72.0V / 84.0V</div>
+          <div class="metric-val" id="top-metric-volt">72.0V / 84.0V</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">ЕМКОСТЬ 20S7P</div>
@@ -864,15 +1199,15 @@
           <div class="metric-val orange">60A SIN / 120A</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">ПРИВОД / ОБОДА</div>
-          <div class="metric-val">3000W DD / MTX39</div>
+          <div class="metric-label">ОДОМЕТР ODO</div>
+          <div class="metric-val" id="top-metric-odo">128.45 KM</div>
         </div>
       </div>
 
       <!-- MOBILE QUICK TOOLBAR (SHOWN ON SMARTPHONES/TABLETS) -->
       <div class="mobile-toolbar">
-        <button id="btn-mob-nodes" class="mob-tab-btn">[ УЗЛЫ CAD (8) ]</button>
-        <button id="btn-mob-docs" class="mob-tab-btn">[ ЧЕРТЕЖИ 1:1 (5) ]</button>
+        <button id="btn-mob-nodes" class="mob-tab-btn">[ УЗЛЫ CAD (9) ]</button>
+        <button id="btn-mob-docs" class="mob-tab-btn">[ 📐 ЧЕРТЕЖИ (6) ]</button>
         <button id="btn-mob-pins" class="mob-tab-btn active">[ 3D МЕТКИ ]</button>
       </div>
     </header>
@@ -892,6 +1227,10 @@
           <button class="node-btn active" data-cam="default">
             <span>00. ОБЩИЙ СТУДИЙНЫЙ ВИД</span>
             <span class="code">FULL</span>
+          </button>
+          <button class="node-btn" data-cam="pov">
+            <span>08. ВИД ОТ 1-ГО ЛИЦА (РАЙДЕР POV + SW900)</span>
+            <span class="code">POV-08</span>
           </button>
           <button class="node-btn" data-cam="fork">
             <span>01. ВИЛКА FOXSID-X2 26" (120 ММ)</span>
@@ -937,7 +1276,7 @@
             </div>
             <div>
               <div class="xray-item-label">НАПРЯЖЕНИЕ СЕКЦИИ</div>
-              <div class="xray-item-val" id="xray-group-volt">4.20 V (100%)</div>
+              <div class="xray-item-val" id="xray-group-volt">3.6..4.2V (84V)</div>
             </div>
             <div>
               <div class="xray-item-label">ЕМКОСТЬ ГРУППЫ</div>
@@ -949,7 +1288,7 @@
             </div>
             <div>
               <div class="xray-item-label">ДАТЧИК NTC / ШИНА</div>
-              <div class="xray-item-val" id="xray-group-temp">27.0°C / Cu+Ni</div>
+              <div class="xray-item-val" id="xray-group-temp">27.0°C / Cu 2.5мм²</div>
             </div>
           </div>
         </div>
@@ -958,31 +1297,38 @@
       <!-- RIGHT BLUEPRINT DOCK -->
       <aside class="hotspot-dock" id="right-hotspot-dock">
         <div class="panel-title">
-          <span>ЧЕРТЕЖИ И ТЕХКАРТЫ (1:1)</span>
+          <span>ЧЕРТЕЖИ И СХЕМЫ СБОРКИ (6 ЛИСТОВ)</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            <span>CAD DOCS</span>
+            <span>CAD 1:1</span>
             <button class="drawer-close-btn" id="close-right-drawer">×</button>
           </div>
         </div>
-        <button class="blueprint-btn" data-modal="battery">
-          <span>СХЕМА: СБОРКА АКБ 20S7P (140 ЯЧЕЕК)</span>
-          <small>Змейка 1S→20S • Медь+Никель • Распайка BMS 120A</small>
+        <button id="btn-open-cad-tablet-side" class="tactical-btn active-orange" style="width:100%;justify-content:center;margin-bottom:4px;">
+          <span>[📐 ОТКРЫТЬ ПЛАНШЕТ (6 ЛИСТОВ CAD)]</span>
         </button>
-        <button class="blueprint-btn" data-modal="saddle">
-          <span>ЧЕРТЕЖ: МОТО-СЕДЛО И ПОДРАМНИК</span>
-          <small>П-паз 40×70 мм • Сталь 18×2 мм • Стоп-сигнал</small>
+        <button class="blueprint-btn" data-sheet="0">
+          <span>ЛИСТ №1: МОНОЛИТНЫЙ ДРОПАУТ М14 + IS 51ММ</span>
+          <small>Сталь 6 мм • Паз 10×14 мм • Сварка к дропауту 5 мм</small>
         </button>
-        <button class="blueprint-btn" data-modal="dropout">
-          <span>SVG-ШАБЛОН: БРОНЕПЛАСТИНА 6 ММ</span>
-          <small>Ось М14 (10×14 мм) + Ушки IS 51 мм (2-в-1)</small>
+        <button class="blueprint-btn" data-sheet="1">
+          <span>ЛИСТ №2: СХЕМА 140 БАНОК 21700 (20S7P)</span>
+          <small>9 рядов (22..7) • Медный бутерброд 2.5 мм² • 21 провод BMS</small>
         </button>
-        <button class="blueprint-btn" data-modal="motor">
-          <span>ГАЙД: МОТОР 3000W + ПМС-100 + EBS</span>
-          <small>Заливка 40 мл силикона • Пайка рекуперации</small>
+        <button class="blueprint-btn" data-sheet="2">
+          <span>ЛИСТ №3: ПОДРАМНИК И МОТО-СЕДЛО (530 ММ)</span>
+          <small>П-вырез 40×70 мм • Труба 20×20×2 + распорки Ø16 мм</small>
         </button>
-        <button class="blueprint-btn" data-modal="wiring">
-          <span>СХЕМА: 3D-КОРОБ + DC-DC 12V + ГУДОК</span>
-          <small>Акустические жабры • Фара Sur-Ron 20W • 105 дБ</small>
+        <button class="blueprint-btn" data-sheet="3">
+          <span>ЛИСТ №4: ЦВЕТНАЯ ЭЛЕКТРОСХЕМА 72V И 12V</span>
+          <small>EBS→GND рекуперация • DC-DC 12V • Фара + Гудок + Стоп</small>
+        </button>
+        <button class="blueprint-btn" data-sheet="4">
+          <span>ЛИСТ №5: ВЫКРОЙКА СУМКИ CORDURA 1000D</span>
+          <small>Раскрой на листе 1000×1000 мм • Обечайка 85 мм • 7 строп</small>
+        </button>
+        <button class="blueprint-btn" data-sheet="5">
+          <span>ЛИСТ №6: 3D-ПЕЧАТНЫЙ КОРОБ PETG И ГУДОК</span>
+          <small>3 проекции • Отсек DC-DC • Стойка М6 • Жабры 45° (105 дБ)</small>
         </button>
       </aside>
     </div>
@@ -996,6 +1342,10 @@
       </div>
 
       <div class="controls-bar">
+        <button id="btn-open-cad-tablet" class="tactical-btn active-orange">
+          <span>[📐 ИНЖЕНЕРНЫЕ ЧЕРТЕЖИ И СХЕМЫ СБОРКИ (6 ЛИСТОВ)]</span>
+        </button>
+
         <button id="btn-explode" class="tactical-btn">
           <span>[EXPLODED VIEW / РАЗБОРКА]</span>
         </button>
@@ -1021,6 +1371,42 @@
         </button>
       </div>
     </footer>
+  </div>
+
+  <!-- FULLSCREEN 6-SHEET ENGINEERING CAD TABLET -->
+  <div id="cad-tablet-backdrop" class="cad-tablet-backdrop">
+    <div class="cad-tablet-topbar">
+      <div class="cad-tablet-brand" id="cad-tablet-title">
+        📐 КОНСТРУКТОРСКИЙ ПЛАНШЕТ ГОСТ / CAD (МАСШТАБ 1:1 В ММ) — 6 ЛИСТОВ
+      </div>
+      <div class="cad-tablet-actions">
+        <button id="btn-cad-zoom-in" class="cad-action-btn">[ + ПРИБЛИЗИТЬ ]</button>
+        <button id="btn-cad-zoom-out" class="cad-action-btn">[ − ОТДАЛИТЬ ]</button>
+        <button id="btn-cad-zoom-reset" class="cad-action-btn">[ 100% СБРОС ]</button>
+        <button id="btn-cad-theme" class="cad-action-btn">[ 🎨 ФОН: МИЛЛИМЕТРОВКА #0a192f / БЕЛЫЙ ]</button>
+        <button id="btn-cad-download-svg" class="cad-action-btn green">[ 💾 СКАЧАТЬ SVG 1:1 ]</button>
+        <button id="btn-cad-download-png" class="cad-action-btn green">[ 💾 СКАЧАТЬ PNG 1:1 ]</button>
+        <button id="btn-cad-close" class="cad-action-btn close-red">[ ✕ ЗАКРЫТЬ ESC ]</button>
+      </div>
+    </div>
+
+    <div class="cad-tabs-bar" id="cad-tabs-bar">
+      <button class="cad-tab-btn active" data-tab="0">ЛИСТ №1: ДРОПАУТ М14 + IS 51ММ</button>
+      <button class="cad-tab-btn" data-tab="1">ЛИСТ №2: 140 ЯЧЕЕК 21700 (20S7P)</button>
+      <button class="cad-tab-btn" data-tab="2">ЛИСТ №3: ПОДРАМНИК И МОТО-СЕДЛО</button>
+      <button class="cad-tab-btn" data-tab="3">ЛИСТ №4: ЭЛЕКТРОСХЕМА 72V + 12V</button>
+      <button class="cad-tab-btn" data-tab="4">ЛИСТ №5: ВЫКРОЙКА СУМКИ CORDURA</button>
+      <button class="cad-tab-btn" data-tab="5">ЛИСТ №6: 3D-КОРОБ PETG И ГУДОК</button>
+    </div>
+
+    <div class="cad-viewport-wrap" id="cad-viewport-wrap">
+      <div class="cad-sheet-stage" id="cad-sheet-stage"></div>
+    </div>
+
+    <div class="cad-tablet-footer">
+      <span id="cad-sheet-summary">Крутите колесико мыши для масштабирования чертежа (Zoom 50%..300%), зажмите ЛКМ для перемещения листа.</span>
+      <span id="cad-zoom-indicator">МАСШТАБ: 100%</span>
+    </div>
   </div>
 
   <!-- MODAL WINDOW FOR BLUEPRINTS & GUIDES -->
@@ -3088,67 +3474,371 @@ function createMtx39DecalTexture() {
 }
 
 /**
- * 8. Generates SW900 LCD Computer Screen texture
+ * Helper: Draws a classic 7-segment digit at (x, y) with width w, height h, thickness t
+ */
+function drawSevenSegmentDigit(ctx, ch, x, y, w, h, t, onColor, offColor) {
+  const map = {
+    '0': [1, 1, 1, 1, 1, 1, 0],
+    '1': [0, 1, 1, 0, 0, 0, 0],
+    '2': [1, 1, 0, 1, 1, 0, 1],
+    '3': [1, 1, 1, 1, 0, 0, 1],
+    '4': [0, 1, 1, 0, 0, 1, 1],
+    '5': [1, 0, 1, 1, 0, 1, 1],
+    '6': [1, 0, 1, 1, 1, 1, 1],
+    '7': [1, 1, 1, 0, 0, 0, 0],
+    '8': [1, 1, 1, 1, 1, 1, 1],
+    '9': [1, 1, 1, 1, 0, 1, 1],
+    '-': [0, 0, 0, 0, 0, 0, 1],
+    ' ': [0, 0, 0, 0, 0, 0, 0]
+  };
+  const segs = map[ch] || map[' '];
+  const halfH = h / 2;
+  const pad = 1.5;
+
+  // Segment polygons: [A(top), B(top-right), C(bot-right), D(bot), E(bot-left), F(top-left), G(mid)]
+  const rects = [
+    [x + pad + t * 0.4, y, w - 2 * pad - t * 0.8, t],                        // A
+    [x + w - t, y + pad + t * 0.4, t, halfH - pad - t * 0.6],                // B
+    [x + w - t, y + halfH + pad * 0.5, t, halfH - pad - t * 0.6],            // C
+    [x + pad + t * 0.4, y + h - t, w - 2 * pad - t * 0.8, t],                // D
+    [x, y + halfH + pad * 0.5, t, halfH - pad - t * 0.6],                    // E
+    [x, y + pad + t * 0.4, t, halfH - pad - t * 0.6],                        // F
+    [x + pad + t * 0.4, y + halfH - t * 0.5, w - 2 * pad - t * 0.8, t]       // G
+  ];
+
+  for (let i = 0; i < 7; i++) {
+    ctx.fillStyle = segs[i] ? onColor : offColor;
+    const [rx, ry, rw, rh] = rects[i];
+    ctx.fillRect(rx, ry, rw, rh);
+  }
+}
+
+function drawSevenSegmentNumber(ctx, str, xRight, y, digitW, digitH, thickness, gap, onColor, offColor) {
+  let curX = xRight;
+  for (let i = str.length - 1; i >= 0; i--) {
+    const ch = str[i];
+    if (ch === '.' || ch === ':') {
+      curX -= (thickness + 4);
+      ctx.fillStyle = onColor;
+      if (ch === '.') {
+        ctx.fillRect(curX + 1, y + digitH - thickness - 1, thickness + 2, thickness + 2);
+      } else {
+        ctx.fillRect(curX + 1, y + digitH * 0.30, thickness + 1, thickness + 1);
+        ctx.fillRect(curX + 1, y + digitH * 0.66, thickness + 1, thickness + 1);
+      }
+      curX -= 4;
+    } else {
+      curX -= digitW;
+      drawSevenSegmentDigit(ctx, ch, curX, y, digitW, digitH, thickness, onColor, offColor);
+      curX -= gap;
+    }
+  }
+}
+
+/**
+ * 8. Generates SW900 LCD Computer Screen texture (512x320, real-time 60 FPS updater, 1:1 with real SW900)
  */
 function createSw900ScreenTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 320;
   const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
 
-  ctx.fillStyle = '#071018';
-  ctx.fillRect(0, 0, 512, 320);
+  function updateSw900(state = {}) {
+    const {
+      voltage = 84.0,
+      socBars = 5,
+      speedKmh = 0.0,
+      pas = 5,
+      watts = 0,
+      odoKm = 128.45,
+      tripKm = 0.00,
+      maxSpeedKmh = 0.0,
+      avgSpeedKmh = 0.0,
+      tripTimeSec = 0,
+      modeIndex = 0, // 0: ODO, 1: TRIP, 2: MAX, 3: AVG, 4: TIME
+      lightsOn = false,
+      brakeOn = false
+    } = state;
 
-  ctx.strokeStyle = '#00d2ff';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(12, 12, 488, 296);
+    // Outer silver/white SW900 bezel frame & inner LCD glass window (1:1 as on Reference Photo #8)
+    ctx.fillStyle = '#0e1014';
+    ctx.fillRect(0, 0, 512, 320);
 
-  ctx.fillStyle = '#00ff66';
-  ctx.font = '700 26px "JetBrains Mono", monospace';
-  ctx.fillText('72V  |||||| 100%', 28, 52);
+    // Silver-white inner bezel line + SW900 bottom-right badge
+    ctx.strokeStyle = '#d8e0e8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(8, 8, 496, 286);
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 110px "JetBrains Mono", monospace';
-  ctx.fillText('00.0', 45, 185);
-  ctx.font = '700 28px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#00d2ff';
-  ctx.fillText('KM/H', 360, 175);
+    ctx.fillStyle = '#bcc6d0';
+    ctx.font = 'italic 800 16px "JetBrains Mono", Arial, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('SW900', 496, 313);
 
-  ctx.fillStyle = '#ff5500';
-  ctx.font = '800 34px "JetBrains Mono", monospace';
-  ctx.fillText('PAS: 5   3000W PEAK', 28, 265);
+    // Authentic SW900 LCD background (classic light grey-greenish LCD or backlit night cyan-grey when headlight is ON)
+    const lcdBg = lightsOn ? '#b9d8e2' : '#cad6d8';
+    const inkOn = '#10181f';
+    const inkGhost = 'rgba(16, 24, 31, 0.085)';
+    ctx.fillStyle = lcdBg;
+    ctx.fillRect(14, 14, 484, 274);
 
-  return new THREE.CanvasTexture(canvas);
+    // Subtle inner LCD shadow border
+    ctx.strokeStyle = 'rgba(16, 24, 31, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(16, 16, 480, 270);
+
+    // Horizontal LCD zone divider rules (matching real SW900 segments in Photo #8)
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(24, 92, 464, 3);
+    ctx.fillRect(24, 206, 464, 3);
+
+    // =========================================================================
+    // ZONE 1 (TOP): BATTERY 5-BAR ICON + REAL-TIME VOLTAGE + HEADLIGHT + BRAKE + ODO/TRIP/TIME
+    // =========================================================================
+    // F / E Battery scale labels
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 13px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('F', 28, 31);
+    ctx.fillText('E', 152, 31);
+
+    // Battery body outline (x=28..162, y=35..61) + positive nub
+    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = inkOn;
+    ctx.strokeRect(28, 35, 134, 26);
+    ctx.fillRect(22, 42, 6, 12);
+
+    // 5 Battery Segments (from right=Empty to left=Full as on SW900 Photo #8)
+    for (let b = 0; b < 5; b++) {
+      const barIndexFromEmpty = 4 - b; // right-most is 1st bar above E, left-most is 5th bar under F
+      const bx = 33 + b * 25;
+      ctx.fillStyle = barIndexFromEmpty < socBars ? inkOn : inkGhost;
+      ctx.fillRect(bx, 39, 21, 18);
+    }
+
+    // Live Digital Voltage right under battery icon (Ohm's Law sag: U = U_oc - I * R_int)
+    ctx.fillStyle = inkOn;
+    ctx.font = '900 19px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${voltage.toFixed(1)}V`, 28, 84);
+
+    // Headlight icon 💡 (lights up when Sur-Ron light is ON)
+    ctx.save();
+    if (lightsOn) {
+      ctx.fillStyle = '#0a5c28';
+      ctx.fillRect(112, 66, 36, 20);
+      ctx.fillStyle = '#e8fff0';
+      ctx.font = '800 13px "JetBrains Mono", sans-serif';
+      ctx.fillText('💡ON', 115, 81);
+    } else {
+      ctx.fillStyle = inkGhost;
+      ctx.font = '800 13px "JetBrains Mono", sans-serif';
+      ctx.fillText('💡', 120, 81);
+    }
+    ctx.restore();
+
+    // Red Brake Indicator (!) BRAKE (lights up brightly when brake is active)
+    if (brakeOn) {
+      ctx.fillStyle = '#d91616';
+      ctx.fillRect(172, 24, 72, 26);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 14px "JetBrains Mono", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(!)BRAKE', 208, 42);
+    } else {
+      ctx.strokeStyle = inkGhost;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(172, 24, 72, 26);
+      ctx.fillStyle = inkGhost;
+      ctx.font = '800 13px "JetBrains Mono", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(!)BRAKE', 208, 42);
+    }
+
+    // Top-Right Multi-Function Readout: ODO / TRIP / MAX / AVG / TIME (switched by [M] button)
+    const modeLabels = ['ODO', 'TRIP', 'MAX', 'AVG', 'TIME'];
+    const activeLabel = modeLabels[modeIndex % 5];
+    ctx.fillStyle = inkOn;
+    ctx.font = '900 16px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(activeLabel, 242, 81);
+
+    let topRightFormatted = '0128.4';
+    let unitStr = 'Km';
+    if (modeIndex === 0) {
+      topRightFormatted = odoKm.toFixed(2).padStart(6, '0');
+      unitStr = 'Km';
+    } else if (modeIndex === 1) {
+      topRightFormatted = tripKm.toFixed(2).padStart(6, '0');
+      unitStr = 'Km';
+    } else if (modeIndex === 2) {
+      topRightFormatted = maxSpeedKmh.toFixed(1).padStart(5, '0');
+      unitStr = 'Km/h';
+    } else if (modeIndex === 3) {
+      topRightFormatted = avgSpeedKmh.toFixed(1).padStart(5, '0');
+      unitStr = 'Km/h';
+    } else {
+      const mins = Math.floor(tripTimeSec / 60);
+      const secs = Math.floor(tripTimeSec % 60);
+      topRightFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      unitStr = 'M:S';
+    }
+
+    drawSevenSegmentNumber(ctx, topRightFormatted, 444, 28, 26, 52, 5.5, 6, inkOn, inkGhost);
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 14px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(unitStr, 450, 79);
+
+    // =========================================================================
+    // ZONE 2 (CENTER): SPEED BADGE + HUGE 7-SEGMENT SPEED (00.0 .. 82.4 KM/H)
+    // =========================================================================
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(26, 102, 66, 22);
+    ctx.fillStyle = lcdBg;
+    ctx.font = '900 14px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SPEED', 59, 118);
+
+    // PAS Speed Limit helper label on left under SPEED badge
+    const pasSpecLabels = {
+      1: 'LIM 25 KM/H',
+      2: 'ECO 35 KM/H',
+      3: 'STD 45 KM/H',
+      4: 'SPT 65 KM/H',
+      5: 'MAX 82 KM/H'
+    };
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 12px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(pasSpecLabels[pas] || 'MAX 82 KM/H', 26, 146);
+    if (watts < 0) {
+      ctx.fillStyle = '#b51212';
+      ctx.fillText('E-ABS REGEN', 26, 168);
+    }
+
+    const speedFormatted = Math.max(0, speedKmh).toFixed(1).padStart(4, '0');
+    drawSevenSegmentNumber(ctx, speedFormatted, 418, 104, 48, 90, 9.5, 10, inkOn, inkGhost);
+
+    ctx.fillStyle = inkOn;
+    ctx.font = '900 18px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Km/h', 428, 192);
+
+    // =========================================================================
+    // ZONE 3 (BOTTOM): MODE / PAS (1..5) + LIVE WATTMETER (W = U * I, REGEN E-ABS)
+    // =========================================================================
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(26, 214, 58, 20);
+    ctx.fillStyle = lcdBg;
+    ctx.font = '900 13px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MODE', 55, 229);
+
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 14px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('STD', 102, 229);
+    ctx.font = '900 16px "JetBrains Mono", sans-serif';
+    ctx.fillText('PAS', 26, 274);
+
+    // PAS 7-segment digit (1..5)
+    drawSevenSegmentDigit(ctx, String(pas), 74, 236, 30, 44, 6.0, inkOn, inkGhost);
+
+    // Vertical divider between PAS and WATTMETER
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(142, 212, 2.5, 70);
+
+    // Live Wattmeter (0000 W .. 4320 W or E-ABS -1650 W)
+    const isRegen = watts < -1;
+    ctx.fillStyle = isRegen ? '#b51212' : inkOn;
+    ctx.font = '900 15px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(isRegen ? 'E-ABS' : 'WATT', 156, 274);
+
+    const absWatts = Math.min(9999, Math.round(Math.abs(watts)));
+    const wattStr = (isRegen ? '-' : '') + String(absWatts).padStart(4, '0');
+    drawSevenSegmentNumber(
+      ctx,
+      wattStr,
+      432,
+      222,
+      32,
+      56,
+      6.5,
+      8,
+      isRegen ? '#b51212' : inkOn,
+      inkGhost
+    );
+
+    ctx.fillStyle = isRegen ? '#b51212' : inkOn;
+    ctx.font = '900 20px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('W', 444, 276);
+
+    tex.needsUpdate = true;
+  }
+
+  updateSw900();
+  return { tex, canvas, updateSw900 };
+}
+
+/**
+ * Helper: Distinct color tint for each of the 20 7P series groups (1S..20S) in X-Ray mode
+ * Shows current flow from 1S (3.6..4.2V cool cyan) -> 10S (emerald) -> 20S (72..84.0V warm orange/red)
+ */
+function getSeriesXRayColor(seriesId) {
+  const t = (seriesId - 1) / 19; // 0.0 at 1S -> 1.0 at 20S
+  const color = new THREE.Color();
+  // Smooth HSL gradient from Cyan-Blue (hue 0.56) -> Green (0.35) -> Yellow-Orange (0.08) -> Red (0.01)
+  const hue = 0.56 * (1.0 - t) + 0.01 * t;
+  color.setHSL(hue, 0.88, 0.52);
+  return color;
 }
 
 /**
  * 9. Generates crisp 3D badge material for each of the 20 battery series sections (1S..20S)
+ *    Includes cumulative voltage range: 1S (3.6..4.2V) -> 20S (72.0..84.0V)
  */
-function createBatterySeriesLabelMaterial(seriesId, polarityOnLeft) {
+function createBatterySeriesLabelMaterial(seriesId, polarityOnThisSide) {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
-  canvas.height = 80;
+  canvas.height = 96;
   const ctx = canvas.getContext('2d');
 
-  const isMainNeg = seriesId === 1 && polarityOnLeft < 0;
-  const isMainPos = seriesId === 20 && polarityOnLeft > 0;
-  const isPlus = polarityOnLeft > 0;
+  const isMainNeg = seriesId === 1 && polarityOnThisSide < 0;
+  const isMainPos = seriesId === 20 && polarityOnThisSide > 0;
+  const isPlus = polarityOnThisSide > 0;
 
   ctx.fillStyle = isMainPos ? '#5a0e06' : isMainNeg ? '#062642' : '#0b0e14';
-  ctx.fillRect(0, 0, 256, 80);
+  ctx.fillRect(0, 0, 256, 96);
 
-  ctx.strokeStyle = isMainPos ? '#ff4422' : isMainNeg ? '#00d8ff' : isPlus ? '#ff6622' : '#00d8ff';
+  ctx.strokeStyle = isMainPos ? '#ff3311' : isMainNeg ? '#00d8ff' : isPlus ? '#ff5522' : '#00b8ff';
   ctx.lineWidth = 6;
-  ctx.strokeRect(3, 3, 250, 74);
+  ctx.strokeRect(3, 3, 250, 90);
 
   const polStr = isPlus ? '+' : '−';
-  const tag = isMainNeg ? '1S [B− 0V]' : isMainPos ? '20S [B+ 84V]' : `${seriesId}S (${polStr})`;
+  const topLine = isMainNeg
+    ? '1S [B− 0V]'
+    : isMainPos
+      ? '20S [B+ 84V]'
+      : `${seriesId}S (${polStr})`;
+  const vMin = (seriesId * 3.6).toFixed(1);
+  const vMax = (seriesId * 4.2).toFixed(1);
+  const botLine = `${vMin}..${vMax}V`;
 
-  ctx.font = '900 34px "JetBrains Mono", monospace';
+  ctx.font = '900 32px "JetBrains Mono", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(tag, 128, 41);
+  ctx.fillText(topLine, 128, 34);
+
+  ctx.font = '700 22px "JetBrains Mono", monospace';
+  ctx.fillStyle = isPlus ? '#ffb38a' : '#8ae8ff';
+  ctx.fillText(botLine, 128, 69);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.anisotropy = 4;
@@ -3167,7 +3857,8 @@ function createStealthMaterials() {
   const rotorTex = createRotorBrushedTexture(512);
   const motoVinylTex = createMotoVinylBumpTexture(512);
   const mtxDecalTex = createMtx39DecalTexture();
-  const sw900Tex = createSw900ScreenTexture();
+  const sw900Controller = createSw900ScreenTexture();
+  const sw900Tex = sw900Controller.tex;
 
   // 1. MAT_FRAME_RAL9005 (Frame, subframe, 6mm dropout armor plates)
   const MAT_FRAME_RAL9005 = new THREE.MeshPhysicalMaterial({
@@ -3418,7 +4109,8 @@ function createStealthMaterials() {
     MAT_XT90_YELLOW,
     MAT_SW900_SCREEN,
     MAT_FOXSID_DECAL,
-    MAT_KENDA_SIDEWALL
+    MAT_KENDA_SIDEWALL,
+    sw900Controller
   };
 }
 
@@ -4434,38 +5126,65 @@ function buildCockpitNode(mats) {
 
   cockpitGroup.add(headlightGroup);
 
-  // SW900 LCD Computer above Stem + Dual Handlebar Clamp Arms + 3-Button Remote Pad on Left Bar
+  // SW900 LCD Computer (90 x 54 x 18 mm) mounted on handlebar LEFT of stem on two clamps, facing rider's eyes in POV mode
   const sw900Group = new THREE.Group();
-  sw900Group.position.set(0.415, 0.656, 0.0);
-  sw900Group.rotation.z = 0.45;
-  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.054, 0.082), mats.MAT_ANODIZED_BLACK);
-  const swBezel = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.056, 0.084), mats.MAT_FRAME_RAL9005);
-  swBezel.position.set(0.007, 0, 0);
-  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.046, 0.074), mats.MAT_SW900_SCREEN);
-  swScreen.rotation.y = Math.PI / 2;
-  swScreen.rotation.x = Math.PI / 2;
-  swScreen.position.set(0.0095, 0, 0);
-  sw900Group.add(swCase, swBezel, swScreen);
-  [-0.026, 0.026].forEach((zArm) => {
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.032, 0.008), mats.MAT_ANODIZED_BLACK);
-    arm.position.set(-0.010, -0.022, zArm);
-    sw900Group.add(arm);
+  sw900Group.name = 'SW900_COMPUTER_UNIT';
+  sw900Group.position.set(0.412, 0.654, 0.064);
+  sw900Group.lookAt(new THREE.Vector3(-0.12, 0.88, 0.064));
+
+  // Black ABS Rectangular Housing (90 x 54 x 18 mm)
+  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.090, 0.054, 0.018), mats.MAT_ANODIZED_BLACK);
+  swCase.castShadow = true;
+
+  // Silver-White Outer Frame Bezel around LCD Screen
+  const swSilverBezel = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.052, 0.0025), mats.MAT_STEEL_ROTOR);
+  swSilverBezel.position.set(0, 0, 0.0085);
+
+  // Live 512x320 60FPS LCD Screen Plane
+  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.084, 0.048), mats.MAT_SW900_SCREEN);
+  swScreen.name = 'SW900_LCD_SCREEN_MESH';
+  swScreen.position.set(0, 0, 0.0099);
+  swScreen.userData = { isSw900Screen: true };
+
+  sw900Group.add(swCase, swSilverBezel, swScreen);
+
+  // Two Handlebar Mounting Clamps & Brackets (left and right of SW900 backplate)
+  [-0.028, 0.028].forEach((xClamp) => {
+    const bracketArm = new THREE.Mesh(new THREE.BoxGeometry(0.009, 0.032, 0.012), mats.MAT_ANODIZED_BLACK);
+    bracketArm.position.set(xClamp, -0.022, -0.010);
+    const barRing = new THREE.Mesh(new THREE.TorusGeometry(0.0135, 0.0032, 10, 20), mats.MAT_ANODIZED_BLACK);
+    barRing.rotation.y = Math.PI / 2;
+    barRing.position.set(xClamp, -0.032, -0.014);
+    sw900Group.add(bracketArm, barRing);
   });
   cockpitGroup.add(sw900Group);
 
-  // SW900 3-Button Remote Control Pad (Up / M / Down) on Left Handlebar
+  // SW900 3-Button Rubber Remote Control Pad ([▲ UP], [M MODE], [▼ DOWN]) near Left Grip (clickable by mouse!)
   const swRemote = new THREE.Group();
+  swRemote.name = 'SW900_REMOTE_3BTN';
   swRemote.position.set(0.382, 0.655, 0.214);
-  const remBody = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.030, 0.016), mats.MAT_ANODIZED_BLACK);
-  swRemote.add(remBody);
-  [-0.008, 0, 0.008].forEach((by, bIdx) => {
-    const btn = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.0032, 0.0032, 0.004, 10),
-      bIdx === 1 ? mats.MAT_BLUE_ANODIZED : mats.MAT_RUBBER_KENDA
+  swRemote.lookAt(new THREE.Vector3(-0.12, 0.88, 0.214));
+
+  const remBody = new THREE.Mesh(new THREE.BoxGeometry(0.020, 0.034, 0.018), mats.MAT_ANODIZED_BLACK);
+  const remClamp = new THREE.Mesh(new THREE.TorusGeometry(0.0135, 0.003, 10, 20), mats.MAT_ANODIZED_BLACK);
+  remClamp.rotation.y = Math.PI / 2;
+  remClamp.position.set(0, -0.006, -0.010);
+  swRemote.add(remBody, remClamp);
+
+  const btnConfigs = [
+    { y: 0.010, action: 'UP', label: '▲', mat: mats.MAT_RUBBER_KENDA },
+    { y: 0.000, action: 'MODE', label: 'M', mat: mats.MAT_BLUE_ANODIZED },
+    { y: -0.010, action: 'DOWN', label: '▼', mat: mats.MAT_RUBBER_KENDA }
+  ];
+  btnConfigs.forEach((bCfg) => {
+    const btnMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.014, 0.0075, 0.005),
+      bCfg.mat
     );
-    btn.rotation.z = Math.PI / 2;
-    btn.position.set(-0.012, by, 0);
-    swRemote.add(btn);
+    btnMesh.position.set(0, bCfg.y, 0.010);
+    btnMesh.name = `SW900_BTN_${bCfg.action}`;
+    btnMesh.userData = { sw900Button: bCfg.action, label: bCfg.label };
+    swRemote.add(btnMesh);
   });
   cockpitGroup.add(swRemote);
 
@@ -5250,174 +5969,133 @@ function createRoundedPolygonShape(pts, radius = 0.018) {
 }
 
 /**
- * Compute exact 2D coordinates for all 140 21700 cells (EVE INR21700-50E)
- * arranged in a PERFECT 10-ROW, 5-TIER HEXAGONAL TRIANGLE (6 + 5 + 4 + 3 + 2 = 20S):
+ * Compute exact 2D coordinates for all 140 21700 cells (EVE INR21700-50E, Ø21.2mm × 70.5mm)
+ * arranged in a PERFECT 9-ROW HEXAGONAL TRIANGLE inside the Stern frame triangle (560 × 490 × 360 mm):
  *
- * - Tier 1 (Rows 1 & 2, along Downtube): 22 + 20 = 42 cells -> 6 blocks of 7P (1S -> 6S, Rear to Front)
- * - Tier 2 (Rows 3 & 4):                 18 + 17 = 35 cells -> 5 blocks of 7P (7S -> 11S, Front to Rear)
- * - Tier 3 (Rows 5 & 6):                 15 + 13 = 28 cells -> 4 blocks of 7P (12S -> 15S, Rear to Front)
- * - Tier 4 (Rows 7 & 8):                 11 + 10 = 21 cells -> 3 blocks of 7P (16S -> 18S, Front to Rear)
- * - Tier 5 (Rows 9 & 10, top apex):       8 +  6 = 14 cells -> 2 blocks of 7P (19S -> 20S, Rear to Front)
- *   TOTAL = 42 + 35 + 28 + 21 + 14 = 140 CELLS (20S7P)!
+ * - Row 1 (longest, along Downtube): 22 cells
+ * - Row 2 (honeycomb half-step shift): 21 cells
+ * - Row 3: 19 cells
+ * - Row 4: 18 cells
+ * - Row 5: 16 cells
+ * - Row 6: 15 cells
+ * - Row 7: 13 cells
+ * - Row 8:  9 cells
+ * - Row 9 (top triangular ridge under Bisida BMS): 7 cells
+ *   SUM CHECK: 22 + 21 + 19 + 18 + 16 + 15 + 13 + 9 + 7 = EXACTLY 140 CELLS (20S7P)!
  *
- * Every single 7P block (1S..20S) is a uniform 2-row honeycomb trapezoid (4 cells on one row +
- * 3 cells nested in the honeycomb valleys of the paired row = 7 contiguous cells), separated
- * horizontally by 4 yellow FR4 fiberglass dielectric barrier strips!
+ * Partitioned into 20 connected serpentine 7P groups (Group_1S .. Group_20S):
+ * - Odd sections (1S, 3S ... 19S): PLUS (+Z Left side), MINUS (-Z Right side)
+ * - Even sections (2S, 4S ... 20S): PLUS (-Z Right side), MINUS (+Z Left side)
  */
 function generate140CellsLayout() {
-  // Three vertices of the 140-cell triangle filling the inner frame triangle
-  const T_A = new THREE.Vector2(0.016, 0.050);  // Bottom vertex near BB
-  const T_B = new THREE.Vector2(0.374, 0.466);  // Front-top vertex near Head Tube
-  const T_C = new THREE.Vector2(-0.104, 0.376); // Rear-top apex near Seat Tube / Toptube
+  // Three vertices of the 140-cell triangle filling the inner frame triangle (560 x 490 x 360 mm)
+  const T_A = new THREE.Vector2(0.016, 0.048);  // Bottom vertex near BB
+  const T_B = new THREE.Vector2(0.376, 0.466);  // Front-top vertex near Head Tube
+  const T_C = new THREE.Vector2(-0.104, 0.380); // Rear-top apex near Seat Tube / Toptube
 
   const uAxis = T_B.clone().sub(T_A).normalize();
   const vAxis = new THREE.Vector2(-uAxis.y, uAxis.x);
 
-  // 10 triangular honeycomb rows (5 double-row tiers)
-  const rowCounts = [22, 20, 18, 17, 15, 13, 11, 10, 8, 6]; // Sum = 140 cells
-  const sVals = [0.000, 0.082, 0.184, 0.264, 0.366, 0.446, 0.548, 0.626, 0.728, 0.806];
+  // Exact 9 triangular honeycomb rows specified in Patch #2 (Sum = 140 cells)
+  const rowCounts = [22, 21, 19, 18, 16, 15, 13, 9, 7];
+  const kVals = [0, 1, 2, 3, 4, 5, 6, 9, 10]; // Half-step hexagonal honeycomb offsets
+  const du = 0.0227;   // 22.7 mm center-to-center pitch
+  const dv = 0.01966;  // 19.66 mm row pitch (22.7 * sqrt(3)/2)
+  const v0 = 0.009;
 
-  // Exact 4+3 / 3+4 contiguous slice definitions for each of the 5 double-row tiers
-  const tierDefs = [
-    {
-      tier: 1,
-      rowA: 0,
-      rowB: 1,
-      reverse: false, // Left -> Right (Rear -> Front: 1S..6S)
-      slicesA: [4, 3, 4, 4, 3, 4], // sum = 22
-      slicesB: [3, 4, 3, 3, 4, 3]  // sum = 20
-    },
-    {
-      tier: 2,
-      rowA: 2,
-      rowB: 3,
-      reverse: true,  // Right -> Left (Front -> Rear: 7S..11S)
-      slicesA: [4, 3, 4, 3, 4],    // sum = 18
-      slicesB: [3, 4, 3, 4, 3]     // sum = 17
-    },
-    {
-      tier: 3,
-      rowA: 4,
-      rowB: 5,
-      reverse: false, // Left -> Right (Rear -> Front: 12S..15S)
-      slicesA: [4, 4, 3, 4],       // sum = 15
-      slicesB: [3, 3, 4, 3]        // sum = 13
-    },
-    {
-      tier: 4,
-      rowA: 6,
-      rowB: 7,
-      reverse: true,  // Right -> Left (Front -> Rear: 16S..18S)
-      slicesA: [4, 3, 4],          // sum = 11
-      slicesB: [3, 4, 3]           // sum = 10
-    },
-    {
-      tier: 5,
-      rowA: 8,
-      rowB: 9,
-      reverse: false, // Left -> Right (Rear -> Front: 19S..20S)
-      slicesA: [4, 4],             // sum = 8
-      slicesB: [3, 3]              // sum = 6
-    }
-  ];
-
-  // 1. Generate cell coordinates along each of the 10 triangular rows
+  // 1. Generate cell coordinates along each of the 9 triangular honeycomb rows
   const rows = [];
   for (let r = 0; r < rowCounts.length; r++) {
     const cnt = rowCounts[r];
-    const s = sVals[r];
-    const lx = T_A.x + s * (T_C.x - T_A.x);
-    const ly = T_A.y + s * (T_C.y - T_A.y);
-    const rx = T_B.x + s * (T_C.x - T_B.x);
-    const ry = T_B.y + s * (T_C.y - T_B.y);
-
+    const v = v0 + r * dv;
+    const uStart = 0.014 + kVals[r] * (du * 0.5);
     const rowCells = [];
     for (let c = 0; c < cnt; c++) {
-      const t = cnt > 1 ? c / (cnt - 1) : 0.5;
+      const u = uStart + c * du;
+      const x = T_A.x + u * uAxis.x + v * vAxis.x;
+      const y = T_A.y + u * uAxis.y + v * vAxis.y;
       rowCells.push({
         row: r + 1,
         col: c + 1,
-        t,
-        x: lx + t * (rx - lx),
-        y: ly + t * (ry - ly)
+        u,
+        v,
+        t: cnt > 1 ? c / (cnt - 1) : 0.5,
+        x,
+        y
       });
     }
     rows.push(rowCells);
   }
 
-  // 2. Build the 20 contiguous 7P honeycomb blocks (1S..20S) across the 5 tiers
+  // 2. Partition into 20 compact, 100% connected 7-cell honeycomb clusters (Group_1S .. Group_20S)
+  const b1 = [...rows[0], ...rows[1]].sort((a, b) => (a.u - b.u) || (a.row - b.row));
+  const idxR2Last = b1.findIndex((c) => c.row === 2 && c.col === 21);
+  const cellR2Last = b1.splice(idxR2Last, 1)[0];
+  b1.push(cellR2Last);
+
+  const b2 = [...rows[2], ...rows[3]].sort((a, b) => (b.u - a.u) || (a.row - b.row));
+  const b3 = [...rows[4], ...rows[5]].sort((a, b) => (a.u - b.u) || (a.row - b.row));
+  const b4 = [...rows[6], ...rows[7]].sort((a, b) => (b.u - a.u) || (a.row - b.row));
+  const b5 = [...rows[8]].sort((a, b) => a.u - b.u);
+
+  const snakeCells = [...b1, ...b2, ...b3, ...b4, ...b5];
+
   const cells = [];
   const groupMeta = [];
-  let seriesCounter = 0;
 
-  tierDefs.forEach((tDef) => {
-    const arrA = tDef.reverse ? [...rows[tDef.rowA]].reverse() : [...rows[tDef.rowA]];
-    const arrB = tDef.reverse ? [...rows[tDef.rowB]].reverse() : [...rows[tDef.rowB]];
+  for (let s = 1; s <= 20; s++) {
+    // Spec 1.2: Odd sections (1S, 3S..19S) have PLUS on LEFT side (+Z -> polarityOnLeft = +1)
+    //           Even sections (2S, 4S..20S) have PLUS on RIGHT side (-Z -> polarityOnLeft = -1)
+    const polarityOnLeft = s % 2 === 1 ? 1 : -1;
+    const rawCluster = snakeCells.slice((s - 1) * 7, s * 7);
+    rawCluster.sort((a, b) => (a.row - b.row) || (a.col - b.col));
 
-    let cursorA = 0;
-    let cursorB = 0;
+    const firstRowNum = rawCluster[0].row;
+    const groupCells = rawCluster.map((rc, pIdx) => {
+      const cellObj = {
+        cellGlobalIndex: cells.length + 1,
+        row: rc.row,
+        col: rc.col,
+        u: rc.u,
+        v: rc.v,
+        zone: Math.ceil(rc.row / 2),
+        seriesId: s,
+        parallelIndex: pIdx + 1,
+        polarity: polarityOnLeft,
+        subRow: rc.row === firstRowNum ? 0 : 1,
+        x: rc.x,
+        y: rc.y
+      };
+      cells.push(cellObj);
+      return cellObj;
+    });
 
-    for (let bIdx = 0; bIdx < tDef.slicesA.length; bIdx++) {
-      seriesCounter++;
-      const currentSeriesId = seriesCounter; // 1..20
-      const polarityOnLeft = currentSeriesId % 2 === 1 ? -1 : 1;
+    const cellsRowA = groupCells.filter((c) => c.subRow === 0);
+    const cellsRowB = groupCells.filter((c) => c.subRow === 1);
 
-      const countA = tDef.slicesA[bIdx];
-      const countB = tDef.slicesB[bIdx];
-      const subRowA = arrA.slice(cursorA, cursorA + countA);
-      const subRowB = arrB.slice(cursorB, cursorB + countB);
-      cursorA += countA;
-      cursorB += countB;
+    const cx = groupCells.reduce((acc, item) => acc + item.x, 0) / 7;
+    const cy = groupCells.reduce((acc, item) => acc + item.y, 0) / 7;
 
-      // Sort each sub-row consistently from Rear-Left to Front-Right for clean busbar geometry
-      subRowA.sort((a, b) => a.col - b.col);
-      subRowB.sort((a, b) => a.col - b.col);
+    groupMeta.push({
+      seriesId: s,
+      zone: Math.ceil(firstRowNum / 2),
+      row: firstRowNum,
+      polarityOnLeft,
+      cells: groupCells,
+      cellsRowA,
+      cellsRowB,
+      center: new THREE.Vector2(cx, cy),
+      xrayColor: getSeriesXRayColor(s)
+    });
+  }
 
-      const rawCluster = [...subRowA, ...subRowB];
-      const groupCells = rawCluster.map((rc, pIdx) => {
-        const cellObj = {
-          cellGlobalIndex: cells.length + 1,
-          row: rc.row,
-          col: rc.col,
-          zone: tDef.tier,
-          seriesId: currentSeriesId,
-          parallelIndex: pIdx + 1,
-          polarity: polarityOnLeft,
-          subRow: pIdx < subRowA.length ? 0 : 1,
-          x: rc.x,
-          y: rc.y
-        };
-        cells.push(cellObj);
-        return cellObj;
-      });
-
-      const cellsRowA = groupCells.filter((c) => c.subRow === 0);
-      const cellsRowB = groupCells.filter((c) => c.subRow === 1);
-
-      const cx = groupCells.reduce((acc, item) => acc + item.x, 0) / 7;
-      const cy = groupCells.reduce((acc, item) => acc + item.y, 0) / 7;
-
-      groupMeta.push({
-        seriesId: currentSeriesId,
-        zone: tDef.tier,
-        reverse: tDef.reverse,
-        row: tDef.rowA,
-        polarityOnLeft,
-        cells: groupCells,
-        cellsRowA,
-        cellsRowB,
-        center: new THREE.Vector2(cx, cy)
-      });
-    }
-  });
-
-  // 4 Yellow FR4 Fiberglass Dielectric Barrier Strips between the 5 double-row tiers
-  const zoneBarriers = [0.133, 0.315, 0.497, 0.677].map((sBar) => ({
+  // Dielectric FR4 fiberglass barrier strips separating the triangular row tiers
+  const zoneBarriers = [0.155, 0.345, 0.535, 0.755].map((sBar) => ({
     pLeft: new THREE.Vector2(T_A.x + sBar * (T_C.x - T_A.x), T_A.y + sBar * (T_C.y - T_A.y)),
     pRight: new THREE.Vector2(T_B.x + sBar * (T_C.x - T_B.x), T_B.y + sBar * (T_C.y - T_B.y))
   }));
 
-  return { cells, groupMeta, uAxis, vAxis, zoneBarriers, triangleVertices: { T_A, T_B, T_C } };
+  return { cells, groupMeta, rows, rowCounts, uAxis, vAxis, zoneBarriers, triangleVertices: { T_A, T_B, T_C } };
 }
 
 /**
@@ -5646,7 +6324,7 @@ function buildBatterySystemNode(mats) {
   pvcSleeveMesh.name = 'PVC_HEATSHRINK_SLEEVE';
   corduraCenterGroup.add(pvcSleeveMesh);
 
-  // 1.4 140 Cylindrical Cells Li-ion 21700 EVE INR21700-50E in a 5-TIER (6+5+4+3+2 = 20S) HEXAGONAL TRIANGLE
+  // 1.4 140 Cylindrical Cells Li-ion 21700 EVE INR21700-50E in a 9-ROW (22+21+19+18+16+15+13+9+7 = 140) HEXAGONAL TRIANGLE
   const { cells, groupMeta, uAxis, zoneBarriers } = generate140CellsLayout();
   const cellsMasterGroup = new THREE.Group();
   cellsMasterGroup.name = 'CELLS_20S7P_140_ARRAY';
@@ -5665,14 +6343,14 @@ function buildBatterySystemNode(mats) {
     opacity: 0.90
   });
 
-  // 4 Yellow FR4 Fiberglass Dielectric Barrier Strips separating the 5 double-row tiers (Tier 1..5)
+  // Dielectric FR4 Fiberglass Barrier Strips separating row tiers
   zoneBarriers.forEach((bar) => {
     const p1 = new THREE.Vector3(bar.pLeft.x, bar.pLeft.y, 0);
     const p2 = new THREE.Vector3(bar.pRight.x, bar.pRight.y, 0);
     const barLen = p1.distanceTo(p2) + 0.014;
     const barMid = p1.clone().add(p2).multiplyScalar(0.5);
     const barAng = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-    const fr4Strip = new THREE.Mesh(new THREE.BoxGeometry(barLen, 0.0018, 0.0732), matFR4Barrier);
+    const fr4Strip = new THREE.Mesh(new THREE.BoxGeometry(barLen, 0.0016, 0.0732), matFR4Barrier);
     fr4Strip.position.copy(barMid);
     fr4Strip.rotation.z = barAng;
     cellsMasterGroup.add(fr4Strip);
@@ -5682,42 +6360,46 @@ function buildBatterySystemNode(mats) {
   for (let s = 1; s <= 20; s++) {
     const meta = groupMeta[s - 1];
     const sGroup = new THREE.Group();
-    sGroup.name = `BATTERY_SECTION_${s}S`;
+    sGroup.name = `Group_${s}S`;
     sGroup.userData = {
       seriesId: s,
+      groupName: `Group_${s}S`,
       code: `${s}S7P`,
-      row: meta.row + 1,
+      row: meta.row,
       zone: meta.zone,
       polarityOnLeft: meta.polarityOnLeft,
+      xrayColor: meta.xrayColor,
       voltage: 4.20,
+      vMin: (s * 3.60).toFixed(1),
+      vMax: (s * 4.20).toFixed(1),
       cumVoltage: (s * 4.20).toFixed(1),
       capacityAh: 35.0,
       cellModel: 'EVE INR21700-50E',
-      bmsChannel: `CH-${String(s).padStart(2, '0')}`,
+      bmsChannel: `B${s}`,
       ntcTemp: (26.6 + (s % 5) * 0.2).toFixed(1)
     };
     seriesGroups.push(sGroup);
     cellsMasterGroup.add(sGroup);
   }
 
-  // High-detail geometries for the 140 21700 cells (21.2mm diameter -> R=0.0096m with 1.8mm holder wall)
-  const cellRadius = 0.0096;
-  const cellBodyGeom = new THREE.CylinderGeometry(cellRadius, cellRadius, 0.0702, 28);
+  // High-detail geometries for the 140 21700 cells (Ø21.2mm × 70.5mm along Z axis)
+  const cellRadius = 0.0098;
+  const cellBodyGeom = new THREE.CylinderGeometry(cellRadius, cellRadius, 0.0705, 28);
   cellBodyGeom.rotateX(Math.PI / 2);
 
-  const fishpaperRingGeom = new THREE.RingGeometry(0.0052, cellRadius * 0.98, 28);
-  const whiteGasketGeom = new THREE.RingGeometry(0.0038, 0.0053, 24);
-  const posTermGeom = new THREE.CylinderGeometry(0.0040, 0.0042, 0.0014, 20);
+  // White cardboard/fishpaper insulation ring + 3-spoke vent valve on PLUS pole
+  const whiteInsulatorRingGeom = new THREE.RingGeometry(0.0046, cellRadius * 0.96, 28);
+  const posTermGeom = new THREE.CylinderGeometry(0.0042, 0.0044, 0.0015, 20);
   posTermGeom.rotateX(Math.PI / 2);
-  const negTermGeom = new THREE.CylinderGeometry(0.0076, 0.0076, 0.0006, 20);
+  const negTermGeom = new THREE.CylinderGeometry(0.0078, 0.0078, 0.0006, 20);
   negTermGeom.rotateX(Math.PI / 2);
 
-  // Stamped Circular Nickel Contact Pad per cell pole (R = 7.2mm) + 4 Spot-Weld Dimples + Solder Fillet
-  const niPadGeom = new THREE.CylinderGeometry(0.0072, 0.0072, 0.0005, 20);
+  // Stamped Circular Nickel Contact Pad per cell pole + 4 black spot-weld dots
+  const niPadGeom = new THREE.CylinderGeometry(0.0068, 0.0068, 0.0005, 20);
   niPadGeom.rotateX(Math.PI / 2);
-  const weldDotGeom = new THREE.CylinderGeometry(0.0007, 0.0007, 0.0008, 8);
+  const weldDotGeom = new THREE.CylinderGeometry(0.00075, 0.00075, 0.0009, 8);
   weldDotGeom.rotateX(Math.PI / 2);
-  const solderDomeGeom = new THREE.SphereGeometry(0.0018, 12, 12);
+  const solderLayerGeom = new THREE.SphereGeometry(0.0017, 10, 10);
 
   // Left & Right 3D-Printed PETG Honeycomb Holders (Explodable along ±Z by ±0.14m)
   const holderLeftGroup = new THREE.Group();
@@ -5725,7 +6407,7 @@ function buildBatterySystemNode(mats) {
   const holderRightGroup = new THREE.Group();
   holderRightGroup.name = 'EXPLODE_PETG_HOLDER_RIGHT';
 
-  const hexSocketGeom = new THREE.CylinderGeometry(0.0105, 0.0105, 0.012, 6, 1, true);
+  const hexSocketGeom = new THREE.CylinderGeometry(0.0106, 0.0106, 0.012, 6, 1, true);
   hexSocketGeom.rotateX(Math.PI / 2);
   const instancedHolderL = new THREE.InstancedMesh(hexSocketGeom, mats.MAT_PETG_HOLDER, 140);
   const instancedHolderR = new THREE.InstancedMesh(hexSocketGeom, mats.MAT_PETG_HOLDER, 140);
@@ -5744,31 +6426,44 @@ function buildBatterySystemNode(mats) {
     cellMesh.userData = { seriesId: cell.seriesId, cellIndex: cell.cellGlobalIndex };
     sGroup.add(cellMesh);
 
-    const posZ = cell.polarity === 1 ? 0.0352 : -0.0352;
+    // Spec 1.2: Odd sections (1S, 3S..19S) -> PLUS on Left (+Z), MINUS on Right (-Z)
+    //           Even sections (2S, 4S..20S) -> PLUS on Right (-Z), MINUS on Left (+Z)
+    const posZ = cell.polarity === 1 ? 0.0353 : -0.0353;
     const negZ = -posZ;
 
-    // Green Fishpaper insulator ring + White nylon crimp gasket + Raised positive button cap
-    const fpRing = new THREE.Mesh(fishpaperRingGeom, matFishpaper);
-    fpRing.position.set(cell.x, cell.y, posZ);
-    fpRing.userData = { seriesId: cell.seriesId };
-    sGroup.add(fpRing);
-
-    const wGasket = new THREE.Mesh(whiteGasketGeom, mats.MAT_WHITE_INSULATOR);
-    wGasket.position.set(cell.x, cell.y, posZ + Math.sign(posZ) * 0.0001);
-    wGasket.userData = { seriesId: cell.seriesId };
-    sGroup.add(wGasket);
+    // White electrical cardboard insulation ring + 3-spoke safety vent valve on PLUS side
+    const whiteRing = new THREE.Mesh(whiteInsulatorRingGeom, mats.MAT_WHITE_INSULATOR);
+    whiteRing.position.set(cell.x, cell.y, posZ + Math.sign(posZ) * 0.0001);
+    if (posZ < 0) whiteRing.rotation.y = Math.PI;
+    whiteRing.userData = { seriesId: cell.seriesId };
+    sGroup.add(whiteRing);
 
     const posBtn = new THREE.Mesh(posTermGeom, mats.MAT_STEEL_ROTOR);
     posBtn.position.set(cell.x, cell.y, posZ);
     posBtn.userData = { seriesId: cell.seriesId };
     sGroup.add(posBtn);
 
+    // 3-spoke vent valve lines on positive terminal
+    for (let v = 0; v < 3; v++) {
+      const vAng = (v * Math.PI * 2) / 3;
+      const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.0038, 0.0006, 0.0004), mats.MAT_ANODIZED_BLACK);
+      spoke.position.set(
+        cell.x + Math.cos(vAng) * 0.0022,
+        cell.y + Math.sin(vAng) * 0.0022,
+        posZ + Math.sign(posZ) * 0.0008
+      );
+      spoke.rotation.z = vAng;
+      spoke.userData = { seriesId: cell.seriesId };
+      sGroup.add(spoke);
+    }
+
+    // Flat metallic MINUS terminal on opposite side
     const negFlat = new THREE.Mesh(negTermGeom, mats.MAT_STEEL_ROTOR);
     negFlat.position.set(cell.x, cell.y, negZ);
     negFlat.userData = { seriesId: cell.seriesId };
     sGroup.add(negFlat);
 
-    // Stamped Nickel Circular Pad + 4 Spot-Weld Dimples + Tin-Lead Solder Dome on both +Z and -Z
+    // Stamped Nickel Circular Pad + 4 black spot-weld dots on every cell pole (+Z and -Z)
     [-0.0359, 0.0359].forEach((zSide) => {
       const padMesh = new THREE.Mesh(niPadGeom, sGroup.userData.niMat);
       padMesh.position.set(cell.x, cell.y, zSide);
@@ -5777,21 +6472,15 @@ function buildBatterySystemNode(mats) {
 
       for (let w = 0; w < 4; w++) {
         const wAng = (w / 4) * Math.PI * 2 + Math.PI / 4;
-        const dot = new THREE.Mesh(weldDotGeom, sGroup.userData.busMat);
+        const dot = new THREE.Mesh(weldDotGeom, mats.MAT_ANODIZED_BLACK);
         dot.position.set(
-          cell.x + Math.cos(wAng) * 0.0033,
-          cell.y + Math.sin(wAng) * 0.0033,
-          zSide + Math.sign(zSide) * 0.0003
+          cell.x + Math.cos(wAng) * 0.0032,
+          cell.y + Math.sin(wAng) * 0.0032,
+          zSide + Math.sign(zSide) * 0.00035
         );
         dot.userData = { seriesId: cell.seriesId };
         sGroup.add(dot);
       }
-
-      const solderDome = new THREE.Mesh(solderDomeGeom, mats.MAT_STEEL_ROTOR);
-      solderDome.scale.set(1.0, 1.0, 0.55);
-      solderDome.position.set(cell.x, cell.y, zSide + Math.sign(zSide) * 0.0012);
-      solderDome.userData = { seriesId: cell.seriesId };
-      sGroup.add(solderDome);
     });
 
     // Populate Left & Right PETG Honeycomb Hex Sockets
@@ -5819,7 +6508,7 @@ function buildBatterySystemNode(mats) {
   holderPerimGeomR.translate(0, 0, -0.058);
   holderRightGroup.add(new THREE.Mesh(holderPerimGeomR, mats.MAT_PETG_HOLDER));
 
-  // Add M3 Brass Heat-Set Threaded Inserts & Dovetail Interlock Bosses around the 3D-Printed PETG Holder Perimeter
+  // Add M3 Brass Heat-Set Threaded Inserts around the 3D-Printed PETG Holder Perimeter
   [
     [0.025, 0.068],
     [0.195, 0.258],
@@ -5844,84 +6533,44 @@ function buildBatterySystemNode(mats) {
 
   batteryRoot.add(holderLeftGroup, holderRightGroup);
 
-  // 1.5 ULTRA-CLEAN 2-ROW (4+3 = 7P) STAMPED NICKEL PLATES + SOLDERED COPPER BUSBAR RAILS
-  //     + ALTERNATING (+Z / -Z) SERPENTINE SERIES BRIDGES (1S -> 2S -> ... -> 20S)
-  const labelPlaneGeom = new THREE.PlaneGeometry(0.025, 0.0072);
-
-  function addSubRowRail(sGroup, subRowCells, sId) {
-    if (subRowCells.length < 2) return;
-    const cFirst = subRowCells[0];
-    const cLast = subRowCells[subRowCells.length - 1];
-    const len = Math.hypot(cLast.x - cFirst.x, cLast.y - cFirst.y);
-    const ang = Math.atan2(cLast.y - cFirst.y, cLast.x - cFirst.x);
-    const midX = (cFirst.x + cLast.x) * 0.5;
-    const midY = (cFirst.y + cLast.y) * 0.5;
-
-    [-0.0359, 0.0359].forEach((zNi) => {
-      const niRail = new THREE.Mesh(
-        new THREE.BoxGeometry(len + 0.011, 0.0085, 0.0005),
-        sGroup.userData.niMat
-      );
-      niRail.position.set(midX, midY, zNi);
-      niRail.rotation.z = ang;
-      niRail.userData = { seriesId: sId };
-      sGroup.add(niRail);
-
-      const zCu = zNi + Math.sign(zNi) * 0.0007;
-      const cuRail = new THREE.Mesh(
-        new THREE.BoxGeometry(len + 0.004, 0.0030, 0.0012),
-        sGroup.userData.busMat
-      );
-      cuRail.position.set(midX, midY, zCu);
-      cuRail.rotation.z = ang;
-      cuRail.userData = { seriesId: sId };
-      sGroup.add(cuRail);
-    });
-  }
+  // 1.5 PARALLEL NICKEL STRIPS (0.15 × 8 mm) + SOLDERED COPPER BUSBAR SANDWICH (1.5-2.5 mm² Cu + Sn)
+  //     + SERPENTINE SERIES BRIDGES:
+  //       Left side (+Z):  1S(+) -> 2S(-), 3S(+) -> 4S(-) ... 19S(+) -> 20S(-)
+  //       Right side (-Z): 2S(+) -> 3S(-), 4S(+) -> 5S(-) ... 18S(+) -> 19S(-)
+  const labelPlaneGeom = new THREE.PlaneGeometry(0.028, 0.0092);
 
   for (let s = 1; s <= 20; s++) {
     const sGroup = seriesGroups[s - 1];
     const meta = groupMeta[s - 1];
-    const { cellsRowA, cellsRowB } = meta;
+    const grpCells = meta.cells;
 
-    addSubRowRail(sGroup, cellsRowA, s);
-    addSubRowRail(sGroup, cellsRowB, s);
+    // Connect all 7 cells in parallel within Group_sS using shiny 0.15 x 8mm pure nickel strip segments
+    for (let i = 0; i < grpCells.length; i++) {
+      for (let j = i + 1; j < grpCells.length; j++) {
+        const cA = grpCells[i];
+        const cB = grpCells[j];
+        const len = Math.hypot(cB.x - cA.x, cB.y - cA.y);
+        if (len > 0.0265) continue;
+        const ang = Math.atan2(cB.y - cA.y, cB.x - cA.x);
+        const midX = (cA.x + cB.x) * 0.5;
+        const midY = (cA.y + cB.y) * 0.5;
 
-    const crossCount = Math.min(cellsRowA.length, cellsRowB.length);
-    for (let k = 0; k < crossCount; k++) {
-      const cA = cellsRowA[k];
-      const cB = cellsRowB[k];
-      const dist = Math.hypot(cB.x - cA.x, cB.y - cA.y);
-      const ang = Math.atan2(cB.y - cA.y, cB.x - cA.x);
-      const midX = (cA.x + cB.x) * 0.5;
-      const midY = (cA.y + cB.y) * 0.5;
-
-      [-0.0359, 0.0359].forEach((zNi) => {
-        const niCross = new THREE.Mesh(
-          new THREE.BoxGeometry(dist, 0.0072, 0.0005),
-          sGroup.userData.niMat
-        );
-        niCross.position.set(midX, midY, zNi);
-        niCross.rotation.z = ang;
-        niCross.userData = { seriesId: s };
-        sGroup.add(niCross);
-
-        if (k === Math.floor(crossCount / 2)) {
-          const zCu = zNi + Math.sign(zNi) * 0.0007;
-          const cuCross = new THREE.Mesh(
-            new THREE.BoxGeometry(dist, 0.0028, 0.0012),
-            sGroup.userData.busMat
+        [-0.0359, 0.0359].forEach((zNi) => {
+          const niStrip = new THREE.Mesh(
+            new THREE.BoxGeometry(len + 0.010, 0.0080, 0.0005),
+            sGroup.userData.niMat
           );
-          cuCross.position.set(midX, midY, zCu);
-          cuCross.rotation.z = ang;
-          cuCross.userData = { seriesId: s };
-          sGroup.add(cuCross);
-        }
-      });
+          niStrip.position.set(midX, midY, zNi);
+          niStrip.rotation.z = ang;
+          niStrip.userData = { seriesId: s };
+          sGroup.add(niStrip);
+        });
+      }
     }
 
+    // 3D Voltage & Polarity Label Badges on both sides (+Z and -Z): "1S (3.6..4.2V)" -> "20S (72.0..84.0V)"
     const badgeAngle = Math.atan2(uAxis.y, uAxis.x);
-    [-0.0380, 0.0380].forEach((zBadge) => {
+    [-0.0384, 0.0384].forEach((zBadge) => {
       const sidePolarity = zBadge > 0 ? meta.polarityOnLeft : -meta.polarityOnLeft;
       const badgeMat = createBatterySeriesLabelMaterial(s, sidePolarity);
       const badgeMesh = new THREE.Mesh(labelPlaneGeom, badgeMat);
@@ -5932,42 +6581,40 @@ function buildBatterySystemNode(mats) {
       sGroup.add(badgeMesh);
     });
 
+    // Series Bridges ("Copper Sandwich" 60A-120A):
+    // Odd s (1S->2S, 3S->4S ... 19S->20S) connects on LEFT side (+Z)!
+    // Even s (2S->3S, 4S->5S ... 18S->19S) connects on RIGHT side (-Z)!
     if (s < 20) {
       const nextMeta = groupMeta[s];
-      const zBridge = s % 2 === 1 ? -0.0365 : 0.0365;
-      const bridgePairs = [];
+      const zBridge = s % 2 === 1 ? 0.0365 : -0.0365;
 
-      if (meta.zone === nextMeta.zone) {
-        if (!meta.reverse) {
-          bridgePairs.push([cellsRowA[cellsRowA.length - 1], nextMeta.cellsRowA[0]]);
-          bridgePairs.push([cellsRowB[cellsRowB.length - 1], nextMeta.cellsRowB[0]]);
-        } else {
-          bridgePairs.push([cellsRowA[0], nextMeta.cellsRowA[nextMeta.cellsRowA.length - 1]]);
-          bridgePairs.push([cellsRowB[0], nextMeta.cellsRowB[nextMeta.cellsRowB.length - 1]]);
-        }
-      } else {
-        cellsRowB.forEach((cA) => {
-          let bestCell = nextMeta.cellsRowA[0];
-          let bestDist = Infinity;
-          nextMeta.cellsRowA.forEach((cB) => {
-            const d = Math.hypot(cB.x - cA.x, cB.y - cA.y);
-            if (d < bestDist) {
-              bestDist = d;
-              bestCell = cB;
-            }
-          });
-          bridgePairs.push([cA, bestCell]);
+      // Find the 2 closest adjacent cell pairs between Group_sS and Group_(s+1)S for low-inductance parallel bridges
+      const candidatePairs = [];
+      meta.cells.forEach((cA) => {
+        nextMeta.cells.forEach((cB) => {
+          const d = Math.hypot(cB.x - cA.x, cB.y - cA.y);
+          candidatePairs.push({ cA, cB, d });
         });
+      });
+      candidatePairs.sort((a, b) => a.d - b.d);
+
+      const bridgePairs = [candidatePairs[0]];
+      for (let k = 1; k < candidatePairs.length; k++) {
+        const cand = candidatePairs[k];
+        if (cand.cA !== bridgePairs[0].cA && cand.cB !== bridgePairs[0].cB && cand.d < 0.068) {
+          bridgePairs.push(cand);
+          break;
+        }
       }
 
-      bridgePairs.forEach(([cA, cB]) => {
-        const d = Math.hypot(cB.x - cA.x, cB.y - cA.y);
+      bridgePairs.forEach(({ cA, cB, d }) => {
         const midX = (cA.x + cB.x) * 0.5;
         const midY = (cA.y + cB.y) * 0.5;
         const brAngle = Math.atan2(cB.y - cA.y, cB.x - cA.x);
 
+        // Base Nickel Bridge (0.15 x 8 mm)
         const niBridge = new THREE.Mesh(
-          new THREE.BoxGeometry(d + 0.011, 0.0095, 0.0008),
+          new THREE.BoxGeometry(d + 0.011, 0.0082, 0.0006),
           sGroup.userData.niMat
         );
         niBridge.position.set(midX, midY, zBridge);
@@ -5975,43 +6622,54 @@ function buildBatterySystemNode(mats) {
         niBridge.userData = { seriesId: s };
         sGroup.add(niBridge);
 
+        // Soldered Heavy Copper Busbar Core (2.5 mm² golden-copper wire/bar) on top of nickel bridge
         const cuBridge = new THREE.Mesh(
-          new THREE.BoxGeometry(d + 0.007, 0.0042, 0.0018),
+          new THREE.BoxGeometry(d + 0.007, 0.0032, 0.0016),
           sGroup.userData.busMat
         );
         cuBridge.position.set(midX, midY, zBridge + Math.sign(zBridge) * 0.0010);
         cuBridge.rotation.z = brAngle;
         cuBridge.userData = { seriesId: s };
         sGroup.add(cuBridge);
+
+        // Silver Tin Solder Fillet Layer over the Copper Busbar
+        const tinSolder = new THREE.Mesh(
+          new THREE.BoxGeometry(d + 0.008, 0.0044, 0.0006),
+          mats.MAT_STEEL_ROTOR
+        );
+        tinSolder.position.set(midX, midY, zBridge + Math.sign(zBridge) * 0.0018);
+        tinSolder.rotation.z = brAngle;
+        tinSolder.userData = { seriesId: s };
+        sGroup.add(tinSolder);
       });
     }
   }
 
-  // Main B- (0V at 1S on +Z) and Main B+ (84V at 20S on +Z) Heavy Copper Terminal Collector Bars + M5 Crimp Lugs
+  // Main B- (0V at 1S MINUS on Right side -Z) and Main B+ (84V at 20S PLUS on Right side -Z) Heavy Copper Collector Bars
   const group1S = seriesGroups[0];
-  const cell1S_0 = groupMeta[0].cellsRowA[0];
+  const cell1S_0 = groupMeta[0].cells[0];
   const bMinusCollector = new THREE.Mesh(
     new THREE.BoxGeometry(0.024, 0.012, 0.0032),
     mats.MAT_COPPER_BUSBAR
   );
-  bMinusCollector.position.set(cell1S_0.x - 0.006, cell1S_0.y + 0.005, 0.0375);
+  bMinusCollector.position.set(cell1S_0.x - 0.005, cell1S_0.y + 0.004, -0.0375);
   bMinusCollector.rotation.z = 0.84;
   group1S.add(bMinusCollector);
 
   const group20S = seriesGroups[19];
-  const cell20S_0 = groupMeta[19].cellsRowB[groupMeta[19].cellsRowB.length - 1];
+  const cell20S_last = groupMeta[19].cells[groupMeta[19].cells.length - 1];
   const bPlusCollector = new THREE.Mesh(
     new THREE.BoxGeometry(0.024, 0.012, 0.0032),
     mats.MAT_COPPER_BUSBAR
   );
-  bPlusCollector.position.set(cell20S_0.x, cell20S_0.y + 0.006, 0.0375);
+  bPlusCollector.position.set(cell20S_last.x, cell20S_last.y + 0.006, -0.0375);
   bPlusCollector.rotation.z = 0.25;
   group20S.add(bPlusCollector);
 
   batteryRoot.add(cellsMasterGroup);
 
   // 1.6 Bisida BMS 20S 120A Li-ion in Finned Aluminum Heatsink in upper channel under Toptube
-  // + Internal PCB, 16x TO-263 Power MOSFETs, Manganin Shunts, 20x Bleed Resistors & 21-Pin JST-XH Header
+  // + 8 AWG Power Leads (1S(-) -> B-, C- -> XT90-S(-), 20S(+) -> XT90-S(+)) + 21 Balance Wires (B0..B20) + NTC Sensor
   const bmsGroup = new THREE.Group();
   bmsGroup.name = 'EXPLODE_BISIDA_BMS_120A';
 
@@ -6021,8 +6679,8 @@ function buildBatterySystemNode(mats) {
   bmsCore.position.copy(bmsPos);
   bmsCore.rotation.z = toptubeAngle;
 
-  // Finned Aluminum Heatsink Body (140 x 16 x 62 mm)
-  const bmsPlate = new THREE.Mesh(new THREE.BoxGeometry(0.140, 0.014, 0.062), mats.MAT_ANODIZED_BLACK);
+  // Finned Silver/Anodized Aluminum Heatsink Body (140 x 16 x 62 mm)
+  const bmsPlate = new THREE.Mesh(new THREE.BoxGeometry(0.140, 0.014, 0.062), mats.MAT_STEEL_ROTOR);
   bmsCore.add(bmsPlate);
 
   // Green FR4 Multi-Layer BMS Printed Circuit Board (PCB) sandwiched under the heatsink
@@ -6030,7 +6688,7 @@ function buildBatterySystemNode(mats) {
   bmsPcb.position.set(0, -0.0082, 0);
   bmsCore.add(bmsPcb);
 
-  // 16x TO-263 High-Current Power MOSFETs + 4x Copper/Manganin Current Shunt Resistors on BMS PCB
+  // 16x TO-263 High-Current Power MOSFETs on BMS PCB
   for (let m = 0; m < 8; m++) {
     const mx = -0.048 + m * 0.0135;
     [-0.018, 0.018].forEach((mz) => {
@@ -6042,23 +6700,8 @@ function buildBatterySystemNode(mats) {
     });
   }
 
-  for (let f = -4; f <= 4; f++) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.0052, 0.0026), mats.MAT_RED_ANODIZED);
-    fin.position.set(0, 0.0095, f * 0.0066);
-    bmsCore.add(fin);
-  }
-
-  // 4 Stainless M3 Heatsink Corner Screws
-  [-0.062, 0.062].forEach((sx) => {
-    [-0.026, 0.026].forEach((sz) => {
-      const hsScrew = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.018, 10), mats.MAT_STEEL_ROTOR);
-      hsScrew.position.set(sx, 0.002, sz);
-      bmsCore.add(hsScrew);
-    });
-  });
-
-  // White 21-pin JST-XH Balance Connector Header + 21 Individual Gold Contact Pins on BMS front edge
-  const jstHeader = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.0065, 0.0085), mats.MAT_WHITE_INSULATOR);
+  // White 21-pin JST-XH Balance Connector Header (B0..B20) on BMS board edge
+  const jstHeader = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.0068, 0.0090), mats.MAT_WHITE_INSULATOR);
   jstHeader.position.set(0.008, -0.007, 0.032);
   bmsCore.add(jstHeader);
 
@@ -6073,16 +6716,16 @@ function buildBatterySystemNode(mats) {
     bmsCore.add(pin);
   }
 
-  // Heavy Tinned Copper Solder Pads B- and C- on BMS left end + M4 Clamp Bolts
+  // Heavy Tinned Copper Solder Pads B- and C- on BMS left end
   const padBMinus = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.004, 0.020), mats.MAT_COPPER_BUSBAR);
-  padBMinus.position.set(-0.062, -0.007, 0.015);
+  padBMinus.position.set(-0.062, -0.007, -0.015);
   const padCMinus = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.004, 0.020), mats.MAT_COPPER_BUSBAR);
-  padCMinus.position.set(-0.062, -0.007, -0.015);
+  padCMinus.position.set(-0.062, -0.007, 0.015);
   bmsCore.add(padBMinus, padCMinus);
 
   bmsGroup.add(bmsCore);
 
-  // Upper-Rear pocket near Seat Tube / Toptube corner: Amass XT90-S Anti-Spark Yellow Connector + Gold Bullet Pins
+  // Upper-Rear pocket near Seat Tube / Toptube corner: Amass XT90-S Anti-Spark Yellow Connector
   const xt90Pos = new THREE.Vector3(-0.048, 0.398, 0.015);
   const xt90Housing = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.022, 0.014), mats.MAT_XT90_YELLOW);
   xt90Housing.position.copy(xt90Pos);
@@ -6098,72 +6741,78 @@ function buildBatterySystemNode(mats) {
   xt90GoldPinNeg.position.set(xt90Pos.x + 0.014, xt90Pos.y - 0.005, xt90Pos.z);
   bmsGroup.add(xt90Housing, xt90AntiSparkBand, xt90GoldPinPos, xt90GoldPinNeg);
 
-  // Heavy 6AWG Silicone Power Cables showing exact electrical connections:
-  const pBMinusStart = new THREE.Vector3(cell1S_0.x - 0.008, cell1S_0.y + 0.005, 0.037);
-  const pBMinusMid = new THREE.Vector3(-0.104, 0.372, 0.034);
-  const pBMinusEnd = new THREE.Vector3(0.092, 0.434, 0.016);
+  // Spec 1.3: Heavy 8 AWG Silicone Power Cables:
+  // 1) From 1S(-) on -Z -> thick black 8 AWG silicone cable to B- pad of Bisida BMS 20S 120A
+  const pBMinusStart = new THREE.Vector3(cell1S_0.x - 0.006, cell1S_0.y + 0.004, -0.037);
+  const pBMinusMid = new THREE.Vector3(-0.104, 0.372, -0.034);
+  const pBMinusEnd = new THREE.Vector3(0.092, 0.434, -0.016);
   bmsGroup.add(
-    createCylinderBetween(pBMinusStart, pBMinusMid, 0.0038, 0.0038, mats.MAT_BLUE_ANODIZED, 14),
-    createCylinderBetween(pBMinusMid, pBMinusEnd, 0.0038, 0.0038, mats.MAT_BLUE_ANODIZED, 14)
+    createCylinderBetween(pBMinusStart, pBMinusMid, 0.0038, 0.0038, mats.MAT_ANODIZED_BLACK, 14),
+    createCylinderBetween(pBMinusMid, pBMinusEnd, 0.0038, 0.0038, mats.MAT_ANODIZED_BLACK, 14)
   );
 
-  const pCMinusStart = new THREE.Vector3(0.092, 0.434, -0.015);
+  // 2) From C- pad of BMS -> thick black 8 AWG power cable to negative terminal of Amass XT90-S
+  const pCMinusStart = new THREE.Vector3(0.092, 0.434, 0.015);
   const pCMinusEnd = new THREE.Vector3(xt90Pos.x + 0.010, xt90Pos.y - 0.005, xt90Pos.z);
   bmsGroup.add(
     createCylinderBetween(pCMinusStart, pCMinusEnd, 0.0038, 0.0038, mats.MAT_ANODIZED_BLACK, 14)
   );
 
-  const pBPlusStart = new THREE.Vector3(cell20S_0.x, cell20S_0.y + 0.006, 0.037);
+  // 3) From 20S(+) on -Z -> thick red 8 AWG silicone cable directly to positive terminal of Amass XT90-S
+  const pBPlusStart = new THREE.Vector3(cell20S_last.x, cell20S_last.y + 0.006, -0.037);
   const pBPlusEnd = new THREE.Vector3(xt90Pos.x - 0.010, xt90Pos.y + 0.005, xt90Pos.z);
   bmsGroup.add(
-    createCylinderBetween(pBPlusStart, pBPlusEnd, 0.0040, 0.0040, mats.MAT_RED_ANODIZED, 14)
+    createCylinderBetween(pBPlusStart, pBPlusEnd, 0.0042, 0.0042, mats.MAT_RED_ANODIZED, 14)
   );
 
-  // Clean Routed 21-Wire BMS Balance Harness with Ring Terminal Lugs on every Series Busbar
+  // 4) 21 Balance Wires (B0 black + B1..B20 red) from each of the 20 groups into white JST-XH comb connector on BMS
   for (let s = 1; s <= 20; s++) {
     const meta = groupMeta[s - 1];
     const t = s / 20;
     const jstPinPos = new THREE.Vector3(
       bmsPos.x - 0.034 + t * 0.080,
       bmsPos.y - 0.010 + t * 0.019,
-      s % 2 === 1 ? -0.035 : 0.035
+      0.035
     );
-    const tapZ = s % 2 === 1 ? -0.0372 : 0.0372;
-    const tapCell = meta.cellsRowB[Math.floor(meta.cellsRowB.length / 2)];
+    // Tap the POSITIVE side of section s (+Z for odd s, -Z for even s)
+    const tapZ = s % 2 === 1 ? 0.0372 : -0.0372;
+    const tapCell = meta.cells[Math.floor(meta.cells.length / 2)];
     const tapPos = new THREE.Vector3(tapCell.x, tapCell.y + 0.006, tapZ);
     const elbowPos = new THREE.Vector3(tapCell.x, Math.max(tapCell.y + 0.028, bmsPos.y - 0.022), tapZ);
 
-    const wireMat = s === 20 ? mats.MAT_XT90_YELLOW : mats.MAT_RED_ANODIZED;
     bmsGroup.add(
-      createCylinderBetween(jstPinPos, elbowPos, 0.00068, 0.00068, wireMat, 8),
-      createCylinderBetween(elbowPos, tapPos, 0.00068, 0.00068, wireMat, 8)
+      createCylinderBetween(jstPinPos, elbowPos, 0.00068, 0.00068, mats.MAT_RED_ANODIZED, 8),
+      createCylinderBetween(elbowPos, tapPos, 0.00068, 0.00068, mats.MAT_RED_ANODIZED, 8)
     );
 
-    const tapLug = new THREE.Mesh(new THREE.TorusGeometry(0.0018, 0.0006, 6, 12), mats.MAT_GOLD_BRASS || mats.MAT_STEEL_ROTOR);
+    const tapLug = new THREE.Mesh(
+      new THREE.TorusGeometry(0.0018, 0.0006, 6, 12),
+      mats.MAT_GOLD_BRASS || mats.MAT_STEEL_ROTOR
+    );
     tapLug.position.copy(tapPos);
     bmsGroup.add(tapLug);
   }
 
-  // B0 (Black balance ground lead) to 1S (-)
+  // B0 (Black balance ground wire #1 of 21) from 1S(-) to Pin 0 of white JST-XH BMS comb connector
   bmsGroup.add(
     createCylinderBetween(
-      new THREE.Vector3(bmsPos.x - 0.038, bmsPos.y - 0.012, 0.035),
+      new THREE.Vector3(bmsPos.x - 0.036, bmsPos.y - 0.012, 0.035),
       pBMinusMid,
-      0.0008,
-      0.0008,
+      0.00075,
+      0.00075,
       mats.MAT_ANODIZED_BLACK,
       8
     )
   );
 
-  // Dual Epoxy NTC Thermistors glued into Tier 2 and Tier 4 honeycomb centers
+  // NTC Temperature Sensor Probe wire from BMS into the exact center of the 140-cell triangle
   [
-    new THREE.Vector3(0.115, 0.285, 0),
+    new THREE.Vector3(0.145, 0.285, 0),
     new THREE.Vector3(0.205, 0.345, 0)
   ].forEach((ntcEnd, nIdx) => {
     const ntcStart = new THREE.Vector3(bmsPos.x + 0.01 + nIdx * 0.012, bmsPos.y - 0.01, 0);
     const ntcWire = createCylinderBetween(ntcStart, ntcEnd, 0.0010, 0.0010, mats.MAT_ANODIZED_BLACK, 8);
-    const ntcBead = new THREE.Mesh(new THREE.SphereGeometry(0.0030, 12, 12), mats.MAT_ANODIZED_BLACK);
+    const ntcBead = new THREE.Mesh(new THREE.SphereGeometry(0.0032, 12, 12), mats.MAT_ANODIZED_BLACK);
     ntcBead.position.copy(ntcEnd);
     bmsGroup.add(ntcWire, ntcBead);
   });
@@ -6593,347 +7242,767 @@ function buildMotoSaddleAndSubframeNode(mats) {
 
 // --- [4/5] ENGINEERING MODALS & 1:1 SVG TEMPLATES ---
 // ============================================================================
-// STEALTH SUR-RON 72V 3000W — ENGINEERING BLUEPRINTS, 1:1 SVG TEMPLATES & GUIDES
-// Modal Content Generator for Hotspots & Technical Documentation
+// STEALTH SUR-RON 72V 3000W — ENGINEERING CAD BLUEPRINTS & 6-SHEET TABLET
+// Includes 6 High-Precision GOST/CAD Blueprints (in millimeters, with Dark #0a192f
+// & Clean White theme support, zoom/pan, and 1:1 SVG / PNG download)
 // ============================================================================
 
-const ENGINEERING_MODALS = {
-  saddle: {
-    title: 'ЧЕРТЕЖ УЗЛА 07: МОТО-СЕДЛО SUR-RON (530 ММ), СТАЛЬНОЙ ПОДРАМНИК И СТОП-СИГНАЛ',
-    html: `
-      <p><strong>Конструкция посадочного модуля:</strong> Вместо штатного велосипедного штыря на раму <em>Stern Dynamic 1.0 (18")</em> интегрировано длинное двухместное мотоциклетное седло <strong>Sur-Ron / Pitbike (длина 530 мм)</strong> на кастомном сварном стальном подрамнике.</p>
-      
-      <div class="svg-blueprint-box">
-        <svg width="760" height="290" viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg">
-          <rect width="760" height="290" fill="#07080a"/>
-          <!-- Grid -->
-          <g stroke="#181c24" stroke-width="1">
-            <line x1="0" y1="50" x2="760" y2="50"/><line x1="0" y1="100" x2="760" y2="100"/>
-            <line x1="0" y1="150" x2="760" y2="150"/><line x1="0" y1="200" x2="760" y2="200"/>
-            <line x1="0" y1="250" x2="760" y2="250"/>
-            <line x1="120" y1="0" x2="120" y2="290"/><line x1="280" y1="0" x2="280" y2="290"/>
-            <line x1="440" y1="0" x2="440" y2="290"/><line x1="600" y1="0" x2="600" y2="290"/>
-          </g>
-          <!-- Saddle Profile 530mm -->
-          <path d="M 540 135 Q 500 95 430 92 C 330 88 230 65 110 42 Q 70 36 55 44 L 70 85 Q 190 105 350 138 L 415 138 L 415 162 L 475 162 L 475 142 Z"
-                fill="rgba(255,85,0,0.14)" stroke="#FF5500" stroke-width="2.5"/>
-          <!-- Welded Steel Subframe 18x2mm -->
-          <line x1="445" y1="162" x2="462" y2="235" stroke="#00FF66" stroke-width="6"/>
-          <line x1="445" y1="142" x2="115" y2="85" stroke="#00FF66" stroke-width="5"/>
-          <line x1="145" y1="92" x2="335" y2="235" stroke="#00FF66" stroke-width="5"/>
-          <circle cx="335" cy="235" r="6" fill="#FF5500"/>
-          <!-- Rear LED Brake Light -->
-          <rect x="46" y="72" width="22" height="12" fill="#ff0022" stroke="#ffffff" stroke-width="1"/>
-          <!-- Dimensions -->
-          <line x1="55" y1="20" x2="540" y2="20" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="295" y="15" fill="#00D2FF" font-family="JetBrains Mono" font-size="12" text-anchor="middle">ОБЩАЯ ДЛИНА МОТО-СЕДЛА = 530 ММ</text>
-          <text x="445" y="182" fill="#FF5500" font-family="JetBrains Mono" font-size="11" text-anchor="middle">П-ПАЗ 40×70 ММ (ПОДСЕДЕЛ)</text>
-          <text x="205" y="195" fill="#00FF66" font-family="JetBrains Mono" font-size="11">УКОСИНЫ СТАЛЬ Ø18×2 ММ (БОЛТЫ М6 К ПЕРЬЯМ)</text>
-          <text x="115" y="68" fill="#ffffff" font-family="JetBrains Mono" font-size="11">ПОРОЛОН ПВВ 55 КГ/М³ (75-80 ММ)</text>
-        </svg>
-      </div>
+/**
+ * Generates the 140-cell (9-row: 22+21+19+18+16+15+13+9+7) SVG elements for Sheet #2
+ */
+function buildSheet2CellsSvgContent() {
+  const rowCounts = [22, 21, 19, 18, 16, 15, 13, 9, 7];
+  const kVals = [0, 1, 2, 3, 4, 5, 6, 9, 10];
 
-      <table class="spec-table">
-        <tr>
-          <th>Параметр узла</th>
-          <th>Инженерная спецификация</th>
-        </tr>
-        <tr>
-          <td>Посадочный П-образный паз носика</td>
-          <td>Ширина <strong>40 мм</strong> × глубина <strong>70 мм</strong> — плотно садится на срез подседельной трубы <code>(-0.145, 0.435, 0)</code> вровень с сумкой Cordura 1000D.</td>
-        </tr>
-        <tr>
-          <td>Геометрия подушки (ПВВ 55 кг/м³)</td>
-          <td>Передний наплыв <strong>45 мм</strong>, центральная анатомическая яма <strong>75–80 мм</strong>, задний хвост <strong>55 мм</strong> в матовом антислип-виниле.</td>
-        </tr>
-        <tr>
-          <td>Сварной стальной подрамник</td>
-          <td>Труба холоднокатаная <strong>Ø16–20 мм (стенка 2.0 мм)</strong>, грунт-эмаль CERTA RAL 9005. Задние распорки крепятся болтами <strong>М6</strong> к верхним перьям рамы.</td>
-        </tr>
-        <tr>
-          <td>Распайка LED Стоп-сигнала (12V)</td>
-          <td>3 провода: <code>Черный -> GND (12V-)</code>, <code>Синий -> Габарит (+12V от тумблера фары)</code>, <code>Красный -> Стоп (+12V через нормально-разомкнутый геркон ручки ZOOM HB-890E)</code>.</td>
-        </tr>
-      </table>
+  // Triangle vertices in SVG coordinates (Left View: x=75..525, y=535..155)
+  const A = { x: 185, y: 535 }; // Bottom BB vertex
+  const B = { x: 525, y: 155 }; // Front Headtube vertex
+  const C = { x: 75, y: 235 };  // Rear Seattube vertex
+
+  const dxAB = B.x - A.x;
+  const dyAB = B.y - A.y;
+  const lenAB = Math.hypot(dxAB, dyAB);
+  const ux = dxAB / lenAB;
+  const uy = dyAB / lenAB;
+  // Normal pointing toward C (up-left in SVG)
+  const vx = uy;
+  const vy = -ux;
+
+  const du = 20.5;
+  const dv = 17.75;
+  const v0 = 8.0;
+
+  const rows = [];
+  for (let r = 0; r < rowCounts.length; r++) {
+    const cnt = rowCounts[r];
+    const v = v0 + r * dv;
+    const uStart = 12.0 + kVals[r] * (du * 0.5);
+    const rCells = [];
+    for (let c = 0; c < cnt; c++) {
+      const u = uStart + c * du;
+      rCells.push({
+        row: r + 1,
+        col: c + 1,
+        u,
+        v,
+        x: A.x + u * ux + v * vx,
+        y: A.y + u * uy + v * vy
+      });
+    }
+    rows.push(rCells);
+  }
+
+  const b1 = [...rows[0], ...rows[1]].sort((a, b) => (a.u - b.u) || (a.row - b.row));
+  const idxR2Last = b1.findIndex((c) => c.row === 2 && c.col === 21);
+  const cellR2Last = b1.splice(idxR2Last, 1)[0];
+  b1.push(cellR2Last);
+
+  const b2 = [...rows[2], ...rows[3]].sort((a, b) => (b.u - a.u) || (a.row - b.row));
+  const b3 = [...rows[4], ...rows[5]].sort((a, b) => (a.u - b.u) || (a.row - b.row));
+  const b4 = [...rows[6], ...rows[7]].sort((a, b) => (b.u - a.u) || (a.row - b.row));
+  const b5 = [...rows[8]].sort((a, b) => a.u - b.u);
+
+  const snake = [...b1, ...b2, ...b3, ...b4, ...b5];
+
+  let svgOut = '';
+
+  // Frame triangle outer contour (560 x 490 x 360 mm)
+  svgOut += `<polygon points="${A.x},${A.y + 18} ${B.x + 18},${B.y - 12} ${B.x - 4},${B.y - 45} ${C.x - 16},${C.y - 12}" fill="rgba(0, 210, 255, 0.05)" stroke="#00d2ff" stroke-width="2.5" stroke-dasharray="8,4"/>`;
+
+  // BMS top block along Toptube
+  svgOut += `<rect x="165" y="128" width="235" height="32" rx="4" fill="#132238" stroke="#00ff66" stroke-width="2"/>`;
+  svgOut += `<text x="282" y="143" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">BISIDA BMS 20S 120A (ПОД ВЕРХНЕЙ ТРУБОЙ)</text>`;
+  svgOut += `<text x="282" y="156" fill="#d8e6f5" font-family="JetBrains Mono" font-size="9" text-anchor="middle">B- (8AWG ЧЕРНЫЙ) | C- (К XT90-S) | ГРЕБЕНКА 21-PIN (B0..B20) + NTC</text>`;
+
+  // Amass XT90-S block
+  svgOut += `<rect x="48" y="158" width="96" height="30" rx="4" fill="#332800" stroke="#ffcc00" stroke-width="2"/>`;
+  svgOut += `<text x="96" y="172" fill="#ffcc00" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">AMASS XT90-S</text>`;
+  svgOut += `<text x="96" y="183" fill="#ffffff" font-family="JetBrains Mono" font-size="8.5" text-anchor="middle">84.0V ВЫХОД</text>`;
+
+  const groups = [];
+  for (let s = 1; s <= 20; s++) {
+    const gCells = snake.slice((s - 1) * 7, s * 7);
+    const cx = gCells.reduce((acc, c) => acc + c.x, 0) / 7;
+    const cy = gCells.reduce((acc, c) => acc + c.y, 0) / 7;
+    const isPlusOnLeft = s % 2 === 1;
+    groups.push({ s, gCells, cx, cy, isPlusOnLeft });
+  }
+
+  // Draw parallel Nickel strips (0.15 x 8 mm) inside each 7P group connecting hexagonal neighbors
+  groups.forEach(({ s, gCells }) => {
+    const hue = Math.round(200 - ((s - 1) / 19) * 190);
+    for (let i = 0; i < gCells.length; i++) {
+      for (let j = i + 1; j < gCells.length; j++) {
+        const d = Math.hypot(gCells[j].x - gCells[i].x, gCells[j].y - gCells[i].y);
+        if (d < 24.5) {
+          svgOut += `<line x1="${gCells[i].x.toFixed(1)}" y1="${gCells[i].y.toFixed(1)}" x2="${gCells[j].x.toFixed(1)}" y2="${gCells[j].y.toFixed(1)}" stroke="hsla(${hue}, 90%, 60%, 0.35)" stroke-width="17" stroke-linecap="round"/>`;
+          svgOut += `<line x1="${gCells[i].x.toFixed(1)}" y1="${gCells[i].y.toFixed(1)}" x2="${gCells[j].x.toFixed(1)}" y2="${gCells[j].y.toFixed(1)}" stroke="#c8d4e0" stroke-width="4.5" stroke-linecap="round"/>`;
+        }
+      }
+    }
+  });
+
+  // Draw Series Copper Busbar Bridges (2.5 mm² Cu + Sn solder) between closest neighbors of s and s+1
+  for (let s = 1; s < 20; s++) {
+    const gA = groups[s - 1];
+    const gB = groups[s];
+    let bestPair = [gA.gCells[0], gB.gCells[0]];
+    let bestD = Infinity;
+    gA.gCells.forEach((cA) => {
+      gB.gCells.forEach((cB) => {
+        const d = Math.hypot(cB.x - cA.x, cB.y - cA.y);
+        if (d < bestD) {
+          bestD = d;
+          bestPair = [cA, cB];
+        }
+      });
+    });
+    const [cA, cB] = bestPair;
+    const isLeftBridge = s % 2 === 1; // Odd transitions (1S->2S, 3S->4S) on Left (+Z); Even (2S->3S) on Right (-Z)
+    const strokeCol = isLeftBridge ? '#ff8822' : '#00d2ff';
+    const dash = isLeftBridge ? '' : 'stroke-dasharray="4,2"';
+    svgOut += `<line x1="${cA.x.toFixed(1)}" y1="${cA.y.toFixed(1)}" x2="${cB.x.toFixed(1)}" y2="${cB.y.toFixed(1)}" stroke="${strokeCol}" stroke-width="4.5" ${dash}/>`;
+  }
+
+  // Draw all 140 individual 21700 cells with + (Red) and - (Blue) polarity markers
+  groups.forEach(({ s, gCells, cx, cy, isPlusOnLeft }) => {
+    gCells.forEach((c) => {
+      const fillCol = isPlusOnLeft ? '#3d1218' : '#0f253d';
+      const strokeCol = isPlusOnLeft ? '#ff4d4d' : '#33bbff';
+      const sym = isPlusOnLeft ? '+' : '−';
+      svgOut += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="7.4" fill="${fillCol}" stroke="${strokeCol}" stroke-width="1.5"/>`;
+      svgOut += `<text x="${c.x.toFixed(1)}" y="${(c.y + 3.2).toFixed(1)}" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">${sym}</text>`;
+    });
+
+    // Group label badge (1S..20S)
+    svgOut += `<rect x="${(cx - 14).toFixed(1)}" y="${(cy - 18).toFixed(1)}" width="28" height="12" rx="2" fill="#07101c" stroke="#ffffff" stroke-width="0.9"/>`;
+    svgOut += `<text x="${cx.toFixed(1)}" y="${(cy - 9.5).toFixed(1)}" fill="#00ff66" font-family="JetBrains Mono" font-size="8.5" font-weight="bold" text-anchor="middle">${s}S</text>`;
+
+    // Balance wire B1..B20 to BMS header
+    const tapCell = gCells[3];
+    const bmsPinX = 185 + (s / 20) * 195;
+    const bmsPinY = 160;
+    svgOut += `<path d="M ${tapCell.x.toFixed(1)} ${tapCell.y.toFixed(1)} Q ${(tapCell.x + bmsPinX) * 0.5} ${Math.min(tapCell.y, bmsPinY + 35)} ${bmsPinX.toFixed(1)} ${bmsPinY}" fill="none" stroke="rgba(255, 60, 60, 0.52)" stroke-width="1.1"/>`;
+  });
+
+  // Main 8 AWG B- and B+ cables
+  const c1S = groups[0].gCells[0];
+  const c20S = groups[19].gCells[6];
+  svgOut += `<path d="M ${c1S.x} ${c1S.y} L 58 510 L 58 210 L 175 148" fill="none" stroke="#3399ff" stroke-width="4"/>`;
+  svgOut += `<line x1="${c20S.x}" y1="${c20S.y}" x2="115" y2="188" stroke="#ff2222" stroke-width="4.5"/>`;
+  svgOut += `<line x1="165" y1="144" x2="144" y2="172" stroke="#aaaaaa" stroke-width="3.8"/>`;
+
+  return svgOut;
+}
+
+const CAD_SHEETS_6 = [
+  {
+    id: 'sheet1',
+    num: ' ЛИСТ 01/06',
+    shortTitle: '01. ДРОПАУТ М14 + IS 51ММ',
+    title: 'ЧЕРТЕЖ №1: МОНОЛИТНЫЙ ДРОПАУТ М14 + КРЕПЛЕНИЕ ТОРМОЗА IS 51 ММ (СТАЛЬ 6 ММ, МАСШТАБ 1:1)',
+    specSummary: 'Сталь Ст3 / 09Г2С (толщина 6.0 мм) • Паз оси мотора 10.0 × 14.0 мм • Ушки IS 51.0 мм (2× Ø6.2 мм) под ZOOM HB-890E',
+    svg: `
+      <svg class="cad-sheet-svg" width="1100" height="660" viewBox="0 0 1100 660" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid1" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(0, 210, 255, 0.10)" stroke-width="1"/>
+          </pattern>
+          <pattern id="grid1-major" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="url(#grid1)"/>
+            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(0, 210, 255, 0.22)" stroke-width="1.2"/>
+          </pattern>
+        </defs>
+        <rect class="cad-bg" width="1100" height="660" fill="#0a192f"/>
+        <rect width="1100" height="660" fill="url(#grid1-major)"/>
+        <rect x="14" y="14" width="1072" height="632" fill="none" stroke="#00d2ff" stroke-width="2"/>
+
+        <!-- Title Banner -->
+        <text x="35" y="46" fill="#00ff66" font-family="JetBrains Mono" font-size="16" font-weight="bold">ЧЕРТЕЖ №1 (ГОСТ / CAD 1:1): МОНОЛИТНАЯ БРОНЕПЛАСТИНА ДРОПАУТА М14 + ТОРМОЗ IS 51.0 ММ</text>
+        <text x="35" y="68" fill="#a8c5e5" font-family="JetBrains Mono" font-size="12">Деталь «2-в-1»: Усилитель крутящего момента мотора 3000W (лыски 10.0×14.0 мм) + кронштейн суппорта ZOOM HB-890E (ротор Ø180 мм)</text>
+
+        <!-- ================= LEFT: SIDE VIEW (МАСШТАБ 1:1 В ММ) ================= -->
+        <text x="295" y="106" fill="#00d2ff" font-family="JetBrains Mono" font-size="14" font-weight="bold" text-anchor="middle">ВИД СБОКУ (ЛЕВАЯ СТОРОНА РАМЫ STERN, +Z)</text>
+
+        <!-- Factory 5mm Frame Dropout Contour (underneath) -->
+        <path d="M 110 470 L 250 420 L 295 455 L 255 510 L 115 505 Z" fill="rgba(255,255,255,0.05)" stroke="#7b8fa8" stroke-width="2" stroke-dasharray="6,4"/>
+        <text x="165" y="532" fill="#9fb6d0" font-family="JetBrains Mono" font-size="11">Штатный дропаут рамы Stern (толщина 5.0 мм)</text>
+
+        <!-- Monolithic 6mm Steel Armor Plate Contour -->
+        <path d="M 225 510 L 285 510 L 285 415 L 325 415 L 325 510 L 385 510 L 408 355 L 372 175 L 320 165 L 292 248 L 218 215 L 185 232 L 205 385 Z"
+              fill="rgba(255, 85, 0, 0.18)" stroke="#ff5500" stroke-width="3.5"/>
+
+        <!-- Red Dashed Welding Zone ("Толстое к толстому" without burning thin stay tube) -->
+        <path d="M 218 395 L 272 375 M 345 385 L 392 435 M 225 510 L 265 510"
+              fill="none" stroke="#ff2222" stroke-width="4" stroke-dasharray="8,5"/>
+        <text x="155" y="365" fill="#ff4444" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ЗОНА СВАРКИ «ТОЛСТОЕ К ТОЛСТОМУ»</text>
+        <text x="155" y="380" fill="#ff9999" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(Провар 6 мм к 5 мм дропауту без прожига тонкого пера!)</text>
+
+        <!-- IS 51mm Caliper Mounting Holes (2x Ø6.2 mm) -->
+        <circle cx="348" cy="202" r="14" fill="#0a192f" stroke="#00ff66" stroke-width="3"/>
+        <circle cx="212" cy="248" r="14" fill="#0a192f" stroke="#00ff66" stroke-width="3"/>
+        <line x1="212" y1="248" x2="348" y2="202" stroke="#00ff66" stroke-width="2" stroke-dasharray="6,4"/>
+
+        <!-- Dimension Arrow for IS 51.0 mm -->
+        <line x1="202" y1="185" x2="338" y2="139" stroke="#00ff66" stroke-width="2"/>
+        <text x="270" y="148" fill="#00ff66" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">&lt;--- МЕЖЦЕНТРОВОЕ IS = 51.0 ММ (2× Ø6.2 ММ) ---&gt;</text>
+        <text x="270" y="164" fill="#a8f0c6" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Под переходник IS-PM Rear 180 и 4-поршневой суппорт ZOOM HB-890E</text>
+
+        <!-- M14 Axle Slot 10.0 x 14.0 mm Details -->
+        <line x1="285" y1="455" x2="325" y2="455" stroke="#00d2ff" stroke-width="2.5"/>
+        <line x1="305" y1="415" x2="305" y2="510" stroke="#00d2ff" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="305" y="545" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">&lt;-- ШИРИНА ПАЗА = 10.00 ММ (ЛЫСКИ ОСИ М14) --&gt;</text>
+        <text x="305" y="565" fill="#ffffff" font-family="JetBrains Mono" font-size="12" text-anchor="middle">ВЫСОТА (ГЛУБИНА) ПАЗА = 14.0 ММ • ГАБАРИТ ПЛАСТИНЫ = 118 × 84 ММ</text>
+
+        <!-- Overall Height Dimension -->
+        <line x1="445" y1="165" x2="445" y2="510" stroke="#00d2ff" stroke-width="2"/>
+        <line x1="435" y1="165" x2="455" y2="165" stroke="#00d2ff" stroke-width="2"/>
+        <line x1="435" y1="510" x2="455" y2="510" stroke="#00d2ff" stroke-width="2"/>
+        <text x="462" y="342" fill="#00d2ff" font-family="JetBrains Mono" font-size="12" font-weight="bold" transform="rotate(90 462 342)" text-anchor="middle">&lt;--- ВЫСОТА 118.0 ММ ---&gt;</text>
+
+        <!-- ================= RIGHT: CROSS-SECTION VIEW A-A (РАЗРЕЗ УЗЛА) ================= -->
+        <text x="805" y="106" fill="#00d2ff" font-family="JetBrains Mono" font-size="14" font-weight="bold" text-anchor="middle">РАЗРЕЗ А-А (СБОРКА ОСИ М14, ДРОПАУТА И ТОРМОЗА)</text>
+
+        <!-- 5mm Factory Dropout Bar -->
+        <rect x="655" y="210" width="28" height="270" fill="#2c3e55" stroke="#9fb6d0" stroke-width="2"/>
+        <text x="669" y="502" fill="#9fb6d0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Рама 5 мм</text>
+
+        <!-- 6mm Monolithic Steel Armor Plate -->
+        <rect x="685" y="160" width="36" height="320" fill="rgba(255, 85, 0, 0.28)" stroke="#ff5500" stroke-width="3"/>
+        <text x="703" y="522" fill="#ff5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">Броня 6.0 мм</text>
+
+        <!-- Weld Fillet triangles -->
+        <polygon points="683,210 683,190 703,210" fill="#ff2222"/>
+        <polygon points="683,480 683,500 703,480" fill="#ff2222"/>
+
+        <!-- M14 Motor Axle passing through slot -->
+        <rect x="595" y="395" width="215" height="42" fill="#4b5d73" stroke="#ffffff" stroke-width="2"/>
+        <text x="702" y="421" fill="#ffffff" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">ОСЬ МОТОРА М14×1.5 (ЛЫСКИ 10 ММ)</text>
+
+        <!-- Heavy Flange Nut M14 + Nord-Lock Washer -->
+        <rect x="723" y="382" width="10" height="68" fill="#00d2ff"/>
+        <rect x="735" y="386" width="34" height="60" rx="4" fill="#d0dae5" stroke="#ffffff" stroke-width="2"/>
+        <text x="845" y="418" fill="#00d2ff" font-family="JetBrains Mono" font-size="11">Гайка М14×1.5 (ключ 21 мм, 65 Н·м)</text>
+        <text x="845" y="434" fill="#9fb6d0" font-family="JetBrains Mono" font-size="10">+ стопорная шайба с усиком</text>
+
+        <!-- IS-PM 180 Adapter & ZOOM HB-890E Caliper on top -->
+        <rect x="660" y="168" width="24" height="55" fill="#182232" stroke="#00ff66" stroke-width="2"/>
+        <rect x="615" y="135" width="68" height="45" rx="6" fill="#111622" stroke="#ff3333" stroke-width="2.5"/>
+        <line x1="635" y1="158" x2="635" y2="335" stroke="#d8e2ec" stroke-width="6"/>
+        <text x="635" y="355" fill="#ffffff" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Ротор Ø180 мм (2.3 мм)</text>
+        <text x="835" y="160" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold">Суппорт ZOOM HB-890E (4 поршня)</text>
+        <text x="835" y="178" fill="#a8c5e5" font-family="JetBrains Mono" font-size="10">Через адаптер IS-PM Rear 180 (2× болта М6×20)</text>
+
+        <!-- Stamp Footer -->
+        <rect x="570" y="555" width="500" height="75" fill="#071224" stroke="#00d2ff" stroke-width="1.5"/>
+        <text x="585" y="578" fill="#00ff66" font-family="JetBrains Mono" font-size="12" font-weight="bold">ТЕХТРЕБОВАНИЯ К ИЗГОТОВЛЕНИЮ:</text>
+        <text x="585" y="596" fill="#d8e6f5" font-family="JetBrains Mono" font-size="11">1. Лазерная резка из листа Ст3 или 09Г2С толщиной 6.0 мм (без ослабляющих вырезов).</text>
+        <text x="585" y="614" fill="#d8e6f5" font-family="JetBrains Mono" font-size="11">2. Паз 10.00 (+0.05) × 14.0 мм — плотная посадка оси мотора М14 под рекуперацию EBS.</text>
+      </svg>
     `
   },
+  {
+    id: 'sheet2',
+    num: 'ЛИСТ 02/06',
+    shortTitle: '02. АКБ 140 ЯЧЕЕК (20S7P)',
+    title: 'ЧЕРТЕЖ №2: СХЕМА УКЛАДКИ И СВАРКИ 140 БАНОК 21700 (20S7P) В ТРЕУГОЛЬНИКЕ 560×490×360 ММ',
+    specSummary: '9 сотовых рядов (22+21+19+18+16+15+13+9+7 = 140 шт.) • Группы 1S..20S (7P) • Медный бутерброд 2.5 мм² + Никель 0.15×8 мм',
+    svg: `
+      <svg class="cad-sheet-svg" width="1100" height="660" viewBox="0 0 1100 660" xmlns="http://www.w3.org/2000/svg">
+        <rect class="cad-bg" width="1100" height="660" fill="#0a192f"/>
+        <rect x="14" y="14" width="1072" height="632" fill="none" stroke="#00d2ff" stroke-width="2"/>
 
-  dropout: {
-    title: 'SVG-ШАБЛОН 1:1 (УЗЕЛ 04): МОНОЛИТНАЯ СТАЛЬНАЯ БРОНЕПЛАСТИНА 6 ММ (ОСЬ М14 + ТОРМОЗ IS 51 ММ)',
-    html: `
-      <p><strong>Назначение детали «2-в-1»:</strong> Удерживает крутящий момент прямоприводного мотора <strong>72V 3000W</strong> (предотвращает проворот оси М14 с лысками 10 мм в алюминиевом дропауте) и одновременно несет верхние ушки <strong>IS 51 мм</strong> для 4-поршневого суппорта <strong>ZOOM HB-890E</strong> под ротор 180 мм.</p>
+        <text x="32" y="44" fill="#00ff66" font-family="JetBrains Mono" font-size="15.5" font-weight="bold">ЧЕРТЕЖ №2: КАРТА УКЛАДКИ И РАСПАЙКИ 140 ЯЧЕЕК 21700 (20S7P) В ТРЕУГОЛЬНИКЕ РАМЫ 560×490×360 ММ</text>
+        <text x="32" y="64" fill="#a8c5e5" font-family="JetBrains Mono" font-size="11.5">Порядная формула треугольника (снизу вверх): 22 + 21 + 19 + 18 + 16 + 15 + 13 + 9 + 7 = РОВНО 140 БАНОК EVE INR21700-50E (Ø21.2×70.5 мм)</text>
 
-      <div class="svg-blueprint-box">
-        <svg width="760" height="310" viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg">
-          <rect width="760" height="310" fill="#07080a"/>
-          <!-- Monolithic 6mm Plate Contour -->
-          <path d="M 290 260 L 355 260 L 355 188 L 385 188 L 385 260 L 450 260 L 465 145 L 430 48 L 392 44 L 372 105 L 315 82 L 282 92 L 290 190 Z"
-                fill="rgba(255,85,0,0.16)" stroke="#FF5500" stroke-width="3"/>
-          <!-- IS 51mm Mounting Holes (Ø6.2mm) -->
-          <circle cx="410" cy="68" r="11" fill="#07080a" stroke="#00FF66" stroke-width="2.5"/>
-          <circle cx="305" cy="105" r="11" fill="#07080a" stroke="#00FF66" stroke-width="2.5"/>
-          <!-- M14x10mm Axle Center Reference -->
-          <line x1="340" y1="215" x2="400" y2="215" stroke="#00D2FF" stroke-width="1" stroke-dasharray="4,3"/>
-          <line x1="370" y1="175" x2="370" y2="265" stroke="#00D2FF" stroke-width="1" stroke-dasharray="4,3"/>
-          <!-- IS 51mm Dimension Line -->
-          <line x1="305" y1="105" x2="410" y2="68" stroke="#00FF66" stroke-width="1.5" stroke-dasharray="5,3"/>
-          <text x="350" y="65" fill="#00FF66" font-family="JetBrains Mono" font-size="12" font-weight="bold">IS СТАНДАРТ = 51.0 ММ (2× Ø6.2 ММ)</text>
-          <text x="370" y="285" fill="#FF5500" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">ПАЗ ОСИ М14: ШИРИНА 10.0 ММ × ВЫСОТА 14.0 ММ (ПОСАДКА С НАТЯГОМ)</text>
-          <text x="595" y="155" fill="#ffffff" font-family="JetBrains Mono" font-size="12">ЛИСТОВАЯ СТАЛЬ СТ3 / 09Г2С</text>
-          <text x="595" y="175" fill="#00D2FF" font-family="JetBrains Mono" font-size="12">ТОЛЩИНА: 6.0 ММ (МОНОЛИТ)</text>
-          <text x="595" y="195" fill="#8E95A2" font-family="JetBrains Mono" font-size="11">+ СВАРКА К ДРОПАУТУ 5 ММ</text>
-        </svg>
-      </div>
+        <!-- Dynamic 140-Cell Map (Left Side +Z View) -->
+        <text x="305" y="96" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">ВИД СЛЕВА (+Z): НЕЧЕТНЫЕ ГРУППЫ (1S,3S..19S) = ПЛЮС [+], ЧЕТНЫЕ (2S,4S..20S) = МИНУС [−]</text>
+        ${buildSheet2CellsSvgContent()}
 
-      <table class="spec-table">
-        <tr>
-          <th>Узел / Параметр</th>
-          <th>Допуски и технология изготовления</th>
-        </tr>
-        <tr>
-          <td>Паз под ось мотора М14</td>
-          <td>Ширина паза строго <strong>10.00..10.05 мм</strong>, глубина <strong>14.0 мм</strong> (ось забивается легким кияночным натягом без малейшего люфта при рекуперации EBS).</td>
-        </tr>
-        <tr>
-          <td>Тормозные ушки IS -> PM 180</td>
-          <td>Межцентровое расстояние <strong>51.0 мм</strong>, диаметр отверстий <strong>6.2 мм</strong> под болты М6 класса прочности 10.9 + переходник <code>IS-PM Rear 180</code>.</td>
-        </tr>
-        <tr>
-          <td>Калипер ZOOM HB-890E</td>
-          <td>4-поршневой гидравлический суппорт на минеральном масле с радиаторными колодками и ротором <strong>180 мм</strong>.</td>
-        </tr>
-      </table>
+        <!-- Triangle Dimension Callouts (560 x 490 x 360 mm) -->
+        <text x="385" y="385" fill="#00d2ff" font-family="JetBrains Mono" font-size="12" font-weight="bold" transform="rotate(-48 385 385)" text-anchor="middle">&lt;--- НИЖНЯЯ ТРУБА: 560 ММ (РЯД 1 = 22 БАНКИ, ШАГ 22.7 ММ) ---&gt;</text>
+        <text x="102" y="405" fill="#00d2ff" font-family="JetBrains Mono" font-size="11.5" font-weight="bold" transform="rotate(-70 102 405)" text-anchor="middle">&lt;-- ПОДСЕДЕЛЬНАЯ: 360 ММ --&gt;</text>
+        <text x="295" y="116" fill="#00d2ff" font-family="JetBrains Mono" font-size="11.5" font-weight="bold" text-anchor="middle">&lt;--- ВЕРХНЯЯ ТРУБА: 490 ММ (КАНАЛ ПОД ПЛАТУ BISIDA BMS 120A) ---&gt;</text>
+
+        <!-- RIGHT SIDE: ROW TABLE + COPPER SANDWICH CROSS-SECTION + RIGHT SIDE (-Z) POLARITY MIRROR INFO -->
+        <rect x="595" y="82" width="470" height="275" fill="#071224" stroke="#00d2ff" stroke-width="1.5"/>
+        <text x="830" y="106" fill="#00ff66" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">ТАБЛИЦА 9 РЯДОВ ТРЕУГОЛЬНОЙ СОТОВОЙ МАТРИЦЫ (ШАГ РЯДОВ 19.66 ММ)</text>
+
+        <g font-family="JetBrains Mono" font-size="11" fill="#d8e6f5">
+          <text x="612" y="130">● РЯД 1 (вдоль нижней трубы рамы):  22 банки  (Секции 1S, 2S, 3S + начало 4S)</text>
+          <text x="612" y="150">● РЯД 2 (сдвиг сот на полшага):     21 банка  (Секции 4S, 5S, 6S + начало 7S)</text>
+          <text x="612" y="170">● РЯД 3:                            19 банок  (Секции 7S, 8S + начало 9S)</text>
+          <text x="612" y="190">● РЯД 4:                            18 банок  (Секции 9S, 10S, 11S + начало 12S)</text>
+          <text x="612" y="210">● РЯД 5:                            16 банок  (Секции 12S, 13S + начало 14S)</text>
+          <text x="612" y="230">● РЯД 6:                            15 банок  (Секции 14S, 15S + начало 16S)</text>
+          <text x="612" y="250">● РЯД 7:                            13 банок  (Секции 16S, 17S + начало 18S)</text>
+          <text x="612" y="270">● РЯД 8:                             9 банок  (Секции 18S + вся секция 19S)</text>
+          <text x="612" y="290" fill="#00ff66" font-weight="bold">● РЯД 9 (верхний гребень под BMS):   7 банок  (Полная секция 20S — выход B+ 84.0V)</text>
+          <text x="612" y="318" fill="#ffcc00" font-weight="bold">ИТОГО ПРОВЕРКА: 22+21+19+18+16+15+13+9+7 = РОВНО 140 ЯЧЕЕК (20S7P, 84V 35Ah)!</text>
+          <text x="612" y="340" fill="#8ae8ff">На правой стороне (-Z): полярность зеркальна (Нечет = МИНУС, Чет = ПЛЮС).</text>
+        </g>
+
+        <!-- Copper Busbar Sandwich Diagram -->
+        <rect x="595" y="372" width="470" height="252" fill="#071224" stroke="#ff5500" stroke-width="1.5"/>
+        <text x="830" y="396" fill="#ff5500" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">УЗЕЛ СВАРКИ И ПАЙКИ «МЕДНЫЙ БУТЕРБРОД» (ПОД ТОКИ 60A–120A)</text>
+
+        <!-- Cell Terminal Cross Section -->
+        <rect x="630" y="470" width="95" height="65" rx="4" fill="#183858" stroke="#00d2ff" stroke-width="2"/>
+        <text x="677" y="508" fill="#ffffff" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">1S (+) 21700</text>
+        <rect x="765" y="470" width="95" height="65" rx="4" fill="#183858" stroke="#00d2ff" stroke-width="2"/>
+        <text x="812" y="508" fill="#ffffff" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">2S (−) 21700</text>
+
+        <!-- Nickel Strip 0.15 x 8 mm + 4 Weld Dots -->
+        <rect x="635" y="456" width="220" height="10" fill="#d0dae5" stroke="#ffffff" stroke-width="1"/>
+        <circle cx="662" cy="461" r="3" fill="#000"/><circle cx="692" cy="461" r="3" fill="#000"/>
+        <circle cx="797" cy="461" r="3" fill="#000"/><circle cx="827" cy="461" r="3" fill="#000"/>
+
+        <!-- Soldered Copper Wire 2.5 mm² + Tin Solder -->
+        <rect x="665" y="442" width="160" height="12" rx="4" fill="#e87a24" stroke="#ffd280" stroke-width="1.5"/>
+        <text x="745" y="432" fill="#ffcc00" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">МЕДНАЯ ШИНА 2.5 ММ² + ПРИПОЙ ПОС-61</text>
+
+        <g font-family="JetBrains Mono" font-size="10.5" fill="#d8e6f5">
+          <text x="612" y="562">1. Параллель внутри секции 7P: чистый никель 0.15×8 мм (по 4 точки сварки на торец).</text>
+          <text x="612" y="582">2. Серийные переходы: Левая сторона (+Z) 1S(+)→2S(−)..19S(+)→20S(−) — оранжевые шины;</text>
+          <text x="612" y="600">   Правая сторона (-Z) 2S(+)→3S(−)..18S(+)→19S(−) — синий пунктир (медь 2.5 мм² в олове).</text>
+          <text x="612" y="618">3. Силовые кабели 8 AWG: Черный от 1S(−) на BMS B-; Красный от 20S(+) на XT90-S(+).</text>
+        </g>
+      </svg>
     `
   },
+  {
+    id: 'sheet3',
+    num: 'ЛИСТ 03/06',
+    shortTitle: '03. ПОДРАМНИК И МОТО-СЕДЛО',
+    title: 'ЧЕРТЕЖ №3: СТАЛЬНОЙ ПОДРАМНИК И ПОСАДКА ДЛИННОГО МОТО-СЕДЛА SUR-RON / ПИТБАЙК (530 ММ)',
+    specSummary: 'Длина седла 530 мм • П-вырез носика 40×70 мм под подседел • Профиль 20×20×2 мм + 2 укосины Ø16×2 мм (365 мм, углы реза 38°/52°)',
+    svg: `
+      <svg class="cad-sheet-svg" width="1100" height="660" viewBox="0 0 1100 660" xmlns="http://www.w3.org/2000/svg">
+        <rect class="cad-bg" width="1100" height="660" fill="#0a192f"/>
+        <rect x="14" y="14" width="1072" height="632" fill="none" stroke="#00d2ff" stroke-width="2"/>
 
-  motor: {
-    title: 'ТЕХКАРТА УЗЛА 03: МОТОР-КОЛЕСО 72V 3000W DD — ЗАЛИВКА 40 МЛ ПМС-100 И ПАЙКА РЕКУПЕРАЦИИ (EBS)',
-    html: `
-      <p><strong>Тепловой тюнинг и электродинамическое торможение:</strong> Прямоприводное мотор-колесо <strong>72V 3000W Direct Drive (корпус Ø245 мм, 18 винтов М4 на крышку)</strong> при пиках до <strong>5040W (84V × 60A)</strong> требует жидкостного теплового моста статор-корпус и активации рекуперативного тормоза <strong>EBS</strong>.</p>
+        <text x="35" y="46" fill="#00ff66" font-family="JetBrains Mono" font-size="16" font-weight="bold">ЧЕРТЕЖ №3: СТАЛЬНОЙ ПОДРАМНИК И ПОСАДКА ДЛИННОГО МОТО-СЕДЛА SUR-RON / CRF110 (530 ММ)</text>
+        <text x="35" y="68" fill="#a8c5e5" font-family="JetBrains Mono" font-size="12">Вид сбоку и вид снизу на пластиковое дно седла: точные длины труб в миллиметрах, П-образный паз 40×70 мм и углы реза болгаркой</text>
 
-      <div class="svg-blueprint-box">
-        <svg width="760" height="250" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
-          <rect width="760" height="250" fill="#07080a"/>
-          <!-- DD Motor Cross Section -->
-          <circle cx="190" cy="125" r="92" fill="#111318" stroke="#FF5500" stroke-width="3"/>
-          <circle cx="190" cy="125" r="76" fill="none" stroke="#00D2FF" stroke-width="5" stroke-dasharray="8,4"/>
-          <circle cx="190" cy="125" r="22" fill="#22252a" stroke="#ffffff" stroke-width="2"/>
-          <text x="190" y="238" fill="#00D2FF" font-family="JetBrains Mono" font-size="11" text-anchor="middle">ПМС-100 (40 МЛ = 2 ШПРИЦА ПО 20 МЛ)</text>
-          <!-- Controller PCB EBS Jumper -->
-          <rect x="390" y="45" width="330" height="160" fill="#0f1712" stroke="#00FF66" stroke-width="2"/>
-          <text x="410" y="75" fill="#00FF66" font-family="JetBrains Mono" font-size="12" font-weight="bold">ПЛАТА КОНТРОЛЛЕРА 72V 60A (18 MOSFET)</text>
-          <circle cx="465" cy="135" r="14" fill="#d97f45" stroke="#fff" stroke-width="2"/>
-          <text x="465" y="139" fill="#000" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">EBS</text>
-          <circle cx="615" cy="135" r="14" fill="#d97f45" stroke="#fff" stroke-width="2"/>
-          <text x="615" y="139" fill="#000" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">GND</text>
-          <path d="M 479 135 Q 540 95 601 135" fill="none" stroke="#FF5500" stroke-width="4"/>
-          <text x="540" y="102" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПЕРЕМЫЧКА МГТФ 0.5 ММ²</text>
-          <text x="410" y="185" fill="#d5d9e0" font-family="JetBrains Mono" font-size="11">Активация торможения двигателем от герконов ZOOM</text>
-        </svg>
-      </div>
+        <!-- ================= TOP/LEFT: SIDE VIEW OF SUBFRAME & SADDLE ================= -->
+        <text x="330" y="105" fill="#00d2ff" font-family="JetBrains Mono" font-size="13.5" font-weight="bold" text-anchor="middle">ВИД СБОКУ (ПОСАДКА СЕДЛА НА ПОДСЕДЕЛЬНУЮ ТРУБУ И ВЕРХНИЕ ПЕРЬЯ)</text>
 
-      <table class="spec-table">
-        <tr>
-          <th>Операция</th>
-          <th>Пошаговый регламент выполнения</th>
-        </tr>
-        <tr>
-          <td>1. Герметизация и заливка ПМС-100</td>
-          <td>Открутить 18 винтов М4 левой крышки (со стороны ротора), обезжирить фланец, нанести герметик <strong>Victor Reinz</strong>. Через верхнее отверстие залить ровно <strong>40 мл (2 медицинских шприца по 20 мл)</strong> диэлектрического силиконового масла <strong>ПМС-100</strong>. Температура обмоток падает на <strong>22–28°C</strong>.</td>
-        </tr>
-        <tr>
-          <td>2. Распайка точки EBS -> GND</td>
-          <td>На плате синусного контроллера 60А запаять перемычку между контактной площадкой <code>EBS</code> (Electronic Brake System) и общей землей <code>GND</code>. При нажатии ручки тормоза ZOOM мотор генерирует обратный ток рекуперации в АКБ 20S7P, экономя колодки до 70%.</td>
-        </tr>
-      </table>
+        <!-- Dimension 530 mm -->
+        <line x1="85" y1="132" x2="555" y2="132" stroke="#00d2ff" stroke-width="2"/>
+        <line x1="85" y1="124" x2="85" y2="140" stroke="#00d2ff" stroke-width="2"/>
+        <line x1="555" y1="124" x2="555" y2="140" stroke="#00d2ff" stroke-width="2"/>
+        <text x="320" y="125" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">&lt;--- ОБЩАЯ ДЛИНА МОТО-СЕДЛА SUR-RON / CRF110 = 530.0 ММ ---&gt;</text>
+
+        <!-- Moto Saddle 530mm Side Silhouette -->
+        <path d="M 555 235 Q 515 192 440 188 C 335 184 225 162 105 142 Q 82 138 75 152 L 92 195 Q 210 215 375 245 L 445 245 L 445 268 L 505 268 L 505 245 Z"
+              fill="rgba(255, 85, 0, 0.22)" stroke="#ff5500" stroke-width="3"/>
+        <text x="275" y="195" fill="#ffffff" font-family="JetBrains Mono" font-size="11.5" font-weight="bold">Поролон ПВВ 55 кг/м³ (толщина 75 мм) + антислип винил</text>
+
+        <!-- Rear Pitbike Fender + Red LED Brake Light -->
+        <path d="M 92 195 L 35 215 L 42 226 L 112 208 Z" fill="#182232" stroke="#9fb6d0" stroke-width="2"/>
+        <rect x="68" y="184" width="26" height="14" rx="2" fill="#ff0022" stroke="#ffffff" stroke-width="1.5"/>
+        <text x="68" y="176" fill="#ff4444" font-family="JetBrains Mono" font-size="10.5" font-weight="bold" text-anchor="middle">LED СТОП 12V</text>
+
+        <!-- Longitudinal Subframe Spine Tube 20x20x2 mm (L = 380 mm) -->
+        <line x1="475" y1="248" x2="135" y2="195" stroke="#00ff66" stroke-width="7"/>
+        <text x="305" y="216" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" transform="rotate(8.8 305 216)" text-anchor="middle">Продольная балка: Профиль 20×20×2 мм (L = 380 мм)</text>
+
+        <!-- Front Seatpost Clamp Post (L = 95 mm, angle 73°) -->
+        <line x1="475" y1="248" x2="498" y2="355" stroke="#00ff66" stroke-width="9"/>
+        <line x1="498" y1="355" x2="532" y2="485" stroke="#7b8fa8" stroke-width="12" stroke-dasharray="8,4"/>
+        <text x="565" y="325" fill="#ffcc00" font-family="JetBrains Mono" font-size="11" font-weight="bold">Передний упор 20×20×2 мм (L = 95 мм)</text>
+        <text x="565" y="342" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10">Входит в подседельную трубу Ø31.8 мм (рез под 73°)</text>
+
+        <!-- Two Rear Inclined Struts Ø16x2 mm (L = 365 mm, cut angles 38° and 52°) -->
+        <line x1="168" y1="202" x2="355" y2="395" stroke="#00ff66" stroke-width="6"/>
+        <circle cx="168" cy="202" r="5" fill="#ff5500"/>
+        <circle cx="355" cy="395" r="7" fill="#ff5500" stroke="#ffffff" stroke-width="1.5"/>
+        <text x="235" y="325" fill="#00ff66" font-family="JetBrains Mono" font-size="11.5" font-weight="bold" transform="rotate(45 235 325)" text-anchor="middle">&lt;-- 2× ЗАДНИЕ РАСПОРКИ Ø16×2 ММ (L = 365 ММ) --&gt;</text>
+        <text x="245" y="362" fill="#ffcc00" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Углы реза болгаркой: верх 38° / низ 52° (ушки под болт М6 к середине верхних перьев)</text>
+
+        <!-- ================= RIGHT: BOTTOM VIEW ON SADDLE BASE & U-CUTOUT 40x70 MM ================= -->
+        <rect x="635" y="92" width="430" height="530" fill="#071224" stroke="#00d2ff" stroke-width="1.5"/>
+        <text x="850" y="118" fill="#00d2ff" font-family="JetBrains Mono" font-size="13.5" font-weight="bold" text-anchor="middle">ВИД СНИЗУ НА ДНО СЕДЛА (ВЫРЕЗ НОСИКА 40×70 ММ)</text>
+
+        <!-- Saddle Bottom Plastic Pan Outline (Length 530 mm, max width 195 mm, nose width 92 mm) -->
+        <path d="M 805 160 L 895 160 L 895 215 L 870 215 L 870 175 L 830 175 L 830 215 L 805 215 Z" fill="none"/>
+        <path d="M 804 165 L 826 165 L 826 225 L 874 225 L 874 165 L 896 165 C 918 240 942 330 935 435 C 928 505 895 545 850 555 C 805 545 772 505 765 435 C 758 330 782 240 804 165 Z"
+              fill="rgba(0, 210, 255, 0.12)" stroke="#00d2ff" stroke-width="2.5"/>
+
+        <!-- Highlight U-shaped Cutout 40 x 70 mm in Front Nose -->
+        <rect x="826" y="165" width="48" height="60" fill="rgba(255, 50, 50, 0.28)" stroke="#ff3333" stroke-width="2.5" stroke-dasharray="4,2"/>
+        <text x="850" y="152" fill="#ff4444" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">&lt;-- П-ВЫРЕЗ 40 × 70 ММ В НОСИКЕ СЕДЛА --&gt;</text>
+        <text x="850" y="246" fill="#ffcc00" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Плотный обхват подседельной трубы вровень с сумкой АКБ</text>
+
+        <!-- Subframe Mounting Rails under Saddle Pan -->
+        <rect x="838" y="225" width="24" height="285" fill="rgba(0, 255, 102, 0.25)" stroke="#00ff66" stroke-width="2"/>
+        <line x1="785" y1="315" x2="915" y2="315" stroke="#00ff66" stroke-width="6"/>
+        <line x1="775" y1="455" x2="925" y2="455" stroke="#00ff66" stroke-width="6"/>
+        <circle cx="795" cy="315" r="5" fill="#ff5500"/><circle cx="905" cy="315" r="5" fill="#ff5500"/>
+        <circle cx="790" cy="455" r="5" fill="#ff5500"/><circle cx="910" cy="455" r="5" fill="#ff5500"/>
+
+        <!-- Width Dimension 195 mm -->
+        <line x1="765" y1="415" x2="935" y2="415" stroke="#00d2ff" stroke-width="1.8"/>
+        <text x="850" y="408" fill="#ffffff" font-family="JetBrains Mono" font-size="11.5" font-weight="bold" text-anchor="middle">&lt;--- ШИРИНА ПОДУШКИ = 195 ММ ---&gt;</text>
+
+        <text x="850" y="582" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">КРЕПЛЕНИЕ СЕДЛА: 4× БОЛТА М6 ЧЕРЕЗ ПОПЕРЕЧНЫЕ ПЛАНКИ 140 ММ</text>
+        <text x="850" y="602" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Высота по седлу от земли: 830 мм (идеальная мото-посадка Sur-Ron)</text>
+
+        <!-- Bottom Left Cut List Box -->
+        <rect x="35" y="455" width="575" height="167" fill="#071224" stroke="#00ff66" stroke-width="1.5"/>
+        <text x="52" y="480" fill="#00ff66" font-family="JetBrains Mono" font-size="12.5" font-weight="bold">СПЕЦИФИКАЦИЯ НАРЕЗКИ СТАЛЬНЫХ ТРУБ ПОДРАМНИКА (БОЛГАРКА + ПОЛУАВТОМАТ):</text>
+        <text x="52" y="502" fill="#d8e6f5" font-family="JetBrains Mono" font-size="11">1. Продольный хребет под дно седла: Профиль 20×20×2 мм — длина 380 мм (1 шт.).</text>
+        <text x="52" y="522" fill="#d8e6f5" font-family="JetBrains Mono" font-size="11">2. Передний упор в подседельный узел: Профиль 20×20×2 мм — длина 95 мм, угол реза 73° (1 шт.).</text>
+        <text x="52" y="542" fill="#d8e6f5" font-family="JetBrains Mono" font-size="11">3. Задние наклонные укосины к перьям: Труба круглая Ø16×2.0 мм — длина 365 мм, резы 38°/52° (2 шт.).</text>
+        <text x="52" y="562" fill="#d8e6f5" font-family="JetBrains Mono" font-size="11">4. Поперечные траверсы крепления седла: Полоса стальная 30×4 мм — длина 140 мм и 165 мм (2 шт.).</text>
+        <text x="52" y="582" fill="#ffcc00" font-family="JetBrains Mono" font-size="11">5. Покраска: антикоррозийный грунт + матовая черная термоэмаль CERTA RAL 9005 в цвет рамы.</text>
+      </svg>
     `
   },
+  {
+    id: 'sheet4',
+    num: 'ЛИСТ 04/06',
+    shortTitle: '04. ЭЛЕКТРОСХЕМА 72V + 12V',
+    title: 'ЧЕРТЕЖ №4: ПОЛНАЯ ЦВЕТНАЯ ЭЛЕКТРОСХЕМА БОРТОВОЙ СЕТИ 72V И 12V (СВЕТ + ГУДОК + СТОП-СИГНАЛ + РЕКУПЕРАЦИЯ)',
+    specSummary: 'Контур 72V (84V 60A + перемычка EBS->GND) • Контур 12V (DC-DC 10A -> Кнопка 2-в-1 -> Фара 20W + Гудок 105 дБ) • Стоп-сигнал от правой ручки ZOOM',
+    svg: `
+      <svg class="cad-sheet-svg" width="1100" height="660" viewBox="0 0 1100 660" xmlns="http://www.w3.org/2000/svg">
+        <rect class="cad-bg" width="1100" height="660" fill="#0a192f"/>
+        <rect x="14" y="14" width="1072" height="632" fill="none" stroke="#00d2ff" stroke-width="2"/>
 
-  wiring: {
-    title: 'СХЕМА УЗЛА 06: 3D-КОРОБ PETG ПОД РАМОЙ, DC-DC 12V 10A, КНОПКА 2-В-1, ФАРА SUR-RON 20W И ГУДОК 105 ДБ',
-    html: `
-      <p><strong>Архитектура низковольтной сети 12V:</strong> Весь монтаж силовых фазных клемм, преобразователя <code>DC-DC 36–120V -> 12V 10A</code> и мотоциклетного гудка <strong>105 дБ</strong> скрыт внутри герметичного граненого 3D-короба из <strong>PETG</strong> под нижней трубой рамы вплотную к торцу контроллера 60А.</p>
+        <text x="35" y="44" fill="#00ff66" font-family="JetBrains Mono" font-size="15.5" font-weight="bold">ЧЕРТЕЖ №4: ПОЛНАЯ ЦВЕТНАЯ ЭЛЕКТРОСХЕМА БОРТОВОЙ СЕТИ 72V (84V) И 12V (БЕЗ ЗАУМНЫХ ЗНАЧКОВ — НАГЛЯДНЫЕ БЛОКИ!)</text>
+        <text x="35" y="64" fill="#a8c5e5" font-family="JetBrains Mono" font-size="11.5">1) Силовой контур 72V + Рекуперация E-ABS (левая ручка) • 2) Контур 12V (Свет Sur-Ron + Гудок 105 дБ) • 3) Контур Стоп-сигнала (правая ручка ZOOM)</text>
 
-      <div class="svg-blueprint-box">
-        <svg width="760" height="270" viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg">
-          <rect width="760" height="270" fill="#07080a"/>
-          <!-- 72V Input -->
-          <rect x="25" y="35" width="145" height="55" fill="#181b22" stroke="#FF5500" stroke-width="2"/>
-          <text x="97" y="60" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">АКБ 20S7P (72V/84V)</text>
-          <text x="97" y="78" fill="#8E95A2" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Разъем XT90-S Anti-Spark</text>
+        <!-- ================= 1. HIGH-VOLTAGE 72V (84V) POWERTRAIN CIRCUIT (TOP) ================= -->
+        <rect x="35" y="85" width="235" height="145" rx="6" fill="#0c1e35" stroke="#00d2ff" stroke-width="2.5"/>
+        <text x="152" y="110" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">1. АКБ 20S7P (72V / 84.0V)</text>
+        <text x="152" y="128" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">140× EVE INR21700-50E (35.0 Ah)</text>
+        <rect x="52" y="142" width="200" height="36" rx="4" fill="#132c48" stroke="#00ff66" stroke-width="1.5"/>
+        <text x="152" y="164" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПЛАТА BISIDA BMS 20S 120A</text>
+        <text x="152" y="205" fill="#ffcc00" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">1S(−)→[B-] | Выход [C-]→XT90(−)</text>
 
-          <!-- DC-DC 12V 10A -->
-          <rect x="235" y="35" width="185" height="65" fill="#141e19" stroke="#00FF66" stroke-width="2"/>
-          <text x="327" y="60" fill="#00FF66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">DC-DC 36-120V -> 12V 10A</text>
-          <text x="327" y="80" fill="#d5d9e0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Внутри 3D-короба PETG</text>
+        <!-- Amass XT90-S Connector -->
+        <rect x="305" y="125" width="95" height="58" rx="5" fill="#3b2f00" stroke="#ffcc00" stroke-width="2.5"/>
+        <text x="352" y="150" fill="#ffcc00" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">XT90-S</text>
+        <text x="352" y="168" fill="#ffffff" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Anti-Spark</text>
 
-          <!-- 2-in-1 Handlebar Switch -->
-          <rect x="235" y="155" width="185" height="75" fill="#181b22" stroke="#00D2FF" stroke-width="2"/>
-          <text x="327" y="180" fill="#00D2FF" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">БЛОК КНОПОК 2-В-1 (РУЛЬ)</text>
-          <text x="327" y="200" fill="#ffffff" font-family="JetBrains Mono" font-size="10" text-anchor="middle">1. Тумблер Света (Фикс.)</text>
-          <text x="327" y="216" fill="#ff4444" font-family="JetBrains Mono" font-size="10" text-anchor="middle">2. Красная кнопка Гудка</text>
+        <!-- 8 AWG Power Wires Battery -> XT90 -> Controller -->
+        <line x1="270" y1="140" x2="305" y2="140" stroke="#ff2222" stroke-width="5"/>
+        <line x1="270" y1="168" x2="305" y2="168" stroke="#2288ff" stroke-width="5"/>
+        <line x1="400" y1="140" x2="445" y2="140" stroke="#ff2222" stroke-width="5"/>
+        <line x1="400" y1="168" x2="445" y2="168" stroke="#2288ff" stroke-width="5"/>
 
-          <!-- Sur-Ron Headlight & Horn -->
-          <rect x="515" y="30" width="215" height="65" fill="#181b22" stroke="#00FF66" stroke-width="2"/>
-          <text x="622" y="55" fill="#00FF66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ФАРА SUR-RON 20W (2 LED)</text>
-          <text x="622" y="75" fill="#d5d9e0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">+ Габарит заднего крыла</text>
+        <!-- Sine-Wave Controller 72V 60A + EBS->GND Solder Jumper -->
+        <rect x="445" y="85" width="320" height="175" rx="6" fill="#102238" stroke="#ff5500" stroke-width="2.5"/>
+        <text x="605" y="110" fill="#ff5500" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">СИНУСНЫЙ КОНТРОЛЛЕР 72V 60A</text>
+        <text x="605" y="128" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">18 MOSFET (Под нижней трубой рамы, пик 5040W)</text>
 
-          <rect x="515" y="155" width="215" height="75" fill="#181b22" stroke="#FF5500" stroke-width="2"/>
-          <text x="622" y="182" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">МОТО-ГУДОК 105 ДБ (12V)</text>
-          <text x="622" y="202" fill="#d5d9e0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">На пружинной пластине</text>
-          <text x="622" y="218" fill="#8E95A2" font-family="JetBrains Mono" font-size="10" text-anchor="middle">напротив акустических жабр</text>
+        <!-- EBS -> GND Solder Bridge Box inside Controller -->
+        <rect x="465" y="142" width="280" height="52" rx="4" fill="#1f1418" stroke="#ff3333" stroke-width="2"/>
+        <circle cx="515" cy="168" r="11" fill="#e87a24" stroke="#fff" stroke-width="1.5"/>
+        <text x="515" y="172" fill="#000" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">EBS</text>
+        <circle cx="605" cy="168" r="11" fill="#e87a24" stroke="#fff" stroke-width="1.5"/>
+        <text x="605" y="172" fill="#000" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">GND</text>
+        <path d="M 526 168 Q 560 144 594 168" fill="none" stroke="#00ff66" stroke-width="4"/>
+        <text x="682" y="164" fill="#00ff66" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">ПЕРЕМЫЧКА</text>
+        <text x="682" y="178" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">ПРИПОЕМ (E-ABS)</text>
 
-          <!-- Wires -->
-          <line x1="170" y1="62" x2="235" y2="62" stroke="#FF5500" stroke-width="3"/>
-          <line x1="327" y1="100" x2="327" y2="155" stroke="#00FF66" stroke-width="3"/>
-          <line x1="420" y1="178" x2="515" y2="62" stroke="#00D2FF" stroke-width="2.5"/>
-          <line x1="420" y1="205" x2="515" y2="192" stroke="#ff4444" stroke-width="2.5"/>
-        </svg>
-      </div>
+        <text x="605" y="216" fill="#8ae8ff" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Фишка дисплея (5-pin) → Экран SW900 на руле</text>
+        <text x="605" y="236" fill="#ffcc00" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Фишка High/Low Brake → ЛЕВАЯ РУЧКА ТОРМОЗА (РЕКУПЕРАЦИЯ!)</text>
 
-      <table class="spec-table">
-        <tr>
-          <th>Компонент</th>
-          <th>Особенности монтажа в 3D-коробе</th>
-        </tr>
-        <tr>
-          <td>Акустические прорези-жабры («чешуя»)</td>
-          <td>Наклонены назад под углом <strong>45°</strong> на боковых и нижней стенках 3D-короба — беспрепятственно пропускают звуковую волну <strong>105 дБ</strong> и полностью отсекают брызги воды от переднего колеса.</td>
-        </tr>
-        <tr>
-          <td>Силовой клеммник фаз U / V / W</td>
-          <td>Керамический/карболитовый блок <strong>W20 (3 шпильки М5)</strong> соединяет фазные провода контроллера 60А и мотора 3000W внутри сухого объема короба.</td>
-        </tr>
-      </table>
+        <!-- 3 Phase Cables (Yellow / Green / Blue) + 5 Hall Wires to 3000W Hub Motor -->
+        <line x1="765" y1="125" x2="845" y2="125" stroke="#ffcc00" stroke-width="4.5"/>
+        <line x1="765" y1="145" x2="845" y2="145" stroke="#00ff66" stroke-width="4.5"/>
+        <line x1="765" y1="165" x2="845" y2="165" stroke="#00b8ff" stroke-width="4.5"/>
+        <line x1="765" y1="190" x2="845" y2="190" stroke="#ffffff" stroke-width="2" stroke-dasharray="5,3"/>
+        <text x="805" y="115" fill="#ffcc00" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">3 ФАЗЫ U/V/W</text>
+        <text x="805" y="206" fill="#d8e6f5" font-family="JetBrains Mono" font-size="9" text-anchor="middle">Датчики Холла (5-pin)</text>
+
+        <circle cx="945" cy="158" r="72" fill="#0c1e35" stroke="#ff5500" stroke-width="3"/>
+        <circle cx="945" cy="158" r="56" fill="none" stroke="#00d2ff" stroke-width="2" stroke-dasharray="6,4"/>
+        <text x="945" y="152" fill="#ffffff" font-family="JetBrains Mono" font-size="12.5" font-weight="bold" text-anchor="middle">МОТОР 3000W</text>
+        <text x="945" y="170" fill="#00ff66" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Direct Drive 72V</text>
+        <text x="945" y="186" fill="#8ae8ff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">+40 мл ПМС-100</text>
+
+        <!-- Left Brake Lever (Regen E-ABS) -->
+        <rect x="445" y="285" width="320" height="65" rx="6" fill="#0d2622" stroke="#00ff66" stroke-width="2"/>
+        <text x="605" y="310" fill="#00ff66" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">ЛЕВАЯ РУЧКА ТОРМОЗА ZOOM HB-890E (ПЕРЕДНИЙ)</text>
+        <text x="605" y="330" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">2-контактный геркон подключен к контроллеру → включает РЕКУПЕРАЦИЮ E-ABS (-1650W)!</text>
+        <line x1="605" y1="260" x2="605" y2="285" stroke="#00ff66" stroke-width="3"/>
+
+        <!-- ================= 2. LOW-VOLTAGE 12V CIRCUIT (HEADLIGHT + 105 dB HORN) ================= -->
+        <rect x="35" y="375" width="295" height="125" rx="6" fill="#0d2622" stroke="#00ff66" stroke-width="2.5"/>
+        <text x="182" y="402" fill="#00ff66" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">2. ПРЕОБРАЗОВАТЕЛЬ DC-DC 12V 10A</text>
+        <text x="182" y="422" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Вход: 36–120V (от XT90-S через предохранитель 5А)</text>
+        <text x="182" y="442" fill="#ffcc00" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">Выход: Стабильные +12.0V (Красный) / GND (Черный)</text>
+        <text x="182" y="464" fill="#8ae8ff" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Установлен в 3D-коробе PETG под нижней трубой</text>
+
+        <!-- Tap from XT90-S to DC-DC Input through 5A Fuse -->
+        <path d="M 335 183 L 335 340 L 145 340 L 145 375" fill="none" stroke="#ff2222" stroke-width="3"/>
+        <rect x="205" y="328" width="75" height="22" rx="3" fill="#3a1010" stroke="#ff4444" stroke-width="1.5"/>
+        <text x="242" y="343" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">FUSE 5A</text>
+
+        <!-- 3-Pin Handlebar Switch 2-in-1 (Light + Horn) -->
+        <rect x="395" y="375" width="265" height="125" rx="6" fill="#102238" stroke="#00d2ff" stroke-width="2.5"/>
+        <text x="527" y="402" fill="#00d2ff" font-family="JetBrains Mono" font-size="12.5" font-weight="bold" text-anchor="middle">3-КОНТАКТНАЯ КНОПКА «2-В-1»</text>
+        <text x="527" y="422" fill="#ffffff" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Пин 1 (Общий вход): +12V от DC-DC</text>
+        <text x="527" y="442" fill="#00ff66" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Пин 2 (Фикс. кнопка 💡): Выход +12V на Фару</text>
+        <text x="527" y="462" fill="#ff9933" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Пин 3 (Кнопка 📯 без фикс.): Выход +12V на Гудок</text>
+
+        <line x1="330" y1="435" x2="395" y2="435" stroke="#ff2222" stroke-width="4"/>
+        <text x="362" y="426" fill="#ff4444" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">+12V</text>
+
+        <!-- Sur-Ron 20W Headlight & 105 dB Moto Horn -->
+        <rect x="735" y="368" width="325" height="62" rx="6" fill="#102238" stroke="#00ff66" stroke-width="2"/>
+        <text x="897" y="394" fill="#00ff66" font-family="JetBrains Mono" font-size="12.5" font-weight="bold" text-anchor="middle">ФАРА SUR-RON 20W (2 ЛИНЗЫ LED) + ГАБАРИТ</text>
+        <text x="897" y="414" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Плюс от кнопки 💡 | Минус (Черный) на общую шину GND 12V</text>
+
+        <rect x="735" y="442" width="325" height="62" rx="6" fill="#102238" stroke="#ff9933" stroke-width="2"/>
+        <text x="897" y="468" fill="#ff9933" font-family="JetBrains Mono" font-size="12.5" font-weight="bold" text-anchor="middle">МОТО-ГУДОК 105 ДБ (12V, Ø65 ММ В 3D-КОРОБЕ)</text>
+        <text x="897" y="488" fill="#d8e6f5" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Клемма 1 от кнопки 📯 | Клемма 2 на общую шину GND 12V</text>
+
+        <line x1="660" y1="405" x2="735" y2="398" stroke="#00ff66" stroke-width="3.5"/>
+        <line x1="660" y1="462" x2="735" y2="472" stroke="#ff9933" stroke-width="3.5"/>
+
+        <!-- ================= 3. BRAKE LIGHT CIRCUIT (RIGHT BRAKE LEVER HERKON -> STOP LED) ================= -->
+        <rect x="35" y="528" width="1025" height="96" rx="6" fill="#241018" stroke="#ff3333" stroke-width="2.5"/>
+        <text x="547" y="554" fill="#ff4444" font-family="JetBrains Mono" font-size="13.5" font-weight="bold" text-anchor="middle">3. КОНТУР СТОП-СИГНАЛА ЗАДНЕГО КРЫЛА (ЧЕРЕЗ СВОБОДНЫЙ ГЕРКОН ПРАВОЙ РУЧКИ ТОРМОЗА ZOOM HB-890E)</text>
+
+        <rect x="65" y="568" width="215" height="40" rx="4" fill="#0d2622" stroke="#00ff66" stroke-width="1.5"/>
+        <text x="172" y="592" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ВЫХОД +12V ОТ DC-DC</text>
+
+        <line x1="280" y1="588" x2="385" y2="588" stroke="#ff2222" stroke-width="4"/>
+        <text x="332" y="579" fill="#ff4444" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">+12V</text>
+
+        <rect x="385" y="566" width="310" height="44" rx="4" fill="#182232" stroke="#ffcc00" stroke-width="2"/>
+        <text x="540" y="586" fill="#ffcc00" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПРАВАЯ РУЧКА ТОРМОЗА ZOOM (ЗАДНИЙ)</text>
+        <text x="540" y="602" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">2-контактный провод геркона (замыкает +12V при нажатии)</text>
+
+        <line x1="695" y1="588" x2="795" y2="588" stroke="#ff2222" stroke-width="4"/>
+        <text x="745" y="579" fill="#ff4444" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">КРАСНЫЙ (СТОП)</text>
+
+        <rect x="795" y="566" width="240" height="44" rx="4" fill="#4a0810" stroke="#ff2222" stroke-width="2"/>
+        <text x="915" y="586" fill="#ffffff" font-family="JetBrains Mono" font-size="11.5" font-weight="bold" text-anchor="middle">ЯРКИЙ LED СТОП-СИГНАЛ</text>
+        <text x="915" y="602" fill="#ffb3b3" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Заднее крыло питбайка (12V)</text>
+      </svg>
     `
   },
+  {
+    id: 'sheet5',
+    num: 'ЛИСТ 05/06',
+    shortTitle: '05. ВЫКРОЙКА СУМКИ CORDURA',
+    title: 'ЧЕРТЕЖ №5: ВЫКРОЙКА ТАКТИЧЕСКОЙ СУМКИ ИЗ ТКАНИ CORDURA 1000D И ДЕМПФЕРНОГО КОКОНА (НА ЛИСТЕ 1000×1000 ММ)',
+    specSummary: 'Раскрой на листе 1000×1000 мм • Боковины 560×490×360 мм (+70 мм нос, припуск 15 мм) • Обечайка шириной 85 мм • 7 строп Velcro 45 мм',
+    svg: `
+      <svg class="cad-sheet-svg" width="1100" height="660" viewBox="0 0 1100 660" xmlns="http://www.w3.org/2000/svg">
+        <rect class="cad-bg" width="1100" height="660" fill="#0a192f"/>
+        <rect x="14" y="14" width="1072" height="632" fill="none" stroke="#00d2ff" stroke-width="2"/>
 
-  battery: {
-    title: 'СХЕМА СБОРКИ И РАСПАЙКИ АКБ 20S7P (140× 21700 EVE 50E) + BISIDA BMS 120A',
-    html: `
-      <p><strong>Полная топология 5-ярусного треугольного сотового массива «Змейкой» (6 + 5 + 4 + 3 + 2 = 20S7P):</strong> Все 140 ячеек <code>EVE INR21700-50E</code> образуют <strong>правильный 10-рядный гексагональный треугольник</strong> (<code>22 + 20 + 18 + 17 + 15 + 13 + 11 + 10 + 8 + 6 = 140 шт.</code>), разделенный 4 перегородками из желтого стеклотекстолита <strong>FR4 (1.5 мм)</strong> на 5 двухрядных сотовых ярусов: <strong>Ярус 1 (42 банки = 6 секций 1S..6S)</strong>, <strong>Ярус 2 (35 банок = 5 секций 7S..11S)</strong>, <strong>Ярус 3 (28 банок = 4 секции 12S..15S)</strong>, <strong>Ярус 4 (21 банка = 3 секции 16S..18S)</strong> и <strong>Ярус 5 (14 банок = 2 секции 19S..20S)</strong>. Каждая секция <code>7P</code> представляет собой единую трапецию <code>4 + 3 = 7</code> соседних банок. Нечетные переходы (<code>1S→2S</code>, <code>3S→4S</code>, ..., <code>19S→20S</code>) выполняются на <strong>Правой стороне (-Z)</strong>, четные (<code>2S→3S</code>, <code>4S→5S</code>, ..., <code>18S→19S</code>) — на <strong>Левой стороне (+Z)</strong>.</p>
+        <text x="35" y="44" fill="#00ff66" font-family="JetBrains Mono" font-size="15.5" font-weight="bold">ЧЕРТЕЖ №5: ПОРТНОВСКАЯ ВЫКРОЙКА ТАКТИЧЕСКОЙ СУМКИ ИЗ ТКАНИ CORDURA 1000D PU И КОКОНА EVA 15 ММ</text>
+        <text x="35" y="64" fill="#a8c5e5" font-family="JetBrains Mono" font-size="11.5">Раскладка всех деталей на 1 погонном метре ткани Cordura 1000D (1000 × 1000 мм) с припусками на шов 15 мм и точками пришивания 7 строп Velcro 45 мм</text>
 
-      <div class="svg-blueprint-box">
-        <svg width="760" height="350" viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg">
-          <rect width="760" height="350" fill="#07080a"/>
-          <!-- BMS Top Block -->
-          <rect x="190" y="10" width="290" height="36" fill="#141820" stroke="#FF5500" stroke-width="2"/>
-          <text x="335" y="25" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">BISIDA BMS 20S 120A (ПОД ВЕРХНЕЙ ТРУБОЙ)</text>
-          <text x="335" y="40" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Пятаки: [B- к 1S(-)] • [C- к XT90(-)] • Разъем 21-pin JST (B0..B20)</text>
+        <!-- 1000 x 1000 mm Fabric Sheet Frame (Left) -->
+        <rect x="45" y="95" width="540" height="520" fill="rgba(0, 210, 255, 0.04)" stroke="#00d2ff" stroke-width="2"/>
+        <text x="315" y="86" fill="#00d2ff" font-family="JetBrains Mono" font-size="12.5" font-weight="bold" text-anchor="middle">&lt;--- ЛИСТ ТКАНИ CORDURA 1000D (ШИРИНА РУЛОНА 1000 ММ × ДЛИНА 1000 ММ) ---&gt;</text>
 
-          <!-- XT90-S Rear Pocket -->
-          <rect x="20" y="10" width="145" height="36" fill="#241e08" stroke="#f5b800" stroke-width="2"/>
-          <text x="92" y="25" fill="#f5b800" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">AMASS XT90-S (84V)</text>
-          <text x="92" y="40" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">[+] от 20S • [-] от BMS C-</text>
+        <!-- Left Triangular Side Panel (560 x 490 x 360 + 70mm nose) -->
+        <polygon points="85,435 335,165 318,125 72,215" fill="rgba(255, 85, 0, 0.18)" stroke="#ff5500" stroke-width="2.5"/>
+        <!-- 15mm Seam Allowance Dashed Outer Contour -->
+        <polygon points="75,448 348,165 326,112 58,208" fill="none" stroke="#ffcc00" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="195" y="255" fill="#ffffff" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">ДЕТАЛЬ №1 (ЛЕВАЯ БОКОВИНА)</text>
+        <text x="195" y="272" fill="#ffcc00" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Чистый размер: 560×490×360 + нос 70 мм</text>
+        <text x="195" y="288" fill="#00ff66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Пунктир: припуск на шов +15 мм по периметру</text>
 
-          <!-- Tier 5 (Rows 9-10: 8+6=14 cells = 2 blocks): 19S -> 20S -->
-          <rect x="80" y="58" width="95" height="36" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="127" y="80" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" text-anchor="middle">19S (4+3) [-Z]</text>
-          <rect x="183" y="58" width="110" height="36" fill="#3a1010" stroke="#ff3b1f" stroke-width="2"/>
-          <text x="238" y="80" fill="#ffffff" font-family="JetBrains Mono" font-size="10" font-weight="bold" text-anchor="middle">20S [B+ 84V]</text>
+        <!-- Waterproof Zipper Line on Left Panel -->
+        <line x1="88" y1="222" x2="312" y2="145" stroke="#00d2ff" stroke-width="3" stroke-dasharray="4,2"/>
+        <text x="200" y="172" fill="#00d2ff" font-family="JetBrains Mono" font-size="9.5" transform="rotate(-19 200 172)" text-anchor="middle">Прорезь под влагозащитную молнию №10 (460 мм)</text>
 
-          <!-- FR4 Barrier 4 -->
-          <line x1="75" y1="100" x2="320" y2="100" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
+        <!-- Right Triangular Side Panel (Mirror) -->
+        <polygon points="355,445 555,215 565,165 342,395" fill="rgba(0, 255, 102, 0.15)" stroke="#00ff66" stroke-width="2.5"/>
+        <polygon points="344,457 567,218 577,152 330,390" fill="none" stroke="#ffcc00" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="458" y="315" fill="#ffffff" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">ДЕТАЛЬ №2 (ПРАВАЯ)</text>
+        <text x="458" y="332" fill="#00ff66" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Зеркально: 560×490×360×70 мм</text>
 
-          <!-- Tier 4 (Rows 7-8: 11+10=21 cells = 3 blocks): 18S <- 17S <- 16S -->
-          <rect x="80" y="106" width="88" height="38" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="124" y="129" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">18S (4+3) [+Z]</text>
-          <rect x="176" y="106" width="88" height="38" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="220" y="129" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">17S (3+4) [-Z]</text>
-          <rect x="272" y="106" width="88" height="38" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="316" y="129" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">16S (4+3) [+Z]</text>
+        <!-- Central Gusset Strip (Обечайка: width 85 mm + 2x15mm seam = 115 mm cut width, length 1480 mm in 2 parts) -->
+        <rect x="65" y="482" width="500" height="52" fill="rgba(0, 210, 255, 0.18)" stroke="#00d2ff" stroke-width="2"/>
+        <line x1="65" y1="492" x2="565" y2="492" stroke="#ffcc00" stroke-width="1" stroke-dasharray="5,3"/>
+        <line x1="65" y1="524" x2="565" y2="524" stroke="#ffcc00" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="315" y="512" fill="#ffffff" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ДЕТАЛЬ №3: ЦЕНТРАЛЬНАЯ ПОЛОСА-ОБЕЧАЙКА (ЧИСТАЯ ШИРИНА 85 ММ / КРОЙ 115 ММ × ПЕРИМЕТР 1480 ММ)</text>
 
-          <!-- FR4 Barrier 3 -->
-          <line x1="75" y1="150" x2="395" y2="150" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
+        <!-- 7x Velcro Straps 45 mm mark points along Gusset -->
+        <g fill="#ff5500" stroke="#ffffff" stroke-width="1">
+          <rect x="95" y="548" width="48" height="22"/><rect x="162" y="548" width="48" height="22"/>
+          <rect x="229" y="548" width="48" height="22"/><rect x="296" y="548" width="48" height="22"/>
+          <rect x="363" y="548" width="48" height="22"/><rect x="430" y="548" width="48" height="22"/>
+          <rect x="497" y="548" width="48" height="22"/>
+        </g>
+        <text x="315" y="592" fill="#ff5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ДЕТАЛЬ №4: 7 СИЛОВЫХ СТРОП VELCRO ШИРИНОЙ 45 ММ (ДЛИНА КАЖДОЙ СТРОПЫ 280 ММ + ПРЯЖКА D-RING)</text>
 
-          <!-- Tier 3 (Rows 5-6: 15+13=28 cells = 4 blocks): 12S -> 13S -> 14S -> 15S -->
-          <rect x="80" y="156" width="82" height="40" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="121" y="180" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">12S (4+3) [+Z]</text>
-          <rect x="168" y="156" width="82" height="40" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="209" y="180" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">13S (4+3) [-Z]</text>
-          <rect x="256" y="156" width="82" height="40" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="297" y="180" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">14S (3+4) [+Z]</text>
-          <rect x="344" y="156" width="82" height="40" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="385" y="180" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">15S (4+3) [-Z]</text>
+        <!-- RIGHT SIDE: ASSEMBLY & EVA 15MM DAMPER COCOON DIAGRAM -->
+        <rect x="610" y="95" width="455" height="520" fill="#071224" stroke="#00d2ff" stroke-width="1.5"/>
+        <text x="837" y="122" fill="#00ff66" font-family="JetBrains Mono" font-size="13.5" font-weight="bold" text-anchor="middle">СХЕМА ПРИШИВАНИЯ 7 СТРОП VELCRO 45 ММ И ДЕМПФЕРА EVA</text>
 
-          <!-- FR4 Barrier 2 -->
-          <line x1="75" y1="202" x2="465" y2="202" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
+        <!-- Side bag schematic with 7 straps (3 on Downtube, 2 on Toptube, 2 on Seattube) -->
+        <polygon points="725,445 965,195 948,148 705,235" fill="#131c2b" stroke="#ffffff" stroke-width="2.5"/>
+        <!-- 3 Straps on Downtube (560 mm) -->
+        <rect x="765" y="375" width="36" height="18" fill="#ff5500" transform="rotate(-46 783 384)"/>
+        <rect x="835" y="302" width="36" height="18" fill="#ff5500" transform="rotate(-46 853 311)"/>
+        <rect x="905" y="228" width="36" height="18" fill="#ff5500" transform="rotate(-46 923 237)"/>
+        <!-- 2 Straps on Toptube (490 mm) -->
+        <rect x="775" y="188" width="36" height="18" fill="#00ff66" transform="rotate(-19 793 197)"/>
+        <rect x="865" y="156" width="36" height="18" fill="#00ff66" transform="rotate(-19 883 165)"/>
+        <!-- 2 Straps on Seattube (360 mm) -->
+        <rect x="698" y="285" width="36" height="18" fill="#00d2ff" transform="rotate(82 716 294)"/>
+        <rect x="708" y="368" width="36" height="18" fill="#00d2ff" transform="rotate(82 726 377)"/>
 
-          <!-- Tier 2 (Rows 3-4: 18+17=35 cells = 5 blocks): 11S <- 10S <- 9S <- 8S <- 7S -->
-          <rect x="80" y="208" width="76" height="44" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="118" y="234" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">11S (-Z)</text>
-          <rect x="162" y="208" width="76" height="44" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="200" y="234" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">10S (+Z)</text>
-          <rect x="244" y="208" width="76" height="44" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="282" y="234" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">9S (-Z)</text>
-          <rect x="326" y="208" width="76" height="44" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="364" y="234" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">8S (+Z)</text>
-          <rect x="408" y="208" width="76" height="44" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="446" y="234" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">7S (-Z)</text>
+        <g font-family="JetBrains Mono" font-size="11" fill="#d8e6f5">
+          <text x="628" y="478" fill="#ff5500" font-weight="bold">● 3 стропы Velcro 45 мм на Нижнюю трубу (шаг 145 мм)</text>
+          <text x="628" y="498" fill="#00ff66" font-weight="bold">● 2 стропы Velcro 45 мм на Верхнюю трубу (шаг 160 мм)</text>
+          <text x="628" y="518" fill="#00d2ff" font-weight="bold">● 2 стропы Velcro 45 мм на Подседельную трубу (шаг 130 мм)</text>
+          <text x="628" y="544">● Внутренний демпферный кокон: вспененный каучук / ЭВА</text>
+          <text x="628" y="562">  толщиной 15.0 мм (повторяет контур обечайки 85 мм,</text>
+          <text x="628" y="580">  гасит удары при прыжках с бордюров на вилке 120 мм).</text>
+          <text x="628" y="600" fill="#ffcc00">● Нить: армированная капроновая 70ЛЛ + кедер ПВХ в шов.</text>
+        </g>
+      </svg>
+    `
+  },
+  {
+    id: 'sheet6',
+    num: 'ЛИСТ 06/06',
+    shortTitle: '06. 3D-КОРОБ PETG И ГУДОК',
+    title: 'ЧЕРТЕЖ №6: 3D-ПЕЧАТНЫЙ ГЕРМЕТИЧНЫЙ КОРОБ ПОД НИЖНЮЮ ТРУБУ (ДЛЯ ПРОВОДОВ, DC-DC И СКРЫТОГО ГУДКА 105 ДБ)',
+    specSummary: 'Корпус PETG (175×84×62 мм, стенка 3.2 мм) в 3 проекциях • Посадка DC-DC 12V • Стойка М6 гудка Ø65 мм • Акустические жабры 45°',
+    svg: `
+      <svg class="cad-sheet-svg" width="1100" height="660" viewBox="0 0 1100 660" xmlns="http://www.w3.org/2000/svg">
+        <rect class="cad-bg" width="1100" height="660" fill="#0a192f"/>
+        <rect x="14" y="14" width="1072" height="632" fill="none" stroke="#00d2ff" stroke-width="2"/>
 
-          <!-- FR4 Barrier 1 -->
-          <line x1="75" y1="258" x2="565" y2="258" stroke="#e09f24" stroke-width="2.5" stroke-dasharray="8,3"/>
+        <text x="35" y="44" fill="#00ff66" font-family="JetBrains Mono" font-size="15.5" font-weight="bold">ЧЕРТЕЖ №6: 3D-ПЕЧАТНЫЙ ГЕРМЕТИЧНЫЙ КОРОБ ИЗ PETG ПОД НИЖНЮЮ ТРУБУ (В 3 ПРОЕКЦИЯХ С РАЗМЕРАМИ В ММ)</text>
+        <text x="35" y="64" fill="#a8c5e5" font-family="JetBrains Mono" font-size="11.5">Стыкуется вплотную к нижнему торцу контроллера 60А: скрывает силовые фишки, блок DC-DC 12V 10A и мото-гудок 105 дБ за жабрами 45°</text>
 
-          <!-- Tier 1 (Rows 1-2 along Downtube: 22+20=42 cells = 6 blocks): 1S -> 2S -> 3S -> 4S -> 5S -> 6S -->
-          <rect x="80" y="264" width="74" height="58" fill="#08243c" stroke="#00D2FF" stroke-width="2"/>
-          <text x="117" y="297" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">1S [B- 0V]</text>
-          <rect x="160" y="264" width="74" height="58" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="197" y="297" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">2S (+Z)</text>
-          <rect x="240" y="264" width="74" height="58" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="277" y="297" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">3S (-Z)</text>
-          <rect x="320" y="264" width="74" height="58" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="357" y="297" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">4S (+Z)</text>
-          <rect x="400" y="264" width="74" height="58" fill="#102230" stroke="#00D2FF" stroke-width="1.5"/>
-          <text x="437" y="297" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">5S (-Z)</text>
-          <rect x="480" y="264" width="74" height="58" fill="#10281c" stroke="#00FF66" stroke-width="1.5"/>
-          <text x="517" y="297" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">6S (+Z)</text>
+        <!-- ================= PROJECTION 1: SIDE LONGITUDINAL SECTION (ВИД СБОКУ В РАЗРЕЗЕ) ================= -->
+        <text x="330" y="98" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">ПРОЕКЦИЯ 1: ПРОДОЛЬНЫЙ РАЗРЕЗ (ДЛИНА 175 ММ × ВЫСОТА 62 ММ)</text>
 
-          <!-- Power Cables Routing -->
-          <path d="M 80 305 L 42 305 L 42 52 L 210 52 L 210 46" fill="none" stroke="#00D2FF" stroke-width="3.5"/>
-          <text x="32" y="185" fill="#00D2FF" font-family="JetBrains Mono" font-size="10" transform="rotate(-90 32 185)" text-anchor="middle">СИНИЙ 6AWG B- (ОТ 1S К BMS B-)</text>
-          <line x1="238" y1="58" x2="135" y2="46" stroke="#ff3b1f" stroke-width="3.5"/>
-          <line x1="190" y1="28" x2="165" y2="28" stroke="#ffffff" stroke-width="3"/>
+        <!-- Dimension 175 mm -->
+        <line x1="75" y1="122" x2="585" y2="122" stroke="#00d2ff" stroke-width="2"/>
+        <text x="330" y="116" fill="#00d2ff" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">&lt;--- ОБЩАЯ ДЛИНА КОРОБА PETG = 175.0 ММ (СТЕНКА 3.2 ММ) ---&gt;</text>
 
-          <!-- Legend Box -->
-          <rect x="575" y="58" width="170" height="264" fill="#0e1116" stroke="#2c3340" stroke-width="1"/>
-          <text x="660" y="80" fill="#FF5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">5 ЯРУСОВ (6+5+4+3+2)</text>
-          <text x="585" y="104" fill="#00FF66" font-family="JetBrains Mono" font-size="9.5">● Блок 7P (4 + 3):</text>
-          <text x="585" y="118" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">2 ряда (4+3 банки)</text>
-          <text x="585" y="132" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Никель 0.15×8.5 мм</text>
-          <text x="585" y="156" fill="#00D2FF" font-family="JetBrains Mono" font-size="9.5">● Мосты секций:</text>
-          <text x="585" y="170" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Нечет (1S→2S): ПРАВО (-Z)</text>
-          <text x="585" y="184" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Чет (2S→3S): ЛЕВО (+Z)</text>
-          <text x="585" y="208" fill="#e09f24" font-family="JetBrains Mono" font-size="9.5">● 4 полосы FR4:</text>
-          <text x="585" y="222" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Стеклотекстолит 1.5 мм</text>
-          <text x="585" y="236" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">+ изоляторы Fishpaper</text>
-          <text x="585" y="260" fill="#ff3b1f" font-family="JetBrains Mono" font-size="9.5">● Шина Медь+Никель:</text>
-          <text x="585" y="274" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">Паяная шина Cu 2.5 мм²</text>
-          <text x="585" y="288" fill="#cfd6e0" font-family="JetBrains Mono" font-size="9">поверх никеля (120А)</text>
-        </svg>
-      </div>
+        <!-- Outer Box Contour with chamfered bottom nose -->
+        <polygon points="75,140 585,140 585,325 135,325 75,275" fill="rgba(0, 210, 255, 0.10)" stroke="#00d2ff" stroke-width="3"/>
 
-      <table class="spec-table">
-        <tr>
-          <th>Узел коммутации АКБ</th>
-          <th>Как соединять (Пошаговая инструкция)</th>
-        </tr>
-        <tr>
-          <td>1. 5 двухрядных ярусов (6+5+4+3+2 = 20 секций = 140 банок)</td>
-          <td>Банки уложены в 10 гексагональных рядов параллельно нижней трубе рамы (<code>22, 20, 18, 17, 15, 13, 11, 10, 8, 6</code>), разделенных 4 полосами желтого текстолита <strong>FR4</strong> на 5 двухрядных ярусов. В каждом ярусе секции <code>7P</code> имеют одинаковую сотовую форму <code>4 + 3 = 7 банок</code>.</td>
-        </tr>
-        <tr>
-          <td>2. Двухрядные пластины никеля 7P + медная шина 2.5 мм²</td>
-          <td>Внутри каждого блока <code>7P</code> вдоль ряда из 4 банок и ряда из 3 банок приварены две параллельные шины из чистого никеля <strong>0.15 × 8.5 мм</strong> с 3 поперечными перемычками, поверх которых напаян луженый медный позвоночник <strong>Cu 3.0 × 1.2 мм</strong>.</td>
-        </tr>
-        <tr>
-          <td>3. Чередующиеся последовательные мосты (1S -> 20S) и жгут BMS</td>
-          <td>Внутри яруса соседние блоки соединяются 2 параллельными медно-никелевыми мостами, а при переходе через перегородку FR4 на следующий ярус (<code>6S→7S</code>, <code>11S→12S</code>, <code>15S→16S</code>, <code>18S→19S</code>) — 3 вертикальными мостами. Балансировочный жгут <code>B0..B20</code> уложен в аккуратную магистраль вдоль верхней трубы.</td>
-        </tr>
-      </table>
+        <!-- Compartment 1 (Right): Controller Harness & W20 Phase Terminal Block -->
+        <rect x="425" y="155" width="142" height="75" rx="4" fill="#14263c" stroke="#ffcc00" stroke-width="2"/>
+        <text x="496" y="186" fill="#ffcc00" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ОТСЕК ФИШЕК И ФАЗ</text>
+        <text x="496" y="204" fill="#d8e6f5" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Клеммник W20 (U/V/W)</text>
+        <text x="496" y="218" fill="#d8e6f5" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">+ разъемы Холла/SW900</text>
+
+        <!-- Compartment 2 (Center): DC-DC 36-120V -> 12V 10A Seat (74 x 40 x 22 mm) -->
+        <rect x="265" y="152" width="140" height="54" rx="4" fill="#0e2c24" stroke="#00ff66" stroke-width="2"/>
+        <text x="335" y="176" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ПОСАДКА DC-DC 12V</text>
+        <text x="335" y="194" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Ниша 75 × 42 × 22 мм</text>
+
+        <!-- Compartment 3 (Left/Bottom): Internal M6 Boss + Spring Steel Bracket + 105 dB Moto Horn (Ø65 mm) -->
+        <rect x="135" y="140" width="18" height="32" fill="#ff5500" stroke="#ffffff" stroke-width="1.5"/>
+        <text x="144" y="186" fill="#ff5500" font-family="JetBrains Mono" font-size="9.5" font-weight="bold" text-anchor="middle">Стойка М6</text>
+        <!-- Spring plate -->
+        <line x1="144" y1="172" x2="195" y2="238" stroke="#d0dae5" stroke-width="4"/>
+        <!-- Horn Ø65mm body -->
+        <ellipse cx="205" cy="252" rx="46" ry="26" fill="#1a1218" stroke="#ff5500" stroke-width="2.5"/>
+        <text x="205" y="250" fill="#ff5500" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ГУДОК 105 ДБ</text>
+        <text x="205" y="264" fill="#ffffff" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">12V (Ø65 × 34 мм)</text>
+
+        <!-- Rear-angled 45° Acoustic Louvers ("Жабры-чешуя") on bottom wall -->
+        <g stroke="#00ff66" stroke-width="4" stroke-linecap="round">
+          <line x1="155" y1="312" x2="175" y2="332"/>
+          <line x1="180" y1="312" x2="200" y2="332"/>
+          <line x1="205" y1="312" x2="225" y2="332"/>
+          <line x1="230" y1="312" x2="250" y2="332"/>
+          <line x1="255" y1="312" x2="275" y2="332"/>
+          <line x1="280" y1="312" x2="300" y2="332"/>
+        </g>
+        <text x="235" y="352" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">АКУСТИЧЕСКИЕ ЖАБРЫ «ЧЕШУЯ» (НАКЛОН НАЗАД 45°, 6 ПРОРЕЗЕЙ 3.5 ММ)</text>
+        <text x="235" y="368" fill="#8ae8ff" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Звук 105 дБ выходит свободно вниз-назад • Брызги от переднего колеса отражаются!</text>
+
+        <!-- ================= PROJECTION 2: TOP / PLAN VIEW (ВИД СВЕРХУ / ПЛАН ОТСЕКОВ) ================= -->
+        <text x="330" y="410" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">ПРОЕКЦИЯ 2: ВИД СВЕРХУ СО СНЯТОЙ КРЫШКОЙ (ШИРИНА 84.0 ММ)</text>
+
+        <rect x="75" y="425" width="510" height="175" rx="8" fill="rgba(0, 210, 255, 0.08)" stroke="#00d2ff" stroke-width="2.5"/>
+        <!-- 4x M4 Lid Brass Inserts -->
+        <circle cx="92" cy="442" r="5" fill="#ffcc00"/><circle cx="568" cy="442" r="5" fill="#ffcc00"/>
+        <circle cx="92" cy="582" r="5" fill="#ffcc00"/><circle cx="568" cy="582" r="5" fill="#ffcc00"/>
+
+        <circle cx="195" cy="512" r="58" fill="rgba(255, 85, 0, 0.20)" stroke="#ff5500" stroke-width="2"/>
+        <text x="195" y="516" fill="#ffffff" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ГУДОК Ø65 ММ</text>
+
+        <rect x="275" y="445" width="130" height="135" rx="4" fill="rgba(0, 255, 102, 0.14)" stroke="#00ff66" stroke-width="2"/>
+        <text x="340" y="510" fill="#00ff66" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">DC-DC 12V 10A</text>
+        <text x="340" y="528" fill="#d8e6f5" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">74 × 40 мм</text>
+
+        <rect x="425" y="445" width="135" height="135" rx="4" fill="rgba(255, 204, 0, 0.14)" stroke="#ffcc00" stroke-width="2"/>
+        <text x="492" y="510" fill="#ffcc00" font-family="JetBrains Mono" font-size="11" font-weight="bold" text-anchor="middle">ОТСЕК ФИШЕК</text>
+        <text x="492" y="528" fill="#d8e6f5" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">Ввод 3 сальников PG9</text>
+
+        <!-- ================= PROJECTION 3: FRONT CROSS-SECTION & LOUVER DETAIL (РАЗРЕЗ ПОПЕРЕК РАМЫ) ================= -->
+        <rect x="635" y="95" width="430" height="515" fill="#071224" stroke="#00d2ff" stroke-width="1.5"/>
+        <text x="850" y="122" fill="#00d2ff" font-family="JetBrains Mono" font-size="13" font-weight="bold" text-anchor="middle">ПРОЕКЦИЯ 3: ПОПЕРЕЧНЫЙ РАЗРЕЗ (84 × 62 ММ)</text>
+
+        <!-- Frame Downtube Ø48mm on top -->
+        <circle cx="850" cy="185" r="34" fill="#1c2838" stroke="#ffffff" stroke-width="2.5"/>
+        <text x="850" y="189" fill="#ffffff" font-family="JetBrains Mono" font-size="10.5" font-weight="bold" text-anchor="middle">ТРУБА РАМЫ</text>
+
+        <!-- Semi-circular cradle saddle + EPDM rubber gasket + Velcro/Clamp channel -->
+        <path d="M 735 225 L 808 225 A 42 42 0 0 0 892 225 L 965 225 L 965 385 L 940 410 L 760 410 L 735 385 Z"
+              fill="rgba(0, 210, 255, 0.14)" stroke="#00d2ff" stroke-width="3"/>
+
+        <!-- Horn suspended inside on M6 boss without touching walls -->
+        <rect x="842" y="232" width="16" height="28" fill="#ff5500"/>
+        <ellipse cx="850" cy="318" rx="68" ry="34" fill="#26141c" stroke="#ff5500" stroke-width="2.5"/>
+        <text x="850" y="322" fill="#ff5500" font-family="JetBrains Mono" font-size="11.5" font-weight="bold" text-anchor="middle">МЕМБРАНА ГУДКА Ø65 ММ</text>
+        <text x="850" y="372" fill="#00ff66" font-family="JetBrains Mono" font-size="10.5" text-anchor="middle">Зазор 8 мм от стенок (свободный резонанс 105 дБ)</text>
+
+        <!-- Width 84.0 mm Dimension -->
+        <line x1="735" y1="438" x2="965" y2="438" stroke="#00d2ff" stroke-width="2"/>
+        <text x="850" y="456" fill="#00d2ff" font-family="JetBrains Mono" font-size="12" font-weight="bold" text-anchor="middle">&lt;--- ШИРИНА КОРОБА = 84.0 ММ (ВРОВЕНЬ С КОНТРОЛЛЕРОМ) ---&gt;</text>
+
+        <g font-family="JetBrains Mono" font-size="11" fill="#d8e6f5">
+          <text x="655" y="492" fill="#00ff66" font-weight="bold">ПАРАМЕТРЫ 3D-ПЕЧАТИ (ПЛАСТИК PETG ЧЕРНЫЙ):</text>
+          <text x="655" y="514">● Сопло 0.4 мм, слой 0.20 мм, 4 периметра, заполнение 40% Gyroid.</text>
+          <text x="655" y="534">● Вплавляемые латунные втулки: 4× М4 (крышка) + 1× М6 (стойка гудка).</text>
+          <text x="655" y="554">● Уплотнение крышки: резиновый шнур EPDM Ø2.5 мм в пазу по периметру.</text>
+          <text x="655" y="574">● Крепление к нижней трубе рамы: 2 силовых хомута / стропы Velcro 45 мм.</text>
+        </g>
+      </svg>
     `
   }
-};
+];
 
+const ENGINEERING_MODALS = {
+  dropout: {
+    title: CAD_SHEETS_6[0].title,
+    html: `<p><strong>${CAD_SHEETS_6[0].specSummary}</strong></p><div class="svg-blueprint-box">${CAD_SHEETS_6[0].svg}</div>`
+  },
+  battery: {
+    title: CAD_SHEETS_6[1].title,
+    html: `<p><strong>${CAD_SHEETS_6[1].specSummary}</strong></p><div class="svg-blueprint-box">${CAD_SHEETS_6[1].svg}</div>`
+  },
+  saddle: {
+    title: CAD_SHEETS_6[2].title,
+    html: `<p><strong>${CAD_SHEETS_6[2].specSummary}</strong></p><div class="svg-blueprint-box">${CAD_SHEETS_6[2].svg}</div>`
+  },
+  motor: {
+    title: CAD_SHEETS_6[3].title,
+    html: `<p><strong>${CAD_SHEETS_6[3].specSummary}</strong></p><div class="svg-blueprint-box">${CAD_SHEETS_6[3].svg}</div>`
+  },
+  cordura: {
+    title: CAD_SHEETS_6[4].title,
+    html: `<p><strong>${CAD_SHEETS_6[4].specSummary}</strong></p><div class="svg-blueprint-box">${CAD_SHEETS_6[4].svg}</div>`
+  },
+  wiring: {
+    title: CAD_SHEETS_6[5].title,
+    html: `<p><strong>${CAD_SHEETS_6[5].specSummary}</strong></p><div class="svg-blueprint-box">${CAD_SHEETS_6[5].svg}</div>`
+  }
+};
 
 
 // --- [5/5] MAIN WEBGL SCENE, GSAP EXPLODED VIEW & X-RAY RAYCASTER ---
@@ -7396,7 +8465,8 @@ function setXRayMode(enable) {
     batterySys.holderLeftGroup.visible = false;
     batterySys.holderRightGroup.visible = false;
 
-    // Show all 20 sections (140 cells) at full opacity on entry; hovering/tapping any section highlights it!
+    // Show all 20 sections (140 cells) with their unique 1S..20S color gradient on entry
+    hoveredSeriesId = -1;
     resetAllBatterySeriesMaterials();
     xrayGroupTitle.textContent = '20S7P (140× 21700): НАЖМИТЕ НА СЕКЦИЮ 1S..20S';
     if (mobXRayTitle) mobXRayTitle.textContent = 'X-RAY 20S7P: ТАПНИТЕ СЕКЦИЮ 1S..20S';
@@ -7417,6 +8487,7 @@ function setXRayMode(enable) {
     batterySys.rightCoverGroup.visible = true;
     batterySys.holderLeftGroup.visible = true;
     batterySys.holderRightGroup.visible = true;
+    hoveredSeriesId = -1;
     resetAllBatterySeriesMaterials();
   }
 }
@@ -7425,11 +8496,21 @@ function resetAllBatterySeriesMaterials() {
   if (hoveredSeriesId === null) return;
   hoveredSeriesId = null;
   batterySys.seriesGroups.forEach((sGroup) => {
+    const s = sGroup.userData.seriesId;
     const { cellMat, busMat, niMat } = sGroup.userData;
-    cellMat.color.setHex(0xffffff);
-    cellMat.emissive.setHex(0x000000);
-    cellMat.emissiveIntensity = 0;
-    cellMat.opacity = 1.0;
+    if (isXRayMode) {
+      // Unique color tint per 7P group (1S -> 20S) in X-Ray mode to show current flow
+      const cTint = getSeriesXRayColor(s);
+      cellMat.color.copy(cTint);
+      cellMat.emissive.copy(cTint);
+      cellMat.emissiveIntensity = 0.28;
+      cellMat.opacity = 1.0;
+    } else {
+      cellMat.color.setHex(0xffffff);
+      cellMat.emissive.setHex(0x000000);
+      cellMat.emissiveIntensity = 0;
+      cellMat.opacity = 1.0;
+    }
 
     busMat.emissive.setHex(0x000000);
     busMat.emissiveIntensity = 0;
@@ -7448,9 +8529,10 @@ function highlightBatterySeriesGroup(seriesId) {
 
     if (s === seriesId) {
       // Selected 7P group and its copper-nickel busbar flash neon!
-      cellMat.color.setHex(0x00ff66);
-      cellMat.emissive.setHex(0x00ff66);
-      cellMat.emissiveIntensity = 0.85;
+      const cTint = getSeriesXRayColor(s);
+      cellMat.color.copy(cTint);
+      cellMat.emissive.copy(cTint);
+      cellMat.emissiveIntensity = 0.95;
       cellMat.opacity = 1.0;
 
       busMat.emissive.setHex(0xff5500);
@@ -7461,17 +8543,18 @@ function highlightBatterySeriesGroup(seriesId) {
       const polSideStr = polarityOnLeft > 0 ? '+Z ПЛЮС / -Z МИНУС' : '+Z МИНУС / -Z ПЛЮС';
       xrayGroupTitle.textContent = `СЕКЦИЯ ${s}S (РЯД #${row}, ЯЧЕЙКИ #${(s - 1) * 7 + 1}..#${s * 7})`;
       xrayGroupCfg.textContent = `${s}S7P (${polSideStr})`;
-      xrayGroupVolt.textContent = `4.20 V (∑ ${(s * 4.2).toFixed(1)}V)`;
+      xrayGroupVolt.textContent = `${(s * 3.6).toFixed(1)}..${(s * 4.2).toFixed(1)}V`;
       xrayGroupTemp.textContent = `NTC ${sGroup.userData.ntcTemp}°C / Cu 2.5мм²`;
 
-      if (mobXRayTitle) mobXRayTitle.textContent = `СЕКЦИЯ ${s}S (ЯРУС #${row} • #${(s - 1) * 7 + 1}..#${s * 7})`;
-      if (mobXRayVal) mobXRayVal.textContent = `4.2V (∑${(s * 4.2).toFixed(1)}V) • ${sGroup.userData.ntcTemp}°C`;
+      if (mobXRayTitle) mobXRayTitle.textContent = `СЕКЦИЯ ${s}S (РЯД #${row} • #${(s - 1) * 7 + 1}..#${s * 7})`;
+      if (mobXRayVal) mobXRayVal.textContent = `${(s * 3.6).toFixed(1)}..${(s * 4.2).toFixed(1)}V • ${sGroup.userData.ntcTemp}°C`;
     } else {
-      // Other 133 cells fade into semi-transparent glass (opacity: 0.16)
-      cellMat.color.setHex(0x3b82a6);
+      // Other 133 cells fade into semi-transparent tinted glass (opacity: 0.22)
+      const cTint = getSeriesXRayColor(s);
+      cellMat.color.copy(cTint);
       cellMat.emissive.setHex(0x000000);
       cellMat.emissiveIntensity = 0.0;
-      cellMat.opacity = 0.16;
+      cellMat.opacity = 0.22;
 
       busMat.emissive.setHex(0x000000);
       busMat.emissiveIntensity = 0.0;
@@ -7488,7 +8571,7 @@ btnXRay.addEventListener('click', () => {
   }
 });
 
-// Raycaster for hovering (desktop) or tapping (mobile) any of the 20 groups (1S..20S) in X-Ray or Exploded mode
+// Raycaster for hovering/tapping 20 battery groups (1S..20S) AND 3D SW900 handlebar buttons
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
@@ -7519,48 +8602,273 @@ function inspectBatteryAtClientXY(clientX, clientY) {
   return false;
 }
 
+function check3DSw900ButtonClick(clientX, clientY) {
+  pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(cockpitNode.children, true);
+  for (let i = 0; i < hits.length; i++) {
+    const btnType = hits[i].object.userData && hits[i].object.userData.sw900Button;
+    if (btnType) {
+      handleSw900ButtonAction(btnType);
+      return true;
+    }
+  }
+  return false;
+}
+
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   inspectBatteryAtClientXY(e.clientX, e.clientY);
 });
 
 renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (check3DSw900ButtonClick(e.clientX, e.clientY)) return;
   if (e.pointerType === 'touch' || window.innerWidth <= 920) {
     inspectBatteryAtClientXY(e.clientX, e.clientY);
   }
 });
 
 // ----------------------------------------------------------------------------
-// 7. TEST BRAKE & SUR-RON HEADLIGHT SWITCH
+// 7. TEST BRAKE & SUR-RON HEADLIGHT SWITCH + LIVE SW900 TELEMETRY STATE
 // ----------------------------------------------------------------------------
 let isLightsAndBrakeOn = false;
+let isRegenBraking = false;
 const btnLights = document.getElementById('btn-lights');
+const btnRegenBrake = document.getElementById('btn-regen-brake');
 
-btnLights.addEventListener('click', () => {
-  isLightsAndBrakeOn = !isLightsAndBrakeOn;
+function updateBrakeAndHeadlightVisuals() {
   lightsTestGroup.visible = isLightsAndBrakeOn;
+  mats.MAT_HEADLIGHT_LED.emissiveIntensity = isLightsAndBrakeOn ? 4.5 : 0.5;
 
-  if (isLightsAndBrakeOn) {
-    btnLights.classList.add('active-orange');
-    // Sur-Ron Dual LED eyes ignite bright white/cyan
-    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 4.5;
-    // Rear LED Brake Light flashes bright red (emissive: 0xff0000, emissiveIntensity: 4.0)
+  const brakeActive = isLightsAndBrakeOn || isRegenBraking;
+  if (brakeActive) {
     mats.MAT_BRAKE_LED.emissive.setHex(0xff0000);
-    mats.MAT_BRAKE_LED.emissiveIntensity = 4.0;
-    rearBrakePointLight.intensity = 3.5;
+    mats.MAT_BRAKE_LED.emissiveIntensity = 4.2;
+    rearBrakePointLight.intensity = 3.8;
   } else {
-    btnLights.classList.remove('active-orange');
-    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 0.5;
     mats.MAT_BRAKE_LED.emissiveIntensity = 0.35;
     rearBrakePointLight.intensity = 0.0;
   }
+}
+
+btnLights.addEventListener('click', () => {
+  isLightsAndBrakeOn = !isLightsAndBrakeOn;
+  btnLights.classList.toggle('active-orange', isLightsAndBrakeOn);
+  updateBrakeAndHeadlightVisuals();
 });
 
 // ----------------------------------------------------------------------------
-// 8. CAMERA PRESETS, MOBILE DRAWERS & 3D SCREEN-SPACE INTERACTIVE HOTSPOTS
+// 8. LIVE SW900 ON-BOARD COMPUTER (60 FPS 7-SEGMENT LCD + ODO + WATTMETER + POV)
 // ----------------------------------------------------------------------------
-function flyCameraTo(posVec, targetVec) {
-  const adjustedPos = getViewportAdjustedPos(posVec, targetVec);
+const PAS_LIMITS = {
+  1: { maxSpeedKmh: 24.9, maxPowerW: 240, maxCurrentA: 3.0 },
+  2: { maxSpeedKmh: 36.0, maxPowerW: 950, maxCurrentA: 12.0 },
+  3: { maxSpeedKmh: 45.0, maxPowerW: 1680, maxCurrentA: 21.0 },
+  4: { maxSpeedKmh: 64.0, maxPowerW: 2880, maxCurrentA: 36.0 },
+  5: { maxSpeedKmh: 82.4, maxPowerW: 4320, maxCurrentA: 60.0 }
+};
+const BOTTOM_MODES = ['ODO', 'TRIP', 'MAX', 'AVG', 'TIME'];
+const ODO_STORAGE_KEY = 'stealth_surron_72v_odo_km';
+
+let savedOdo = 128.45;
+try {
+  const rawOdo = localStorage.getItem(ODO_STORAGE_KEY);
+  if (rawOdo !== null && !isNaN(parseFloat(rawOdo))) {
+    savedOdo = parseFloat(rawOdo);
+  }
+} catch (e) {
+  // ignore localStorage restrictions
+}
+
+const sw900State = {
+  pas: 5,
+  throttlePct: 0,
+  speedKmh: 0.0,
+  openCircuitVolts: 84.0,
+  internalResistanceOhm: 0.07, // 20S7P EVE 50E pack internal resistance (~70 mOhm)
+  voltage: 84.0,
+  currentA: 0.0,
+  watts: 0,
+  odoKm: savedOdo,
+  tripKm: 0.0,
+  maxSpeedKmh: 0.0,
+  rideTimeSec: 0,
+  bottomModeIdx: 0
+};
+
+const sw900HudWidget = document.getElementById('sw900-hud-widget');
+const sw900HudCanvas = document.getElementById('sw900-hud-canvas');
+const sw900HudCtx = sw900HudCanvas ? sw900HudCanvas.getContext('2d') : null;
+const sw900PovBadge = document.getElementById('sw900-pov-badge');
+const sliderThrottle = document.getElementById('slider-throttle');
+const throttleLabel = document.getElementById('throttle-label');
+const topMetricVolt = document.getElementById('top-metric-volt');
+const topMetricOdo = document.getElementById('top-metric-odo');
+const btnPovRider = document.getElementById('btn-pov-rider');
+
+function handleSw900ButtonAction(action) {
+  if (action === 'UP') {
+    sw900State.pas = Math.min(5, sw900State.pas + 1);
+  } else if (action === 'DOWN') {
+    sw900State.pas = Math.max(1, sw900State.pas - 1);
+  } else if (action === 'MODE') {
+    sw900State.bottomModeIdx = (sw900State.bottomModeIdx + 1) % BOTTOM_MODES.length;
+  }
+}
+
+document.getElementById('sw900-btn-up')?.addEventListener('click', () => handleSw900ButtonAction('UP'));
+document.getElementById('sw900-btn-down')?.addEventListener('click', () => handleSw900ButtonAction('DOWN'));
+document.getElementById('sw900-btn-mode')?.addEventListener('click', () => handleSw900ButtonAction('MODE'));
+
+if (sliderThrottle) {
+  sliderThrottle.addEventListener('input', (e) => {
+    sw900State.throttlePct = parseFloat(e.target.value) || 0;
+    if (throttleLabel) throttleLabel.textContent = `ГАЗ: ${Math.round(sw900State.throttlePct)}%`;
+  });
+}
+
+if (btnRegenBrake) {
+  btnRegenBrake.addEventListener('click', () => {
+    isRegenBraking = !isRegenBraking;
+    btnRegenBrake.classList.toggle('active', isRegenBraking);
+    updateBrakeAndHeadlightVisuals();
+  });
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.key >= '1' && e.key <= '5') {
+    sw900State.pas = parseInt(e.key, 10);
+  } else if (e.key === 'ArrowUp') {
+    handleSw900ButtonAction('UP');
+  } else if (e.key === 'ArrowDown') {
+    handleSw900ButtonAction('DOWN');
+  } else if (e.key === 'm' || e.key === 'M' || e.key === 'ь' || e.key === 'Ь') {
+    handleSw900ButtonAction('MODE');
+  }
+});
+
+let lastSimTime = performance.now();
+let lastOdoSaveTime = performance.now();
+
+function updateSw900PhysicsAndScreen(now) {
+  const dt = Math.min(0.1, Math.max(0.001, (now - lastSimTime) / 1000));
+  lastSimTime = now;
+
+  const pasCfg = PAS_LIMITS[sw900State.pas] || PAS_LIMITS[5];
+  const thr = sw900State.throttlePct / 100;
+
+  // Target speed & current depending on throttle, PAS level, and E-ABS regenerative braking
+  let targetSpeed = pasCfg.maxSpeedKmh * thr;
+  if (isRegenBraking) {
+    targetSpeed = 0;
+    // Regenerative braking decelerates quickly
+    sw900State.speedKmh = Math.max(0, sw900State.speedKmh - 38.0 * dt);
+  } else {
+    const accelRate = targetSpeed > sw900State.speedKmh ? 26.0 : 14.0;
+    const diff = targetSpeed - sw900State.speedKmh;
+    if (Math.abs(diff) < accelRate * dt) {
+      sw900State.speedKmh = targetSpeed;
+    } else {
+      sw900State.speedKmh += Math.sign(diff) * accelRate * dt;
+    }
+  }
+
+  // Compute instantaneous current I (Amps) and Ohm's law voltage U = U_oc - I * R_internal
+  if (isRegenBraking && sw900State.speedKmh > 1.5) {
+    // E-ABS regenerative braking charges battery (-20.5A, up to -1650W)
+    const regenRatio = Math.min(1.0, sw900State.speedKmh / 45.0);
+    sw900State.currentA = -20.5 * regenRatio;
+  } else if (!isRegenBraking && thr > 0.005) {
+    const loadFactor = Math.min(1.0, thr * (0.45 + 0.55 * (sw900State.speedKmh / Math.max(1, pasCfg.maxSpeedKmh))));
+    sw900State.currentA = pasCfg.maxCurrentA * loadFactor;
+  } else {
+    sw900State.currentA = 0.0;
+  }
+
+  // Gradual open-circuit discharge as trip distance increases (2.94 kWh capacity ~ 110 km range)
+  sw900State.openCircuitVolts = Math.max(62.0, 84.0 - sw900State.tripKm * 0.18);
+  sw900State.voltage = Math.min(84.4, Math.max(60.0, sw900State.openCircuitVolts - sw900State.currentA * sw900State.internalResistanceOhm));
+  sw900State.watts = Math.round(sw900State.voltage * sw900State.currentA);
+
+  // Clamp wattmeter in PAS 1..4 to their configured ceilings
+  if (sw900State.watts > pasCfg.maxPowerW) {
+    sw900State.watts = pasCfg.maxPowerW;
+  }
+
+  // Integrate distance dS = v * dt (km)
+  if (sw900State.speedKmh > 0.05) {
+    const dKm = (sw900State.speedKmh / 3600) * dt;
+    sw900State.odoKm += dKm;
+    sw900State.tripKm += dKm;
+    sw900State.rideTimeSec += dt;
+    if (sw900State.speedKmh > sw900State.maxSpeedKmh) {
+      sw900State.maxSpeedKmh = sw900State.speedKmh;
+    }
+
+    // Rotate 3D front and rear wheels in real time (R_wheel = 0.345m)
+    const vMs = sw900State.speedKmh / 3.6;
+    const dAngle = (vMs / 0.345) * dt;
+    frontWheelNode.rotation.z -= dAngle;
+    rearWheelNode.rotation.z -= dAngle;
+  }
+
+  // Persist ODO to localStorage every 2 seconds while moving
+  if (now - lastOdoSaveTime > 2000) {
+    lastOdoSaveTime = now;
+    try {
+      localStorage.setItem(ODO_STORAGE_KEY, sw900State.odoKm.toFixed(2));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Update top telemetry strip
+  if (topMetricVolt) {
+    topMetricVolt.textContent = `${sw900State.voltage.toFixed(1)}V / ${ Math.abs(sw900State.watts) }W`;
+  }
+  if (topMetricOdo) {
+    topMetricOdo.textContent = `${sw900State.odoKm.toFixed(2)} KM`;
+  }
+
+  // Compute 1..5 battery bars from open-circuit voltage (60V..84V)
+  const soc = Math.max(0, Math.min(1, (sw900State.voltage - 62.0) / (84.0 - 62.0)));
+  const batteryBars = Math.max(1, Math.min(5, Math.ceil(soc * 5)));
+  const avgSpeedKmh = sw900State.rideTimeSec > 1 ? (sw900State.tripKm / (sw900State.rideTimeSec / 3600)) : 0.0;
+
+  if (mats.sw900Controller && mats.sw900Controller.updateSw900) {
+    mats.sw900Controller.updateSw900({
+      speedKmh: sw900State.speedKmh,
+      voltage: sw900State.voltage,
+      watts: sw900State.watts,
+      pas: sw900State.pas,
+      odoKm: sw900State.odoKm,
+      tripKm: sw900State.tripKm,
+      maxSpeedKmh: sw900State.maxSpeedKmh,
+      avgSpeedKmh,
+      rideTimeSec: sw900State.rideTimeSec,
+      bottomMode: BOTTOM_MODES[sw900State.bottomModeIdx],
+      headlightOn: isLightsAndBrakeOn,
+      brakeOn: isRegenBraking || isLightsAndBrakeOn,
+      batteryBars
+    });
+
+    // Copy 3D SW900 CanvasTexture onto the 1:1 HUD duplicate canvas
+    if (sw900HudCtx && mats.sw900Controller.canvas) {
+      sw900HudCtx.drawImage(mats.sw900Controller.canvas, 0, 0);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 9. CAMERA PRESETS (INCLUDING RIDER POV-08), MOBILE DRAWERS & 3D HOTSPOTS
+// ----------------------------------------------------------------------------
+function flyCameraTo(posVec, targetVec, isPov = false) {
+  const adjustedPos = isPov ? posVec.clone() : getViewportAdjustedPos(posVec, targetVec);
+  camera.fov = isPov ? 38 : (window.innerWidth / Math.max(window.innerHeight, 1) < 1.0 ? 44 : 28);
+  camera.updateProjectionMatrix();
+
   gsap.to(camera.position, {
     x: adjustedPos.x,
     y: adjustedPos.y,
@@ -7579,6 +8887,7 @@ function flyCameraTo(posVec, targetVec) {
 
 const CAMERA_PRESETS = {
   default: { pos: DEFAULT_CAM_POS, target: DEFAULT_CAM_TARGET, code: 'ALL' },
+  pov: { pos: new THREE.Vector3(-0.08, 0.86, 0.064), target: new THREE.Vector3(0.412, 0.654, 0.064), code: 'POV-08', isPov: true },
   fork: { pos: new THREE.Vector3(1.12, 0.30, 0.88), target: new THREE.Vector3(0.50, 0.25, 0.0), code: 'FRK-01' },
   cockpit: { pos: new THREE.Vector3(0.92, 0.74, 0.62), target: new THREE.Vector3(0.42, 0.61, 0.0), code: 'CKP-02' },
   wheels: { pos: new THREE.Vector3(-0.42, 0.10, 1.15), target: new THREE.Vector3(-0.445, 0.015, 0.0), code: 'WHL-03' },
@@ -7587,6 +8896,25 @@ const CAMERA_PRESETS = {
   controller: { pos: new THREE.Vector3(0.48, -0.02, 0.74), target: new THREE.Vector3(0.18, 0.18, 0.0), code: 'ESC-06' },
   saddle: { pos: new THREE.Vector3(-0.28, 0.65, 0.88), target: new THREE.Vector3(-0.34, 0.50, 0.0), code: 'SDL-07' }
 };
+
+function setPovModeUI(active) {
+  if (sw900HudWidget) sw900HudWidget.classList.toggle('pov-enlarged', active);
+  if (btnPovRider) btnPovRider.classList.toggle('active', active);
+  if (sw900PovBadge) sw900PovBadge.textContent = active ? 'POV РАЙДЕРА 1:1' : 'РУЛЬ + HUD';
+}
+
+if (btnPovRider) {
+  btnPovRider.addEventListener('click', () => {
+    const isNowPov = currentCameraPresetKey !== 'pov';
+    const key = isNowPov ? 'pov' : 'default';
+    const preset = CAMERA_PRESETS[key];
+    currentCameraPresetKey = key;
+    activeNodeIndicator.textContent = preset.code;
+    nodeButtons.forEach((b) => b.classList.toggle('active', b.getAttribute('data-cam') === key));
+    setPovModeUI(isNowPov);
+    flyCameraTo(preset.pos, preset.target, Boolean(preset.isPov));
+  });
+}
 
 // Mobile Drawers & Pin Toggles
 const leftSidePanel = document.getElementById('left-side-panel');
@@ -7643,7 +8971,8 @@ nodeButtons.forEach((btn) => {
     if (preset) {
       currentCameraPresetKey = key;
       activeNodeIndicator.textContent = preset.code;
-      flyCameraTo(preset.pos, preset.target);
+      setPovModeUI(key === 'pov');
+      flyCameraTo(preset.pos, preset.target, Boolean(preset.isPov));
       closeMobileDrawers();
     }
   });
@@ -7652,17 +8981,188 @@ nodeButtons.forEach((btn) => {
 document.getElementById('btn-reset-cam').addEventListener('click', () => {
   if (isXRayMode) setXRayMode(false);
   currentCameraPresetKey = 'default';
+  setPovModeUI(false);
   closeMobileDrawers();
-  flyCameraTo(DEFAULT_CAM_POS, DEFAULT_CAM_TARGET);
+  flyCameraTo(DEFAULT_CAM_POS, DEFAULT_CAM_TARGET, false);
 });
 
-// Modal Blueprint System
+// ----------------------------------------------------------------------------
+// 10. FULLSCREEN 6-SHEET ENGINEERING CAD TABLET (ZOOM, PAN, THEME, PNG/SVG 1:1)
+// ----------------------------------------------------------------------------
+const cadTabletBackdrop = document.getElementById('cad-tablet-backdrop');
+const cadSheetStage = document.getElementById('cad-sheet-stage');
+const cadViewportWrap = document.getElementById('cad-viewport-wrap');
+const cadSheetSummary = document.getElementById('cad-sheet-summary');
+const cadZoomIndicator = document.getElementById('cad-zoom-indicator');
+const cadTabButtons = document.querySelectorAll('.cad-tab-btn');
+
+let activeCadSheetIdx = 0;
+let cadZoom = 1.0;
+let cadPanX = 0;
+let cadPanY = 0;
+let isCadPanning = false;
+let cadPanStartX = 0;
+let cadPanStartY = 0;
+let isCadWhiteTheme = false;
+
+function updateCadStageTransform() {
+  if (!cadSheetStage) return;
+  cadSheetStage.style.transform = `translate(${cadPanX}px, ${cadPanY}px) scale(${cadZoom})`;
+  if (cadZoomIndicator) {
+    cadZoomIndicator.textContent = `МАСШТАБ: ${Math.round(cadZoom * 100)}%`;
+  }
+}
+
+function selectCadSheet(idx) {
+  activeCadSheetIdx = Math.max(0, Math.min(CAD_SHEETS_6.length - 1, idx));
+  const sheet = CAD_SHEETS_6[activeCadSheetIdx];
+  if (!sheet || !cadSheetStage) return;
+
+  cadSheetStage.innerHTML = sheet.svg;
+  if (cadSheetSummary) {
+    cadSheetSummary.textContent = `${sheet.title} — ${sheet.specSummary}`;
+  }
+  cadTabButtons.forEach((btn, bIdx) => {
+    btn.classList.toggle('active', bIdx === activeCadSheetIdx);
+  });
+
+  // Fit sheet nicely on smaller viewports automatically
+  const vw = window.innerWidth;
+  const vh = window.innerHeight - 130;
+  cadZoom = Math.min(1.0, Math.max(0.45, Math.min((vw - 40) / 1100, (vh - 30) / 660)));
+  cadPanX = 0;
+  cadPanY = 0;
+  updateCadStageTransform();
+}
+
+function openCadTablet(sheetIdx = 0) {
+  closeMobileDrawers();
+  selectCadSheet(sheetIdx);
+  if (cadTabletBackdrop) cadTabletBackdrop.classList.add('open');
+}
+
+function closeCadTablet() {
+  if (cadTabletBackdrop) cadTabletBackdrop.classList.remove('open');
+}
+
+document.getElementById('btn-open-cad-tablet')?.addEventListener('click', () => openCadTablet(activeCadSheetIdx));
+document.getElementById('btn-open-cad-tablet-side')?.addEventListener('click', () => openCadTablet(activeCadSheetIdx));
+document.getElementById('btn-cad-close')?.addEventListener('click', closeCadTablet);
+
+cadTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.getAttribute('data-tab') || '0', 10);
+    selectCadSheet(idx);
+  });
+});
+
+document.querySelectorAll('.blueprint-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const sheetAttr = btn.getAttribute('data-sheet');
+    if (sheetAttr !== null) {
+      openCadTablet(parseInt(sheetAttr, 10));
+    } else {
+      openEngineeringModal(btn.getAttribute('data-modal'));
+    }
+  });
+});
+
+document.getElementById('btn-cad-zoom-in')?.addEventListener('click', () => {
+  cadZoom = Math.min(3.0, cadZoom + 0.2);
+  updateCadStageTransform();
+});
+document.getElementById('btn-cad-zoom-out')?.addEventListener('click', () => {
+  cadZoom = Math.max(0.4, cadZoom - 0.2);
+  updateCadStageTransform();
+});
+document.getElementById('btn-cad-zoom-reset')?.addEventListener('click', () => {
+  cadZoom = 1.0;
+  cadPanX = 0;
+  cadPanY = 0;
+  updateCadStageTransform();
+});
+document.getElementById('btn-cad-theme')?.addEventListener('click', () => {
+  isCadWhiteTheme = !isCadWhiteTheme;
+  if (cadSheetStage) cadSheetStage.classList.toggle('white-theme', isCadWhiteTheme);
+});
+
+if (cadViewportWrap) {
+  cadViewportWrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.14 : -0.14;
+    cadZoom = Math.min(3.2, Math.max(0.4, cadZoom + delta));
+    updateCadStageTransform();
+  }, { passive: false });
+
+  cadViewportWrap.addEventListener('pointerdown', (e) => {
+    isCadPanning = true;
+    cadPanStartX = e.clientX - cadPanX;
+    cadPanStartY = e.clientY - cadPanY;
+    cadViewportWrap.setPointerCapture(e.pointerId);
+  });
+  cadViewportWrap.addEventListener('pointermove', (e) => {
+    if (!isCadPanning) return;
+    cadPanX = e.clientX - cadPanStartX;
+    cadPanY = e.clientY - cadPanStartY;
+    updateCadStageTransform();
+  });
+  cadViewportWrap.addEventListener('pointerup', () => {
+    isCadPanning = false;
+  });
+}
+
+// Download SVG 1:1 & PNG 1:1
+document.getElementById('btn-cad-download-svg')?.addEventListener('click', () => {
+  const sheet = CAD_SHEETS_6[activeCadSheetIdx];
+  if (!sheet) return;
+  const blob = new Blob([sheet.svg.trim()], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `STEALTH_SURRON_CAD_SHEET_0${activeCadSheetIdx + 1}.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-cad-download-png')?.addEventListener('click', () => {
+  const sheet = CAD_SHEETS_6[activeCadSheetIdx];
+  if (!sheet) return;
+  const svgStr = sheet.svg.trim();
+  const img = new Image();
+  const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 2200;
+    c.height = 1320;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 2200, 1320);
+    URL.revokeObjectURL(url);
+    c.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = c.toDataURL('image/png');
+    a.download = `STEALTH_SURRON_CAD_SHEET_0${activeCadSheetIdx + 1}_1to1.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  img.src = url;
+});
+
+// Modal Blueprint System (also wired to 3D Hotspots)
 const modalBackdrop = document.getElementById('modal-backdrop');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
 const modalClose = document.getElementById('modal-close');
 
 function openEngineeringModal(modalKey) {
+  const keyToSheetIdx = { dropout: 0, battery: 1, saddle: 2, motor: 3, cordura: 4, wiring: 5 };
+  if (modalKey in keyToSheetIdx) {
+    openCadTablet(keyToSheetIdx[modalKey]);
+    return;
+  }
   const data = ENGINEERING_MODALS[modalKey];
   if (!data) return;
   closeMobileDrawers();
@@ -7680,13 +9180,10 @@ modalBackdrop.addEventListener('click', (e) => {
   if (e.target === modalBackdrop) closeEngineeringModal();
 });
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeEngineeringModal();
-});
-
-document.querySelectorAll('.blueprint-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    openEngineeringModal(btn.getAttribute('data-modal'));
-  });
+  if (e.key === 'Escape') {
+    closeEngineeringModal();
+    closeCadTablet();
+  }
 });
 
 // 3D Hotspots anchored to the 5 key engineering nodes in 3D space
@@ -7714,8 +9211,8 @@ const HOTSPOT_DEFS = [
   },
   {
     id: 'motor',
-    label: '[ МОТОР 3000W + ПМС-100 ]',
-    mobileLabel: '[ МОТОР 3000W • ПМС ]',
+    label: '[ МОТОР 3000W + ЭЛЕКТРОСХЕМА ]',
+    mobileLabel: '[ МОТОР 3000W • СХЕМА ]',
     parent: rearWheelNode,
     localPos: new THREE.Vector3(0.0, -0.08, 0.06)
   },
@@ -7795,17 +9292,19 @@ function updateHotspotScreenPositions() {
 }
 
 // ----------------------------------------------------------------------------
-// 9. RESIZE HANDLER & MAIN RENDER LOOP
+// 11. RESIZE HANDLER & MAIN RENDER LOOP (60 FPS)
 // ----------------------------------------------------------------------------
 window.addEventListener('resize', () => {
   const aspect = window.innerWidth / Math.max(window.innerHeight, 1);
   camera.aspect = aspect;
-  camera.fov = aspect < 1.0 ? 44 : 28;
+  if (currentCameraPresetKey !== 'pov') {
+    camera.fov = aspect < 1.0 ? 44 : 28;
+  }
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Support optional URL query params (?mode=xray, ?mode=explode, ?mode=side, ?mode=xray_explode)
+// Support optional URL query params (?mode=xray, ?mode=explode, ?mode=side, ?mode=xray_explode, ?mode=pov, ?mode=cad)
 const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
 if (modeParam === 'xray') {
@@ -7814,10 +9313,10 @@ if (modeParam === 'xray') {
   controls.target.set(0.12, 0.26, 0.0);
   controls.update();
 } else if (modeParam === 'explode') {
-  applyExplodeFactor(1.0, false);
+  applyExplodeFactor(1.0);
 } else if (modeParam === 'xray_explode') {
   setXRayMode(true);
-  applyExplodeFactor(0.55, false);
+  applyExplodeFactor(0.55);
   camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.14, 0.27, 0.92), new THREE.Vector3(0.12, 0.26, 0.0)));
   controls.target.set(0.12, 0.26, 0.0);
   controls.update();
@@ -7825,10 +9324,21 @@ if (modeParam === 'xray') {
   camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.08, 0.24, 1.98), new THREE.Vector3(0.08, 0.24, 0.0)));
   controls.target.set(0.08, 0.24, 0.0);
   controls.update();
+} else if (modeParam === 'pov') {
+  currentCameraPresetKey = 'pov';
+  setPovModeUI(true);
+  camera.fov = 38;
+  camera.updateProjectionMatrix();
+  camera.position.copy(CAMERA_PRESETS.pov.pos);
+  controls.target.copy(CAMERA_PRESETS.pov.target);
+  controls.update();
+} else if (modeParam === 'cad') {
+  openCadTablet(0);
 }
 
-function animate() {
+function animate(now = performance.now()) {
   requestAnimationFrame(animate);
+  updateSw900PhysicsAndScreen(now);
   controls.update();
   updateHotspotScreenPositions();
   renderer.render(scene, camera);

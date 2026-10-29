@@ -957,38 +957,65 @@ export function buildCockpitNode(mats) {
 
   cockpitGroup.add(headlightGroup);
 
-  // SW900 LCD Computer above Stem + Dual Handlebar Clamp Arms + 3-Button Remote Pad on Left Bar
+  // SW900 LCD Computer (90 x 54 x 18 mm) mounted on handlebar LEFT of stem on two clamps, facing rider's eyes in POV mode
   const sw900Group = new THREE.Group();
-  sw900Group.position.set(0.415, 0.656, 0.0);
-  sw900Group.rotation.z = 0.45;
-  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.054, 0.082), mats.MAT_ANODIZED_BLACK);
-  const swBezel = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.056, 0.084), mats.MAT_FRAME_RAL9005);
-  swBezel.position.set(0.007, 0, 0);
-  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.046, 0.074), mats.MAT_SW900_SCREEN);
-  swScreen.rotation.y = Math.PI / 2;
-  swScreen.rotation.x = Math.PI / 2;
-  swScreen.position.set(0.0095, 0, 0);
-  sw900Group.add(swCase, swBezel, swScreen);
-  [-0.026, 0.026].forEach((zArm) => {
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.032, 0.008), mats.MAT_ANODIZED_BLACK);
-    arm.position.set(-0.010, -0.022, zArm);
-    sw900Group.add(arm);
+  sw900Group.name = 'SW900_COMPUTER_UNIT';
+  sw900Group.position.set(0.412, 0.654, 0.064);
+  sw900Group.lookAt(new THREE.Vector3(-0.12, 0.88, 0.064));
+
+  // Black ABS Rectangular Housing (90 x 54 x 18 mm)
+  const swCase = new THREE.Mesh(new THREE.BoxGeometry(0.090, 0.054, 0.018), mats.MAT_ANODIZED_BLACK);
+  swCase.castShadow = true;
+
+  // Silver-White Outer Frame Bezel around LCD Screen
+  const swSilverBezel = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.052, 0.0025), mats.MAT_STEEL_ROTOR);
+  swSilverBezel.position.set(0, 0, 0.0085);
+
+  // Live 512x320 60FPS LCD Screen Plane
+  const swScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.084, 0.048), mats.MAT_SW900_SCREEN);
+  swScreen.name = 'SW900_LCD_SCREEN_MESH';
+  swScreen.position.set(0, 0, 0.0099);
+  swScreen.userData = { isSw900Screen: true };
+
+  sw900Group.add(swCase, swSilverBezel, swScreen);
+
+  // Two Handlebar Mounting Clamps & Brackets (left and right of SW900 backplate)
+  [-0.028, 0.028].forEach((xClamp) => {
+    const bracketArm = new THREE.Mesh(new THREE.BoxGeometry(0.009, 0.032, 0.012), mats.MAT_ANODIZED_BLACK);
+    bracketArm.position.set(xClamp, -0.022, -0.010);
+    const barRing = new THREE.Mesh(new THREE.TorusGeometry(0.0135, 0.0032, 10, 20), mats.MAT_ANODIZED_BLACK);
+    barRing.rotation.y = Math.PI / 2;
+    barRing.position.set(xClamp, -0.032, -0.014);
+    sw900Group.add(bracketArm, barRing);
   });
   cockpitGroup.add(sw900Group);
 
-  // SW900 3-Button Remote Control Pad (Up / M / Down) on Left Handlebar
+  // SW900 3-Button Rubber Remote Control Pad ([▲ UP], [M MODE], [▼ DOWN]) near Left Grip (clickable by mouse!)
   const swRemote = new THREE.Group();
+  swRemote.name = 'SW900_REMOTE_3BTN';
   swRemote.position.set(0.382, 0.655, 0.214);
-  const remBody = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.030, 0.016), mats.MAT_ANODIZED_BLACK);
-  swRemote.add(remBody);
-  [-0.008, 0, 0.008].forEach((by, bIdx) => {
-    const btn = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.0032, 0.0032, 0.004, 10),
-      bIdx === 1 ? mats.MAT_BLUE_ANODIZED : mats.MAT_RUBBER_KENDA
+  swRemote.lookAt(new THREE.Vector3(-0.12, 0.88, 0.214));
+
+  const remBody = new THREE.Mesh(new THREE.BoxGeometry(0.020, 0.034, 0.018), mats.MAT_ANODIZED_BLACK);
+  const remClamp = new THREE.Mesh(new THREE.TorusGeometry(0.0135, 0.003, 10, 20), mats.MAT_ANODIZED_BLACK);
+  remClamp.rotation.y = Math.PI / 2;
+  remClamp.position.set(0, -0.006, -0.010);
+  swRemote.add(remBody, remClamp);
+
+  const btnConfigs = [
+    { y: 0.010, action: 'UP', label: '▲', mat: mats.MAT_RUBBER_KENDA },
+    { y: 0.000, action: 'MODE', label: 'M', mat: mats.MAT_BLUE_ANODIZED },
+    { y: -0.010, action: 'DOWN', label: '▼', mat: mats.MAT_RUBBER_KENDA }
+  ];
+  btnConfigs.forEach((bCfg) => {
+    const btnMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.014, 0.0075, 0.005),
+      bCfg.mat
     );
-    btn.rotation.z = Math.PI / 2;
-    btn.position.set(-0.012, by, 0);
-    swRemote.add(btn);
+    btnMesh.position.set(0, bCfg.y, 0.010);
+    btnMesh.name = `SW900_BTN_${bCfg.action}`;
+    btnMesh.userData = { sw900Button: bCfg.action, label: bCfg.label };
+    swRemote.add(btnMesh);
   });
   cockpitGroup.add(swRemote);
 

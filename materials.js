@@ -364,67 +364,371 @@ export function createMtx39DecalTexture() {
 }
 
 /**
- * 8. Generates SW900 LCD Computer Screen texture
+ * Helper: Draws a classic 7-segment digit at (x, y) with width w, height h, thickness t
+ */
+function drawSevenSegmentDigit(ctx, ch, x, y, w, h, t, onColor, offColor) {
+  const map = {
+    '0': [1, 1, 1, 1, 1, 1, 0],
+    '1': [0, 1, 1, 0, 0, 0, 0],
+    '2': [1, 1, 0, 1, 1, 0, 1],
+    '3': [1, 1, 1, 1, 0, 0, 1],
+    '4': [0, 1, 1, 0, 0, 1, 1],
+    '5': [1, 0, 1, 1, 0, 1, 1],
+    '6': [1, 0, 1, 1, 1, 1, 1],
+    '7': [1, 1, 1, 0, 0, 0, 0],
+    '8': [1, 1, 1, 1, 1, 1, 1],
+    '9': [1, 1, 1, 1, 0, 1, 1],
+    '-': [0, 0, 0, 0, 0, 0, 1],
+    ' ': [0, 0, 0, 0, 0, 0, 0]
+  };
+  const segs = map[ch] || map[' '];
+  const halfH = h / 2;
+  const pad = 1.5;
+
+  // Segment polygons: [A(top), B(top-right), C(bot-right), D(bot), E(bot-left), F(top-left), G(mid)]
+  const rects = [
+    [x + pad + t * 0.4, y, w - 2 * pad - t * 0.8, t],                        // A
+    [x + w - t, y + pad + t * 0.4, t, halfH - pad - t * 0.6],                // B
+    [x + w - t, y + halfH + pad * 0.5, t, halfH - pad - t * 0.6],            // C
+    [x + pad + t * 0.4, y + h - t, w - 2 * pad - t * 0.8, t],                // D
+    [x, y + halfH + pad * 0.5, t, halfH - pad - t * 0.6],                    // E
+    [x, y + pad + t * 0.4, t, halfH - pad - t * 0.6],                        // F
+    [x + pad + t * 0.4, y + halfH - t * 0.5, w - 2 * pad - t * 0.8, t]       // G
+  ];
+
+  for (let i = 0; i < 7; i++) {
+    ctx.fillStyle = segs[i] ? onColor : offColor;
+    const [rx, ry, rw, rh] = rects[i];
+    ctx.fillRect(rx, ry, rw, rh);
+  }
+}
+
+function drawSevenSegmentNumber(ctx, str, xRight, y, digitW, digitH, thickness, gap, onColor, offColor) {
+  let curX = xRight;
+  for (let i = str.length - 1; i >= 0; i--) {
+    const ch = str[i];
+    if (ch === '.' || ch === ':') {
+      curX -= (thickness + 4);
+      ctx.fillStyle = onColor;
+      if (ch === '.') {
+        ctx.fillRect(curX + 1, y + digitH - thickness - 1, thickness + 2, thickness + 2);
+      } else {
+        ctx.fillRect(curX + 1, y + digitH * 0.30, thickness + 1, thickness + 1);
+        ctx.fillRect(curX + 1, y + digitH * 0.66, thickness + 1, thickness + 1);
+      }
+      curX -= 4;
+    } else {
+      curX -= digitW;
+      drawSevenSegmentDigit(ctx, ch, curX, y, digitW, digitH, thickness, onColor, offColor);
+      curX -= gap;
+    }
+  }
+}
+
+/**
+ * 8. Generates SW900 LCD Computer Screen texture (512x320, real-time 60 FPS updater, 1:1 with real SW900)
  */
 export function createSw900ScreenTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 320;
   const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
 
-  ctx.fillStyle = '#071018';
-  ctx.fillRect(0, 0, 512, 320);
+  function updateSw900(state = {}) {
+    const {
+      voltage = 84.0,
+      socBars = 5,
+      speedKmh = 0.0,
+      pas = 5,
+      watts = 0,
+      odoKm = 128.45,
+      tripKm = 0.00,
+      maxSpeedKmh = 0.0,
+      avgSpeedKmh = 0.0,
+      tripTimeSec = 0,
+      modeIndex = 0, // 0: ODO, 1: TRIP, 2: MAX, 3: AVG, 4: TIME
+      lightsOn = false,
+      brakeOn = false
+    } = state;
 
-  ctx.strokeStyle = '#00d2ff';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(12, 12, 488, 296);
+    // Outer silver/white SW900 bezel frame & inner LCD glass window (1:1 as on Reference Photo #8)
+    ctx.fillStyle = '#0e1014';
+    ctx.fillRect(0, 0, 512, 320);
 
-  ctx.fillStyle = '#00ff66';
-  ctx.font = '700 26px "JetBrains Mono", monospace';
-  ctx.fillText('72V  |||||| 100%', 28, 52);
+    // Silver-white inner bezel line + SW900 bottom-right badge
+    ctx.strokeStyle = '#d8e0e8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(8, 8, 496, 286);
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 110px "JetBrains Mono", monospace';
-  ctx.fillText('00.0', 45, 185);
-  ctx.font = '700 28px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#00d2ff';
-  ctx.fillText('KM/H', 360, 175);
+    ctx.fillStyle = '#bcc6d0';
+    ctx.font = 'italic 800 16px "JetBrains Mono", Arial, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('SW900', 496, 313);
 
-  ctx.fillStyle = '#ff5500';
-  ctx.font = '800 34px "JetBrains Mono", monospace';
-  ctx.fillText('PAS: 5   3000W PEAK', 28, 265);
+    // Authentic SW900 LCD background (classic light grey-greenish LCD or backlit night cyan-grey when headlight is ON)
+    const lcdBg = lightsOn ? '#b9d8e2' : '#cad6d8';
+    const inkOn = '#10181f';
+    const inkGhost = 'rgba(16, 24, 31, 0.085)';
+    ctx.fillStyle = lcdBg;
+    ctx.fillRect(14, 14, 484, 274);
 
-  return new THREE.CanvasTexture(canvas);
+    // Subtle inner LCD shadow border
+    ctx.strokeStyle = 'rgba(16, 24, 31, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(16, 16, 480, 270);
+
+    // Horizontal LCD zone divider rules (matching real SW900 segments in Photo #8)
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(24, 92, 464, 3);
+    ctx.fillRect(24, 206, 464, 3);
+
+    // =========================================================================
+    // ZONE 1 (TOP): BATTERY 5-BAR ICON + REAL-TIME VOLTAGE + HEADLIGHT + BRAKE + ODO/TRIP/TIME
+    // =========================================================================
+    // F / E Battery scale labels
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 13px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('F', 28, 31);
+    ctx.fillText('E', 152, 31);
+
+    // Battery body outline (x=28..162, y=35..61) + positive nub
+    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = inkOn;
+    ctx.strokeRect(28, 35, 134, 26);
+    ctx.fillRect(22, 42, 6, 12);
+
+    // 5 Battery Segments (from right=Empty to left=Full as on SW900 Photo #8)
+    for (let b = 0; b < 5; b++) {
+      const barIndexFromEmpty = 4 - b; // right-most is 1st bar above E, left-most is 5th bar under F
+      const bx = 33 + b * 25;
+      ctx.fillStyle = barIndexFromEmpty < socBars ? inkOn : inkGhost;
+      ctx.fillRect(bx, 39, 21, 18);
+    }
+
+    // Live Digital Voltage right under battery icon (Ohm's Law sag: U = U_oc - I * R_int)
+    ctx.fillStyle = inkOn;
+    ctx.font = '900 19px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${voltage.toFixed(1)}V`, 28, 84);
+
+    // Headlight icon 💡 (lights up when Sur-Ron light is ON)
+    ctx.save();
+    if (lightsOn) {
+      ctx.fillStyle = '#0a5c28';
+      ctx.fillRect(112, 66, 36, 20);
+      ctx.fillStyle = '#e8fff0';
+      ctx.font = '800 13px "JetBrains Mono", sans-serif';
+      ctx.fillText('💡ON', 115, 81);
+    } else {
+      ctx.fillStyle = inkGhost;
+      ctx.font = '800 13px "JetBrains Mono", sans-serif';
+      ctx.fillText('💡', 120, 81);
+    }
+    ctx.restore();
+
+    // Red Brake Indicator (!) BRAKE (lights up brightly when brake is active)
+    if (brakeOn) {
+      ctx.fillStyle = '#d91616';
+      ctx.fillRect(172, 24, 72, 26);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 14px "JetBrains Mono", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(!)BRAKE', 208, 42);
+    } else {
+      ctx.strokeStyle = inkGhost;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(172, 24, 72, 26);
+      ctx.fillStyle = inkGhost;
+      ctx.font = '800 13px "JetBrains Mono", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(!)BRAKE', 208, 42);
+    }
+
+    // Top-Right Multi-Function Readout: ODO / TRIP / MAX / AVG / TIME (switched by [M] button)
+    const modeLabels = ['ODO', 'TRIP', 'MAX', 'AVG', 'TIME'];
+    const activeLabel = modeLabels[modeIndex % 5];
+    ctx.fillStyle = inkOn;
+    ctx.font = '900 16px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(activeLabel, 242, 81);
+
+    let topRightFormatted = '0128.4';
+    let unitStr = 'Km';
+    if (modeIndex === 0) {
+      topRightFormatted = odoKm.toFixed(2).padStart(6, '0');
+      unitStr = 'Km';
+    } else if (modeIndex === 1) {
+      topRightFormatted = tripKm.toFixed(2).padStart(6, '0');
+      unitStr = 'Km';
+    } else if (modeIndex === 2) {
+      topRightFormatted = maxSpeedKmh.toFixed(1).padStart(5, '0');
+      unitStr = 'Km/h';
+    } else if (modeIndex === 3) {
+      topRightFormatted = avgSpeedKmh.toFixed(1).padStart(5, '0');
+      unitStr = 'Km/h';
+    } else {
+      const mins = Math.floor(tripTimeSec / 60);
+      const secs = Math.floor(tripTimeSec % 60);
+      topRightFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      unitStr = 'M:S';
+    }
+
+    drawSevenSegmentNumber(ctx, topRightFormatted, 444, 28, 26, 52, 5.5, 6, inkOn, inkGhost);
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 14px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(unitStr, 450, 79);
+
+    // =========================================================================
+    // ZONE 2 (CENTER): SPEED BADGE + HUGE 7-SEGMENT SPEED (00.0 .. 82.4 KM/H)
+    // =========================================================================
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(26, 102, 66, 22);
+    ctx.fillStyle = lcdBg;
+    ctx.font = '900 14px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SPEED', 59, 118);
+
+    // PAS Speed Limit helper label on left under SPEED badge
+    const pasSpecLabels = {
+      1: 'LIM 25 KM/H',
+      2: 'ECO 35 KM/H',
+      3: 'STD 45 KM/H',
+      4: 'SPT 65 KM/H',
+      5: 'MAX 82 KM/H'
+    };
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 12px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(pasSpecLabels[pas] || 'MAX 82 KM/H', 26, 146);
+    if (watts < 0) {
+      ctx.fillStyle = '#b51212';
+      ctx.fillText('E-ABS REGEN', 26, 168);
+    }
+
+    const speedFormatted = Math.max(0, speedKmh).toFixed(1).padStart(4, '0');
+    drawSevenSegmentNumber(ctx, speedFormatted, 418, 104, 48, 90, 9.5, 10, inkOn, inkGhost);
+
+    ctx.fillStyle = inkOn;
+    ctx.font = '900 18px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Km/h', 428, 192);
+
+    // =========================================================================
+    // ZONE 3 (BOTTOM): MODE / PAS (1..5) + LIVE WATTMETER (W = U * I, REGEN E-ABS)
+    // =========================================================================
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(26, 214, 58, 20);
+    ctx.fillStyle = lcdBg;
+    ctx.font = '900 13px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MODE', 55, 229);
+
+    ctx.fillStyle = inkOn;
+    ctx.font = '800 14px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('STD', 102, 229);
+    ctx.font = '900 16px "JetBrains Mono", sans-serif';
+    ctx.fillText('PAS', 26, 274);
+
+    // PAS 7-segment digit (1..5)
+    drawSevenSegmentDigit(ctx, String(pas), 74, 236, 30, 44, 6.0, inkOn, inkGhost);
+
+    // Vertical divider between PAS and WATTMETER
+    ctx.fillStyle = inkOn;
+    ctx.fillRect(142, 212, 2.5, 70);
+
+    // Live Wattmeter (0000 W .. 4320 W or E-ABS -1650 W)
+    const isRegen = watts < -1;
+    ctx.fillStyle = isRegen ? '#b51212' : inkOn;
+    ctx.font = '900 15px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(isRegen ? 'E-ABS' : 'WATT', 156, 274);
+
+    const absWatts = Math.min(9999, Math.round(Math.abs(watts)));
+    const wattStr = (isRegen ? '-' : '') + String(absWatts).padStart(4, '0');
+    drawSevenSegmentNumber(
+      ctx,
+      wattStr,
+      432,
+      222,
+      32,
+      56,
+      6.5,
+      8,
+      isRegen ? '#b51212' : inkOn,
+      inkGhost
+    );
+
+    ctx.fillStyle = isRegen ? '#b51212' : inkOn;
+    ctx.font = '900 20px "JetBrains Mono", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('W', 444, 276);
+
+    tex.needsUpdate = true;
+  }
+
+  updateSw900();
+  return { tex, canvas, updateSw900 };
+}
+
+/**
+ * Helper: Distinct color tint for each of the 20 7P series groups (1S..20S) in X-Ray mode
+ * Shows current flow from 1S (3.6..4.2V cool cyan) -> 10S (emerald) -> 20S (72..84.0V warm orange/red)
+ */
+export function getSeriesXRayColor(seriesId) {
+  const t = (seriesId - 1) / 19; // 0.0 at 1S -> 1.0 at 20S
+  const color = new THREE.Color();
+  // Smooth HSL gradient from Cyan-Blue (hue 0.56) -> Green (0.35) -> Yellow-Orange (0.08) -> Red (0.01)
+  const hue = 0.56 * (1.0 - t) + 0.01 * t;
+  color.setHSL(hue, 0.88, 0.52);
+  return color;
 }
 
 /**
  * 9. Generates crisp 3D badge material for each of the 20 battery series sections (1S..20S)
+ *    Includes cumulative voltage range: 1S (3.6..4.2V) -> 20S (72.0..84.0V)
  */
-export function createBatterySeriesLabelMaterial(seriesId, polarityOnLeft) {
+export function createBatterySeriesLabelMaterial(seriesId, polarityOnThisSide) {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
-  canvas.height = 80;
+  canvas.height = 96;
   const ctx = canvas.getContext('2d');
 
-  const isMainNeg = seriesId === 1 && polarityOnLeft < 0;
-  const isMainPos = seriesId === 20 && polarityOnLeft > 0;
-  const isPlus = polarityOnLeft > 0;
+  const isMainNeg = seriesId === 1 && polarityOnThisSide < 0;
+  const isMainPos = seriesId === 20 && polarityOnThisSide > 0;
+  const isPlus = polarityOnThisSide > 0;
 
   ctx.fillStyle = isMainPos ? '#5a0e06' : isMainNeg ? '#062642' : '#0b0e14';
-  ctx.fillRect(0, 0, 256, 80);
+  ctx.fillRect(0, 0, 256, 96);
 
-  ctx.strokeStyle = isMainPos ? '#ff4422' : isMainNeg ? '#00d8ff' : isPlus ? '#ff6622' : '#00d8ff';
+  ctx.strokeStyle = isMainPos ? '#ff3311' : isMainNeg ? '#00d8ff' : isPlus ? '#ff5522' : '#00b8ff';
   ctx.lineWidth = 6;
-  ctx.strokeRect(3, 3, 250, 74);
+  ctx.strokeRect(3, 3, 250, 90);
 
   const polStr = isPlus ? '+' : '−';
-  const tag = isMainNeg ? '1S [B− 0V]' : isMainPos ? '20S [B+ 84V]' : `${seriesId}S (${polStr})`;
+  const topLine = isMainNeg
+    ? '1S [B− 0V]'
+    : isMainPos
+      ? '20S [B+ 84V]'
+      : `${seriesId}S (${polStr})`;
+  const vMin = (seriesId * 3.6).toFixed(1);
+  const vMax = (seriesId * 4.2).toFixed(1);
+  const botLine = `${vMin}..${vMax}V`;
 
-  ctx.font = '900 34px "JetBrains Mono", monospace';
+  ctx.font = '900 32px "JetBrains Mono", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(tag, 128, 41);
+  ctx.fillText(topLine, 128, 34);
+
+  ctx.font = '700 22px "JetBrains Mono", monospace';
+  ctx.fillStyle = isPlus ? '#ffb38a' : '#8ae8ff';
+  ctx.fillText(botLine, 128, 69);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.anisotropy = 4;
@@ -443,7 +747,8 @@ export function createStealthMaterials() {
   const rotorTex = createRotorBrushedTexture(512);
   const motoVinylTex = createMotoVinylBumpTexture(512);
   const mtxDecalTex = createMtx39DecalTexture();
-  const sw900Tex = createSw900ScreenTexture();
+  const sw900Controller = createSw900ScreenTexture();
+  const sw900Tex = sw900Controller.tex;
 
   // 1. MAT_FRAME_RAL9005 (Frame, subframe, 6mm dropout armor plates)
   const MAT_FRAME_RAL9005 = new THREE.MeshPhysicalMaterial({
@@ -694,7 +999,8 @@ export function createStealthMaterials() {
     MAT_XT90_YELLOW,
     MAT_SW900_SCREEN,
     MAT_FOXSID_DECAL,
-    MAT_KENDA_SIDEWALL
+    MAT_KENDA_SIDEWALL,
+    sw900Controller
   };
 }
 

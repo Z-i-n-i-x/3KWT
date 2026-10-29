@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import gsap from 'gsap';
 
-import { createStealthMaterials } from './materials.js';
+import { createStealthMaterials, getSeriesXRayColor } from './materials.js';
 import {
   buildFrameNode,
   buildForkNode,
@@ -22,7 +22,7 @@ import {
   buildUnderTubeModuleNode,
   buildMotoSaddleAndSubframeNode
 } from './bike_powertrain.js';
-import { ENGINEERING_MODALS } from './engineering_modals.js';
+import { ENGINEERING_MODALS, CAD_SHEETS_6 } from './engineering_modals.js';
 
 // ----------------------------------------------------------------------------
 // 1. INITIALIZE CLEAN STUDIO WEBGL SCENE (#050505 + ContactShadows @ y = -0.335)
@@ -468,7 +468,8 @@ function setXRayMode(enable) {
     batterySys.holderLeftGroup.visible = false;
     batterySys.holderRightGroup.visible = false;
 
-    // Show all 20 sections (140 cells) at full opacity on entry; hovering/tapping any section highlights it!
+    // Show all 20 sections (140 cells) with their unique 1S..20S color gradient on entry
+    hoveredSeriesId = -1;
     resetAllBatterySeriesMaterials();
     xrayGroupTitle.textContent = '20S7P (140× 21700): НАЖМИТЕ НА СЕКЦИЮ 1S..20S';
     if (mobXRayTitle) mobXRayTitle.textContent = 'X-RAY 20S7P: ТАПНИТЕ СЕКЦИЮ 1S..20S';
@@ -489,6 +490,7 @@ function setXRayMode(enable) {
     batterySys.rightCoverGroup.visible = true;
     batterySys.holderLeftGroup.visible = true;
     batterySys.holderRightGroup.visible = true;
+    hoveredSeriesId = -1;
     resetAllBatterySeriesMaterials();
   }
 }
@@ -497,11 +499,21 @@ function resetAllBatterySeriesMaterials() {
   if (hoveredSeriesId === null) return;
   hoveredSeriesId = null;
   batterySys.seriesGroups.forEach((sGroup) => {
+    const s = sGroup.userData.seriesId;
     const { cellMat, busMat, niMat } = sGroup.userData;
-    cellMat.color.setHex(0xffffff);
-    cellMat.emissive.setHex(0x000000);
-    cellMat.emissiveIntensity = 0;
-    cellMat.opacity = 1.0;
+    if (isXRayMode) {
+      // Unique color tint per 7P group (1S -> 20S) in X-Ray mode to show current flow
+      const cTint = getSeriesXRayColor(s);
+      cellMat.color.copy(cTint);
+      cellMat.emissive.copy(cTint);
+      cellMat.emissiveIntensity = 0.28;
+      cellMat.opacity = 1.0;
+    } else {
+      cellMat.color.setHex(0xffffff);
+      cellMat.emissive.setHex(0x000000);
+      cellMat.emissiveIntensity = 0;
+      cellMat.opacity = 1.0;
+    }
 
     busMat.emissive.setHex(0x000000);
     busMat.emissiveIntensity = 0;
@@ -520,9 +532,10 @@ function highlightBatterySeriesGroup(seriesId) {
 
     if (s === seriesId) {
       // Selected 7P group and its copper-nickel busbar flash neon!
-      cellMat.color.setHex(0x00ff66);
-      cellMat.emissive.setHex(0x00ff66);
-      cellMat.emissiveIntensity = 0.85;
+      const cTint = getSeriesXRayColor(s);
+      cellMat.color.copy(cTint);
+      cellMat.emissive.copy(cTint);
+      cellMat.emissiveIntensity = 0.95;
       cellMat.opacity = 1.0;
 
       busMat.emissive.setHex(0xff5500);
@@ -533,17 +546,18 @@ function highlightBatterySeriesGroup(seriesId) {
       const polSideStr = polarityOnLeft > 0 ? '+Z ПЛЮС / -Z МИНУС' : '+Z МИНУС / -Z ПЛЮС';
       xrayGroupTitle.textContent = `СЕКЦИЯ ${s}S (РЯД #${row}, ЯЧЕЙКИ #${(s - 1) * 7 + 1}..#${s * 7})`;
       xrayGroupCfg.textContent = `${s}S7P (${polSideStr})`;
-      xrayGroupVolt.textContent = `4.20 V (∑ ${(s * 4.2).toFixed(1)}V)`;
+      xrayGroupVolt.textContent = `${(s * 3.6).toFixed(1)}..${(s * 4.2).toFixed(1)}V`;
       xrayGroupTemp.textContent = `NTC ${sGroup.userData.ntcTemp}°C / Cu 2.5мм²`;
 
-      if (mobXRayTitle) mobXRayTitle.textContent = `СЕКЦИЯ ${s}S (ЯРУС #${row} • #${(s - 1) * 7 + 1}..#${s * 7})`;
-      if (mobXRayVal) mobXRayVal.textContent = `4.2V (∑${(s * 4.2).toFixed(1)}V) • ${sGroup.userData.ntcTemp}°C`;
+      if (mobXRayTitle) mobXRayTitle.textContent = `СЕКЦИЯ ${s}S (РЯД #${row} • #${(s - 1) * 7 + 1}..#${s * 7})`;
+      if (mobXRayVal) mobXRayVal.textContent = `${(s * 3.6).toFixed(1)}..${(s * 4.2).toFixed(1)}V • ${sGroup.userData.ntcTemp}°C`;
     } else {
-      // Other 133 cells fade into semi-transparent glass (opacity: 0.16)
-      cellMat.color.setHex(0x3b82a6);
+      // Other 133 cells fade into semi-transparent tinted glass (opacity: 0.22)
+      const cTint = getSeriesXRayColor(s);
+      cellMat.color.copy(cTint);
       cellMat.emissive.setHex(0x000000);
       cellMat.emissiveIntensity = 0.0;
-      cellMat.opacity = 0.16;
+      cellMat.opacity = 0.22;
 
       busMat.emissive.setHex(0x000000);
       busMat.emissiveIntensity = 0.0;
@@ -560,7 +574,7 @@ btnXRay.addEventListener('click', () => {
   }
 });
 
-// Raycaster for hovering (desktop) or tapping (mobile) any of the 20 groups (1S..20S) in X-Ray or Exploded mode
+// Raycaster for hovering/tapping 20 battery groups (1S..20S) AND 3D SW900 handlebar buttons
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
@@ -591,48 +605,273 @@ function inspectBatteryAtClientXY(clientX, clientY) {
   return false;
 }
 
+function check3DSw900ButtonClick(clientX, clientY) {
+  pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(cockpitNode.children, true);
+  for (let i = 0; i < hits.length; i++) {
+    const btnType = hits[i].object.userData && hits[i].object.userData.sw900Button;
+    if (btnType) {
+      handleSw900ButtonAction(btnType);
+      return true;
+    }
+  }
+  return false;
+}
+
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   inspectBatteryAtClientXY(e.clientX, e.clientY);
 });
 
 renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (check3DSw900ButtonClick(e.clientX, e.clientY)) return;
   if (e.pointerType === 'touch' || window.innerWidth <= 920) {
     inspectBatteryAtClientXY(e.clientX, e.clientY);
   }
 });
 
 // ----------------------------------------------------------------------------
-// 7. TEST BRAKE & SUR-RON HEADLIGHT SWITCH
+// 7. TEST BRAKE & SUR-RON HEADLIGHT SWITCH + LIVE SW900 TELEMETRY STATE
 // ----------------------------------------------------------------------------
 let isLightsAndBrakeOn = false;
+let isRegenBraking = false;
 const btnLights = document.getElementById('btn-lights');
+const btnRegenBrake = document.getElementById('btn-regen-brake');
 
-btnLights.addEventListener('click', () => {
-  isLightsAndBrakeOn = !isLightsAndBrakeOn;
+function updateBrakeAndHeadlightVisuals() {
   lightsTestGroup.visible = isLightsAndBrakeOn;
+  mats.MAT_HEADLIGHT_LED.emissiveIntensity = isLightsAndBrakeOn ? 4.5 : 0.5;
 
-  if (isLightsAndBrakeOn) {
-    btnLights.classList.add('active-orange');
-    // Sur-Ron Dual LED eyes ignite bright white/cyan
-    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 4.5;
-    // Rear LED Brake Light flashes bright red (emissive: 0xff0000, emissiveIntensity: 4.0)
+  const brakeActive = isLightsAndBrakeOn || isRegenBraking;
+  if (brakeActive) {
     mats.MAT_BRAKE_LED.emissive.setHex(0xff0000);
-    mats.MAT_BRAKE_LED.emissiveIntensity = 4.0;
-    rearBrakePointLight.intensity = 3.5;
+    mats.MAT_BRAKE_LED.emissiveIntensity = 4.2;
+    rearBrakePointLight.intensity = 3.8;
   } else {
-    btnLights.classList.remove('active-orange');
-    mats.MAT_HEADLIGHT_LED.emissiveIntensity = 0.5;
     mats.MAT_BRAKE_LED.emissiveIntensity = 0.35;
     rearBrakePointLight.intensity = 0.0;
   }
+}
+
+btnLights.addEventListener('click', () => {
+  isLightsAndBrakeOn = !isLightsAndBrakeOn;
+  btnLights.classList.toggle('active-orange', isLightsAndBrakeOn);
+  updateBrakeAndHeadlightVisuals();
 });
 
 // ----------------------------------------------------------------------------
-// 8. CAMERA PRESETS, MOBILE DRAWERS & 3D SCREEN-SPACE INTERACTIVE HOTSPOTS
+// 8. LIVE SW900 ON-BOARD COMPUTER (60 FPS 7-SEGMENT LCD + ODO + WATTMETER + POV)
 // ----------------------------------------------------------------------------
-function flyCameraTo(posVec, targetVec) {
-  const adjustedPos = getViewportAdjustedPos(posVec, targetVec);
+const PAS_LIMITS = {
+  1: { maxSpeedKmh: 24.9, maxPowerW: 240, maxCurrentA: 3.0 },
+  2: { maxSpeedKmh: 36.0, maxPowerW: 950, maxCurrentA: 12.0 },
+  3: { maxSpeedKmh: 45.0, maxPowerW: 1680, maxCurrentA: 21.0 },
+  4: { maxSpeedKmh: 64.0, maxPowerW: 2880, maxCurrentA: 36.0 },
+  5: { maxSpeedKmh: 82.4, maxPowerW: 4320, maxCurrentA: 60.0 }
+};
+const BOTTOM_MODES = ['ODO', 'TRIP', 'MAX', 'AVG', 'TIME'];
+const ODO_STORAGE_KEY = 'stealth_surron_72v_odo_km';
+
+let savedOdo = 128.45;
+try {
+  const rawOdo = localStorage.getItem(ODO_STORAGE_KEY);
+  if (rawOdo !== null && !isNaN(parseFloat(rawOdo))) {
+    savedOdo = parseFloat(rawOdo);
+  }
+} catch (e) {
+  // ignore localStorage restrictions
+}
+
+const sw900State = {
+  pas: 5,
+  throttlePct: 0,
+  speedKmh: 0.0,
+  openCircuitVolts: 84.0,
+  internalResistanceOhm: 0.07, // 20S7P EVE 50E pack internal resistance (~70 mOhm)
+  voltage: 84.0,
+  currentA: 0.0,
+  watts: 0,
+  odoKm: savedOdo,
+  tripKm: 0.0,
+  maxSpeedKmh: 0.0,
+  rideTimeSec: 0,
+  bottomModeIdx: 0
+};
+
+const sw900HudWidget = document.getElementById('sw900-hud-widget');
+const sw900HudCanvas = document.getElementById('sw900-hud-canvas');
+const sw900HudCtx = sw900HudCanvas ? sw900HudCanvas.getContext('2d') : null;
+const sw900PovBadge = document.getElementById('sw900-pov-badge');
+const sliderThrottle = document.getElementById('slider-throttle');
+const throttleLabel = document.getElementById('throttle-label');
+const topMetricVolt = document.getElementById('top-metric-volt');
+const topMetricOdo = document.getElementById('top-metric-odo');
+const btnPovRider = document.getElementById('btn-pov-rider');
+
+function handleSw900ButtonAction(action) {
+  if (action === 'UP') {
+    sw900State.pas = Math.min(5, sw900State.pas + 1);
+  } else if (action === 'DOWN') {
+    sw900State.pas = Math.max(1, sw900State.pas - 1);
+  } else if (action === 'MODE') {
+    sw900State.bottomModeIdx = (sw900State.bottomModeIdx + 1) % BOTTOM_MODES.length;
+  }
+}
+
+document.getElementById('sw900-btn-up')?.addEventListener('click', () => handleSw900ButtonAction('UP'));
+document.getElementById('sw900-btn-down')?.addEventListener('click', () => handleSw900ButtonAction('DOWN'));
+document.getElementById('sw900-btn-mode')?.addEventListener('click', () => handleSw900ButtonAction('MODE'));
+
+if (sliderThrottle) {
+  sliderThrottle.addEventListener('input', (e) => {
+    sw900State.throttlePct = parseFloat(e.target.value) || 0;
+    if (throttleLabel) throttleLabel.textContent = `ГАЗ: ${Math.round(sw900State.throttlePct)}%`;
+  });
+}
+
+if (btnRegenBrake) {
+  btnRegenBrake.addEventListener('click', () => {
+    isRegenBraking = !isRegenBraking;
+    btnRegenBrake.classList.toggle('active', isRegenBraking);
+    updateBrakeAndHeadlightVisuals();
+  });
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.key >= '1' && e.key <= '5') {
+    sw900State.pas = parseInt(e.key, 10);
+  } else if (e.key === 'ArrowUp') {
+    handleSw900ButtonAction('UP');
+  } else if (e.key === 'ArrowDown') {
+    handleSw900ButtonAction('DOWN');
+  } else if (e.key === 'm' || e.key === 'M' || e.key === 'ь' || e.key === 'Ь') {
+    handleSw900ButtonAction('MODE');
+  }
+});
+
+let lastSimTime = performance.now();
+let lastOdoSaveTime = performance.now();
+
+function updateSw900PhysicsAndScreen(now) {
+  const dt = Math.min(0.1, Math.max(0.001, (now - lastSimTime) / 1000));
+  lastSimTime = now;
+
+  const pasCfg = PAS_LIMITS[sw900State.pas] || PAS_LIMITS[5];
+  const thr = sw900State.throttlePct / 100;
+
+  // Target speed & current depending on throttle, PAS level, and E-ABS regenerative braking
+  let targetSpeed = pasCfg.maxSpeedKmh * thr;
+  if (isRegenBraking) {
+    targetSpeed = 0;
+    // Regenerative braking decelerates quickly
+    sw900State.speedKmh = Math.max(0, sw900State.speedKmh - 38.0 * dt);
+  } else {
+    const accelRate = targetSpeed > sw900State.speedKmh ? 26.0 : 14.0;
+    const diff = targetSpeed - sw900State.speedKmh;
+    if (Math.abs(diff) < accelRate * dt) {
+      sw900State.speedKmh = targetSpeed;
+    } else {
+      sw900State.speedKmh += Math.sign(diff) * accelRate * dt;
+    }
+  }
+
+  // Compute instantaneous current I (Amps) and Ohm's law voltage U = U_oc - I * R_internal
+  if (isRegenBraking && sw900State.speedKmh > 1.5) {
+    // E-ABS regenerative braking charges battery (-20.5A, up to -1650W)
+    const regenRatio = Math.min(1.0, sw900State.speedKmh / 45.0);
+    sw900State.currentA = -20.5 * regenRatio;
+  } else if (!isRegenBraking && thr > 0.005) {
+    const loadFactor = Math.min(1.0, thr * (0.45 + 0.55 * (sw900State.speedKmh / Math.max(1, pasCfg.maxSpeedKmh))));
+    sw900State.currentA = pasCfg.maxCurrentA * loadFactor;
+  } else {
+    sw900State.currentA = 0.0;
+  }
+
+  // Gradual open-circuit discharge as trip distance increases (2.94 kWh capacity ~ 110 km range)
+  sw900State.openCircuitVolts = Math.max(62.0, 84.0 - sw900State.tripKm * 0.18);
+  sw900State.voltage = Math.min(84.4, Math.max(60.0, sw900State.openCircuitVolts - sw900State.currentA * sw900State.internalResistanceOhm));
+  sw900State.watts = Math.round(sw900State.voltage * sw900State.currentA);
+
+  // Clamp wattmeter in PAS 1..4 to their configured ceilings
+  if (sw900State.watts > pasCfg.maxPowerW) {
+    sw900State.watts = pasCfg.maxPowerW;
+  }
+
+  // Integrate distance dS = v * dt (km)
+  if (sw900State.speedKmh > 0.05) {
+    const dKm = (sw900State.speedKmh / 3600) * dt;
+    sw900State.odoKm += dKm;
+    sw900State.tripKm += dKm;
+    sw900State.rideTimeSec += dt;
+    if (sw900State.speedKmh > sw900State.maxSpeedKmh) {
+      sw900State.maxSpeedKmh = sw900State.speedKmh;
+    }
+
+    // Rotate 3D front and rear wheels in real time (R_wheel = 0.345m)
+    const vMs = sw900State.speedKmh / 3.6;
+    const dAngle = (vMs / 0.345) * dt;
+    frontWheelNode.rotation.z -= dAngle;
+    rearWheelNode.rotation.z -= dAngle;
+  }
+
+  // Persist ODO to localStorage every 2 seconds while moving
+  if (now - lastOdoSaveTime > 2000) {
+    lastOdoSaveTime = now;
+    try {
+      localStorage.setItem(ODO_STORAGE_KEY, sw900State.odoKm.toFixed(2));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Update top telemetry strip
+  if (topMetricVolt) {
+    topMetricVolt.textContent = `${sw900State.voltage.toFixed(1)}V / ${ Math.abs(sw900State.watts) }W`;
+  }
+  if (topMetricOdo) {
+    topMetricOdo.textContent = `${sw900State.odoKm.toFixed(2)} KM`;
+  }
+
+  // Compute 1..5 battery bars from open-circuit voltage (60V..84V)
+  const soc = Math.max(0, Math.min(1, (sw900State.voltage - 62.0) / (84.0 - 62.0)));
+  const batteryBars = Math.max(1, Math.min(5, Math.ceil(soc * 5)));
+  const avgSpeedKmh = sw900State.rideTimeSec > 1 ? (sw900State.tripKm / (sw900State.rideTimeSec / 3600)) : 0.0;
+
+  if (mats.sw900Controller && mats.sw900Controller.updateSw900) {
+    mats.sw900Controller.updateSw900({
+      speedKmh: sw900State.speedKmh,
+      voltage: sw900State.voltage,
+      watts: sw900State.watts,
+      pas: sw900State.pas,
+      odoKm: sw900State.odoKm,
+      tripKm: sw900State.tripKm,
+      maxSpeedKmh: sw900State.maxSpeedKmh,
+      avgSpeedKmh,
+      rideTimeSec: sw900State.rideTimeSec,
+      bottomMode: BOTTOM_MODES[sw900State.bottomModeIdx],
+      headlightOn: isLightsAndBrakeOn,
+      brakeOn: isRegenBraking || isLightsAndBrakeOn,
+      batteryBars
+    });
+
+    // Copy 3D SW900 CanvasTexture onto the 1:1 HUD duplicate canvas
+    if (sw900HudCtx && mats.sw900Controller.canvas) {
+      sw900HudCtx.drawImage(mats.sw900Controller.canvas, 0, 0);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 9. CAMERA PRESETS (INCLUDING RIDER POV-08), MOBILE DRAWERS & 3D HOTSPOTS
+// ----------------------------------------------------------------------------
+function flyCameraTo(posVec, targetVec, isPov = false) {
+  const adjustedPos = isPov ? posVec.clone() : getViewportAdjustedPos(posVec, targetVec);
+  camera.fov = isPov ? 38 : (window.innerWidth / Math.max(window.innerHeight, 1) < 1.0 ? 44 : 28);
+  camera.updateProjectionMatrix();
+
   gsap.to(camera.position, {
     x: adjustedPos.x,
     y: adjustedPos.y,
@@ -651,6 +890,7 @@ function flyCameraTo(posVec, targetVec) {
 
 const CAMERA_PRESETS = {
   default: { pos: DEFAULT_CAM_POS, target: DEFAULT_CAM_TARGET, code: 'ALL' },
+  pov: { pos: new THREE.Vector3(-0.08, 0.86, 0.064), target: new THREE.Vector3(0.412, 0.654, 0.064), code: 'POV-08', isPov: true },
   fork: { pos: new THREE.Vector3(1.12, 0.30, 0.88), target: new THREE.Vector3(0.50, 0.25, 0.0), code: 'FRK-01' },
   cockpit: { pos: new THREE.Vector3(0.92, 0.74, 0.62), target: new THREE.Vector3(0.42, 0.61, 0.0), code: 'CKP-02' },
   wheels: { pos: new THREE.Vector3(-0.42, 0.10, 1.15), target: new THREE.Vector3(-0.445, 0.015, 0.0), code: 'WHL-03' },
@@ -659,6 +899,25 @@ const CAMERA_PRESETS = {
   controller: { pos: new THREE.Vector3(0.48, -0.02, 0.74), target: new THREE.Vector3(0.18, 0.18, 0.0), code: 'ESC-06' },
   saddle: { pos: new THREE.Vector3(-0.28, 0.65, 0.88), target: new THREE.Vector3(-0.34, 0.50, 0.0), code: 'SDL-07' }
 };
+
+function setPovModeUI(active) {
+  if (sw900HudWidget) sw900HudWidget.classList.toggle('pov-enlarged', active);
+  if (btnPovRider) btnPovRider.classList.toggle('active', active);
+  if (sw900PovBadge) sw900PovBadge.textContent = active ? 'POV РАЙДЕРА 1:1' : 'РУЛЬ + HUD';
+}
+
+if (btnPovRider) {
+  btnPovRider.addEventListener('click', () => {
+    const isNowPov = currentCameraPresetKey !== 'pov';
+    const key = isNowPov ? 'pov' : 'default';
+    const preset = CAMERA_PRESETS[key];
+    currentCameraPresetKey = key;
+    activeNodeIndicator.textContent = preset.code;
+    nodeButtons.forEach((b) => b.classList.toggle('active', b.getAttribute('data-cam') === key));
+    setPovModeUI(isNowPov);
+    flyCameraTo(preset.pos, preset.target, Boolean(preset.isPov));
+  });
+}
 
 // Mobile Drawers & Pin Toggles
 const leftSidePanel = document.getElementById('left-side-panel');
@@ -715,7 +974,8 @@ nodeButtons.forEach((btn) => {
     if (preset) {
       currentCameraPresetKey = key;
       activeNodeIndicator.textContent = preset.code;
-      flyCameraTo(preset.pos, preset.target);
+      setPovModeUI(key === 'pov');
+      flyCameraTo(preset.pos, preset.target, Boolean(preset.isPov));
       closeMobileDrawers();
     }
   });
@@ -724,17 +984,188 @@ nodeButtons.forEach((btn) => {
 document.getElementById('btn-reset-cam').addEventListener('click', () => {
   if (isXRayMode) setXRayMode(false);
   currentCameraPresetKey = 'default';
+  setPovModeUI(false);
   closeMobileDrawers();
-  flyCameraTo(DEFAULT_CAM_POS, DEFAULT_CAM_TARGET);
+  flyCameraTo(DEFAULT_CAM_POS, DEFAULT_CAM_TARGET, false);
 });
 
-// Modal Blueprint System
+// ----------------------------------------------------------------------------
+// 10. FULLSCREEN 6-SHEET ENGINEERING CAD TABLET (ZOOM, PAN, THEME, PNG/SVG 1:1)
+// ----------------------------------------------------------------------------
+const cadTabletBackdrop = document.getElementById('cad-tablet-backdrop');
+const cadSheetStage = document.getElementById('cad-sheet-stage');
+const cadViewportWrap = document.getElementById('cad-viewport-wrap');
+const cadSheetSummary = document.getElementById('cad-sheet-summary');
+const cadZoomIndicator = document.getElementById('cad-zoom-indicator');
+const cadTabButtons = document.querySelectorAll('.cad-tab-btn');
+
+let activeCadSheetIdx = 0;
+let cadZoom = 1.0;
+let cadPanX = 0;
+let cadPanY = 0;
+let isCadPanning = false;
+let cadPanStartX = 0;
+let cadPanStartY = 0;
+let isCadWhiteTheme = false;
+
+function updateCadStageTransform() {
+  if (!cadSheetStage) return;
+  cadSheetStage.style.transform = `translate(${cadPanX}px, ${cadPanY}px) scale(${cadZoom})`;
+  if (cadZoomIndicator) {
+    cadZoomIndicator.textContent = `МАСШТАБ: ${Math.round(cadZoom * 100)}%`;
+  }
+}
+
+function selectCadSheet(idx) {
+  activeCadSheetIdx = Math.max(0, Math.min(CAD_SHEETS_6.length - 1, idx));
+  const sheet = CAD_SHEETS_6[activeCadSheetIdx];
+  if (!sheet || !cadSheetStage) return;
+
+  cadSheetStage.innerHTML = sheet.svg;
+  if (cadSheetSummary) {
+    cadSheetSummary.textContent = `${sheet.title} — ${sheet.specSummary}`;
+  }
+  cadTabButtons.forEach((btn, bIdx) => {
+    btn.classList.toggle('active', bIdx === activeCadSheetIdx);
+  });
+
+  // Fit sheet nicely on smaller viewports automatically
+  const vw = window.innerWidth;
+  const vh = window.innerHeight - 130;
+  cadZoom = Math.min(1.0, Math.max(0.45, Math.min((vw - 40) / 1100, (vh - 30) / 660)));
+  cadPanX = 0;
+  cadPanY = 0;
+  updateCadStageTransform();
+}
+
+function openCadTablet(sheetIdx = 0) {
+  closeMobileDrawers();
+  selectCadSheet(sheetIdx);
+  if (cadTabletBackdrop) cadTabletBackdrop.classList.add('open');
+}
+
+function closeCadTablet() {
+  if (cadTabletBackdrop) cadTabletBackdrop.classList.remove('open');
+}
+
+document.getElementById('btn-open-cad-tablet')?.addEventListener('click', () => openCadTablet(activeCadSheetIdx));
+document.getElementById('btn-open-cad-tablet-side')?.addEventListener('click', () => openCadTablet(activeCadSheetIdx));
+document.getElementById('btn-cad-close')?.addEventListener('click', closeCadTablet);
+
+cadTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.getAttribute('data-tab') || '0', 10);
+    selectCadSheet(idx);
+  });
+});
+
+document.querySelectorAll('.blueprint-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const sheetAttr = btn.getAttribute('data-sheet');
+    if (sheetAttr !== null) {
+      openCadTablet(parseInt(sheetAttr, 10));
+    } else {
+      openEngineeringModal(btn.getAttribute('data-modal'));
+    }
+  });
+});
+
+document.getElementById('btn-cad-zoom-in')?.addEventListener('click', () => {
+  cadZoom = Math.min(3.0, cadZoom + 0.2);
+  updateCadStageTransform();
+});
+document.getElementById('btn-cad-zoom-out')?.addEventListener('click', () => {
+  cadZoom = Math.max(0.4, cadZoom - 0.2);
+  updateCadStageTransform();
+});
+document.getElementById('btn-cad-zoom-reset')?.addEventListener('click', () => {
+  cadZoom = 1.0;
+  cadPanX = 0;
+  cadPanY = 0;
+  updateCadStageTransform();
+});
+document.getElementById('btn-cad-theme')?.addEventListener('click', () => {
+  isCadWhiteTheme = !isCadWhiteTheme;
+  if (cadSheetStage) cadSheetStage.classList.toggle('white-theme', isCadWhiteTheme);
+});
+
+if (cadViewportWrap) {
+  cadViewportWrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.14 : -0.14;
+    cadZoom = Math.min(3.2, Math.max(0.4, cadZoom + delta));
+    updateCadStageTransform();
+  }, { passive: false });
+
+  cadViewportWrap.addEventListener('pointerdown', (e) => {
+    isCadPanning = true;
+    cadPanStartX = e.clientX - cadPanX;
+    cadPanStartY = e.clientY - cadPanY;
+    cadViewportWrap.setPointerCapture(e.pointerId);
+  });
+  cadViewportWrap.addEventListener('pointermove', (e) => {
+    if (!isCadPanning) return;
+    cadPanX = e.clientX - cadPanStartX;
+    cadPanY = e.clientY - cadPanStartY;
+    updateCadStageTransform();
+  });
+  cadViewportWrap.addEventListener('pointerup', () => {
+    isCadPanning = false;
+  });
+}
+
+// Download SVG 1:1 & PNG 1:1
+document.getElementById('btn-cad-download-svg')?.addEventListener('click', () => {
+  const sheet = CAD_SHEETS_6[activeCadSheetIdx];
+  if (!sheet) return;
+  const blob = new Blob([sheet.svg.trim()], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `STEALTH_SURRON_CAD_SHEET_0${activeCadSheetIdx + 1}.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-cad-download-png')?.addEventListener('click', () => {
+  const sheet = CAD_SHEETS_6[activeCadSheetIdx];
+  if (!sheet) return;
+  const svgStr = sheet.svg.trim();
+  const img = new Image();
+  const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 2200;
+    c.height = 1320;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 2200, 1320);
+    URL.revokeObjectURL(url);
+    c.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = c.toDataURL('image/png');
+    a.download = `STEALTH_SURRON_CAD_SHEET_0${activeCadSheetIdx + 1}_1to1.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  img.src = url;
+});
+
+// Modal Blueprint System (also wired to 3D Hotspots)
 const modalBackdrop = document.getElementById('modal-backdrop');
 const modalTitle = document.getElementById('modal-title');
 const modalBody = document.getElementById('modal-body');
 const modalClose = document.getElementById('modal-close');
 
 function openEngineeringModal(modalKey) {
+  const keyToSheetIdx = { dropout: 0, battery: 1, saddle: 2, motor: 3, cordura: 4, wiring: 5 };
+  if (modalKey in keyToSheetIdx) {
+    openCadTablet(keyToSheetIdx[modalKey]);
+    return;
+  }
   const data = ENGINEERING_MODALS[modalKey];
   if (!data) return;
   closeMobileDrawers();
@@ -752,13 +1183,10 @@ modalBackdrop.addEventListener('click', (e) => {
   if (e.target === modalBackdrop) closeEngineeringModal();
 });
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeEngineeringModal();
-});
-
-document.querySelectorAll('.blueprint-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    openEngineeringModal(btn.getAttribute('data-modal'));
-  });
+  if (e.key === 'Escape') {
+    closeEngineeringModal();
+    closeCadTablet();
+  }
 });
 
 // 3D Hotspots anchored to the 5 key engineering nodes in 3D space
@@ -786,8 +1214,8 @@ const HOTSPOT_DEFS = [
   },
   {
     id: 'motor',
-    label: '[ МОТОР 3000W + ПМС-100 ]',
-    mobileLabel: '[ МОТОР 3000W • ПМС ]',
+    label: '[ МОТОР 3000W + ЭЛЕКТРОСХЕМА ]',
+    mobileLabel: '[ МОТОР 3000W • СХЕМА ]',
     parent: rearWheelNode,
     localPos: new THREE.Vector3(0.0, -0.08, 0.06)
   },
@@ -867,17 +1295,19 @@ function updateHotspotScreenPositions() {
 }
 
 // ----------------------------------------------------------------------------
-// 9. RESIZE HANDLER & MAIN RENDER LOOP
+// 11. RESIZE HANDLER & MAIN RENDER LOOP (60 FPS)
 // ----------------------------------------------------------------------------
 window.addEventListener('resize', () => {
   const aspect = window.innerWidth / Math.max(window.innerHeight, 1);
   camera.aspect = aspect;
-  camera.fov = aspect < 1.0 ? 44 : 28;
+  if (currentCameraPresetKey !== 'pov') {
+    camera.fov = aspect < 1.0 ? 44 : 28;
+  }
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Support optional URL query params (?mode=xray, ?mode=explode, ?mode=side, ?mode=xray_explode)
+// Support optional URL query params (?mode=xray, ?mode=explode, ?mode=side, ?mode=xray_explode, ?mode=pov, ?mode=cad)
 const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
 if (modeParam === 'xray') {
@@ -886,10 +1316,10 @@ if (modeParam === 'xray') {
   controls.target.set(0.12, 0.26, 0.0);
   controls.update();
 } else if (modeParam === 'explode') {
-  applyExplodeFactor(1.0, false);
+  applyExplodeFactor(1.0);
 } else if (modeParam === 'xray_explode') {
   setXRayMode(true);
-  applyExplodeFactor(0.55, false);
+  applyExplodeFactor(0.55);
   camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.14, 0.27, 0.92), new THREE.Vector3(0.12, 0.26, 0.0)));
   controls.target.set(0.12, 0.26, 0.0);
   controls.update();
@@ -897,10 +1327,21 @@ if (modeParam === 'xray') {
   camera.position.copy(getViewportAdjustedPos(new THREE.Vector3(0.08, 0.24, 1.98), new THREE.Vector3(0.08, 0.24, 0.0)));
   controls.target.set(0.08, 0.24, 0.0);
   controls.update();
+} else if (modeParam === 'pov') {
+  currentCameraPresetKey = 'pov';
+  setPovModeUI(true);
+  camera.fov = 38;
+  camera.updateProjectionMatrix();
+  camera.position.copy(CAMERA_PRESETS.pov.pos);
+  controls.target.copy(CAMERA_PRESETS.pov.target);
+  controls.update();
+} else if (modeParam === 'cad') {
+  openCadTablet(0);
 }
 
-function animate() {
+function animate(now = performance.now()) {
   requestAnimationFrame(animate);
+  updateSw900PhysicsAndScreen(now);
   controls.update();
   updateHotspotScreenPositions();
   renderer.render(scene, camera);
