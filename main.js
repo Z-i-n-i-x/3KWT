@@ -599,6 +599,7 @@ btnXRay.addEventListener('click', () => {
 const audioSys = {
   ctx: null,
   initialized: false,
+  masterVolume: 0.20, // 0.0 .. 1.0 (default 20% — ultra-smooth & quiet)
   motorOsc1: null,
   motorOsc2: null,
   motorGain: null,
@@ -623,23 +624,23 @@ function ensureAudioInitialized() {
     const ctx = new AudioCtx();
     audioSys.ctx = ctx;
 
-    // 1. 3000W Direct-Drive Sine-Wave Motor Synthesizer
+    // 1. 3000W Direct-Drive Sine-Wave Motor Synthesizer (Ultra-quiet & soft FOC sine wave)
     const motorOsc1 = ctx.createOscillator();
     const motorOsc2 = ctx.createOscillator();
     const motorFilter = ctx.createBiquadFilter();
     const motorGain = ctx.createGain();
 
     motorOsc1.type = 'sine';
-    motorOsc2.type = 'triangle';
-    motorOsc1.frequency.value = 65;
-    motorOsc2.frequency.value = 195;
+    motorOsc2.type = 'sine';
+    motorOsc1.frequency.value = 60;
+    motorOsc2.frequency.value = 120;
 
     motorFilter.type = 'lowpass';
-    motorFilter.frequency.value = 950;
+    motorFilter.frequency.value = 460;
     motorGain.gain.value = 0.0;
 
     const osc2SubGain = ctx.createGain();
-    osc2SubGain.gain.value = 0.28;
+    osc2SubGain.gain.value = 0.08;
 
     motorOsc1.connect(motorFilter);
     motorOsc2.connect(osc2SubGain);
@@ -650,7 +651,7 @@ function ensureAudioInitialized() {
     motorOsc1.start();
     motorOsc2.start();
 
-    // 2. Kenda 26x2.35" Tire Rolling Noise Generator
+    // 2. Kenda 26x2.35" Tire Rolling Noise Generator (Soft whisper)
     const bufferSize = ctx.sampleRate * 2;
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -663,8 +664,8 @@ function ensureAudioInitialized() {
 
     const tireFilter = ctx.createBiquadFilter();
     tireFilter.type = 'bandpass';
-    tireFilter.frequency.value = 160;
-    tireFilter.Q.value = 1.6;
+    tireFilter.frequency.value = 140;
+    tireFilter.Q.value = 2.0;
 
     const tireGain = ctx.createGain();
     tireGain.gain.value = 0.0;
@@ -686,8 +687,8 @@ function ensureAudioInitialized() {
     hornOsc2.frequency.value = 512;
 
     hornFilter.type = 'bandpass';
-    hornFilter.frequency.value = 920;
-    hornFilter.Q.value = 1.15;
+    hornFilter.frequency.value = 820;
+    hornFilter.Q.value = 1.4;
     hornGain.gain.value = 0.0;
 
     hornOsc1.connect(hornFilter);
@@ -722,7 +723,8 @@ function setHornActive(active) {
   if (active) ensureAudioInitialized();
   if (audioSys.initialized && audioSys.ctx && audioSys.hornGain) {
     const now = audioSys.ctx.currentTime;
-    audioSys.hornGain.gain.setTargetAtTime(active ? 0.22 : 0.0, now, 0.015);
+    const volScale = Math.max(0.05, audioSys.masterVolume * 2.2);
+    audioSys.hornGain.gain.setTargetAtTime(active ? 0.075 * volScale : 0.0, now, 0.02);
   }
 }
 
@@ -731,27 +733,31 @@ function updateMotorAndTireAudio(speedKmh, throttlePct, regenBrakeOn) {
   const now = audioSys.ctx.currentTime;
   const speedNorm = Math.min(1.0, speedKmh / 82.4);
   const thrNorm = throttlePct / 100;
+  const vol = audioSys.masterVolume; // default 0.20 (5x quieter than before)
 
-  // Sine-wave motor pitch scales with wheel RPM (23 pole pairs on 3000W DD hub motor)
-  const baseFreq = 58 + speedNorm * 340 + thrNorm * 35;
-  audioSys.motorOsc1.frequency.setTargetAtTime(baseFreq, now, 0.04);
+  // Soft FOC sine-wave motor hum
+  const baseFreq = 52 + speedNorm * 220 + thrNorm * 18;
+  audioSys.motorOsc1.frequency.setTargetAtTime(baseFreq, now, 0.08);
   audioSys.motorOsc2.frequency.setTargetAtTime(
-    regenBrakeOn ? baseFreq * 3.6 : baseFreq * 2.5,
+    regenBrakeOn ? baseFreq * 2.4 : baseFreq * 1.98,
     now,
-    0.04
+    0.08
   );
 
   let targetMotorGain = 0.0;
-  if (speedKmh > 0.4 || thrNorm > 0.02) {
-    targetMotorGain = Math.min(0.14, 0.015 + speedNorm * 0.065 + thrNorm * 0.055);
-    if (regenBrakeOn && speedKmh > 2.0) targetMotorGain = 0.11;
+  if ((speedKmh > 0.5 || thrNorm > 0.03) && vol > 0.001) {
+    // Max gain at 100% volume is 0.055; at default 20% volume it is ~0.011 (very gentle & quiet!)
+    targetMotorGain = (0.006 + speedNorm * 0.028 + thrNorm * 0.018) * vol;
+    if (regenBrakeOn && speedKmh > 2.0) targetMotorGain = 0.024 * vol;
   }
-  audioSys.motorGain.gain.setTargetAtTime(targetMotorGain, now, 0.05);
+  audioSys.motorGain.gain.setTargetAtTime(targetMotorGain, now, 0.09);
 
-  // Tire tread rolling noise
-  const targetTireGain = speedKmh > 1.0 ? Math.min(0.08, speedNorm * 0.075) : 0.0;
-  audioSys.tireFilter.frequency.setTargetAtTime(140 + speedNorm * 420, now, 0.06);
-  audioSys.tireGain.gain.setTargetAtTime(targetTireGain, now, 0.06);
+  // Soft tire tread rolling whisper
+  const targetTireGain = (speedKmh > 1.5 && vol > 0.001)
+    ? Math.min(0.035, speedNorm * 0.028) * vol
+    : 0.0;
+  audioSys.tireFilter.frequency.setTargetAtTime(125 + speedNorm * 280, now, 0.10);
+  audioSys.tireGain.gain.setTargetAtTime(targetTireGain, now, 0.10);
 }
 
 // ----------------------------------------------------------------------------
@@ -1317,6 +1323,8 @@ const sw900HudCanvas = document.getElementById('sw900-hud-canvas');
 const sw900HudCtx = sw900HudCanvas ? sw900HudCanvas.getContext('2d') : null;
 const sliderThrottle = document.getElementById('slider-throttle');
 const throttleLabel = document.getElementById('throttle-label');
+const sliderVolume = document.getElementById('slider-volume');
+const volumeLabel = document.getElementById('volume-label');
 const btnRegenBrake = document.getElementById('btn-regen-brake');
 const btnPovRider = document.getElementById('btn-pov-rider');
 const sw900Widget = document.getElementById('sw900-hud-widget');
@@ -1326,6 +1334,58 @@ const topMetricSpeed = document.getElementById('top-metric-speed');
 const topMetricOdo = document.getElementById('top-metric-odo');
 const pipRpmReadout = document.getElementById('pip-rpm-readout');
 const pipBrakeReadout = document.getElementById('pip-brake-readout');
+
+// Workspace Mode Switcher: 'drive' (3D Game Mode) vs 'cad' (Engineering CAD Hub)
+const btnModeDrive = document.getElementById('btn-mode-drive');
+const btnModeCad = document.getElementById('btn-mode-cad');
+const btnOpenCadTop = document.getElementById('btn-open-cad-top');
+
+function setWorkspaceUiMode(uiMode) {
+  const isDrive = uiMode === 'drive';
+  document.body.classList.toggle('ui-mode-drive', isDrive);
+  document.body.classList.toggle('ui-mode-cad', !isDrive);
+  if (btnModeDrive) btnModeDrive.classList.toggle('active-drive', isDrive);
+  if (btnModeCad) btnModeCad.classList.toggle('active-cad', !isDrive);
+
+  if (isDrive) {
+    if (isXRayMode) setXRayMode(false);
+    if (explodeState.factor > 0.01) {
+      gsap.to(explodeState, {
+        factor: 0,
+        duration: 0.6,
+        onUpdate: () => applyExplodeFactor(explodeState.factor)
+      });
+    }
+    if (activeLocationKey === 'studio') {
+      setOpenWorldLocation('highway');
+    }
+    if (cameraMode === 'orbit') {
+      setCameraMode('chase');
+    }
+    if (arePinsVisible) {
+      toggleHotspotPinsVisibility();
+    }
+  } else {
+    setOpenWorldLocation('studio');
+    setCameraMode('orbit');
+    if (!arePinsVisible) {
+      toggleHotspotPinsVisibility();
+    }
+  }
+}
+
+btnModeDrive?.addEventListener('click', () => setWorkspaceUiMode('drive'));
+btnModeCad?.addEventListener('click', () => setWorkspaceUiMode('cad'));
+btnOpenCadTop?.addEventListener('click', () => openCadTablet(activeCadSheetIdx));
+
+if (sliderVolume) {
+  sliderVolume.addEventListener('input', (e) => {
+    ensureAudioInitialized();
+    const vPct = parseFloat(e.target.value) || 0;
+    audioSys.masterVolume = Math.max(0, Math.min(1, vPct / 100));
+    if (volumeLabel) volumeLabel.textContent = `🔊 ЗВУК: ${Math.round(vPct)}%`;
+  });
+}
 
 // Record base positions for FOXSID-X2 fork lowers and front wheel for suspension travel
 const forkLowersBasePos = forkNode.userData.forkLowersGroup
@@ -1372,23 +1432,7 @@ function setBrakeAndRegenState(active) {
   }
 }
 
-if (btnRegenBrake) {
-  btnRegenBrake.addEventListener('click', () => {
-    ensureAudioInitialized();
-    const next = !sw900State.regenBrakeOn;
-    if (next && sw900State.throttlePct === 0 && sw900State.speedKmh < 5) {
-      sw900State.speedKmh = 52.0;
-    }
-    if (next && sliderThrottle) {
-      sw900State.throttlePct = 0;
-      sliderThrottle.value = '0';
-      if (throttleLabel) throttleLabel.textContent = 'ГАЗ (W): 0%';
-    }
-    setBrakeAndRegenState(next);
-  });
-}
-
-// Interactive UI Drive Pad buttons (Left A, Right D, Wheelie SPACE, Horn B)
+// Interactive UI Drive Pad buttons (Gas W, Brake S, Left A, Right D, Wheelie SPACE, Light L, Horn B)
 function bindHoldButton(btnId, onDown, onUp) {
   const el = document.getElementById(btnId);
   if (!el) return;
@@ -1407,18 +1451,34 @@ function bindHoldButton(btnId, onDown, onUp) {
   el.addEventListener('pointercancel', release);
 }
 
+bindHoldButton('btn-drive-gas', () => {
+  bikeDriveState.keyW = true;
+  setBrakeAndRegenState(false);
+}, () => {
+  bikeDriveState.keyW = false;
+});
+
+bindHoldButton('btn-regen-brake', () => {
+  bikeDriveState.keyS = true;
+  setBrakeAndRegenState(true);
+}, () => {
+  bikeDriveState.keyS = false;
+  setBrakeAndRegenState(false);
+});
+
 bindHoldButton('btn-drive-left', () => { bikeDriveState.keyA = true; }, () => { bikeDriveState.keyA = false; });
 bindHoldButton('btn-drive-right', () => { bikeDriveState.keyD = true; }, () => { bikeDriveState.keyD = false; });
 bindHoldButton('btn-drive-wheelie', () => {
   bikeDriveState.keySpaceWheelie = true;
-  if (sw900State.throttlePct < 65) {
-    sw900State.throttlePct = 85;
-    if (sliderThrottle) sliderThrottle.value = '85';
-    if (throttleLabel) throttleLabel.textContent = 'ГАЗ (W): 85%';
-  }
-}, () => { bikeDriveState.keySpaceWheelie = false; });
+}, () => {
+  bikeDriveState.keySpaceWheelie = false;
+});
 bindHoldButton('btn-drive-horn', () => setHornActive(true), () => setHornActive(false));
 bindHoldButton('btn-horn-bottom', () => setHornActive(true), () => setHornActive(false));
+
+document.getElementById('btn-drive-light')?.addEventListener('click', () => {
+  setHeadlightsState(!isLightsAndBrakeOn);
+});
 
 // Keyboard W/A/S/D + Arrow Keys + SPACE (Wheelie) + L (Lights) + B (Horn) + H (Hide Labels)
 window.addEventListener('keydown', (e) => {
@@ -1433,17 +1493,21 @@ window.addEventListener('keydown', (e) => {
     cycleSw900Mode();
   } else if (code === 'KeyW' || code === 'ArrowUp') {
     bikeDriveState.keyW = true;
+    document.getElementById('btn-drive-gas')?.classList.add('active');
     setBrakeAndRegenState(false);
   } else if (code === 'KeyS' || code === 'ArrowDown') {
     bikeDriveState.keyS = true;
     setBrakeAndRegenState(true);
   } else if (code === 'KeyA' || code === 'ArrowLeft') {
     bikeDriveState.keyA = true;
+    document.getElementById('btn-drive-left')?.classList.add('active');
   } else if (code === 'KeyD' || code === 'ArrowRight') {
     bikeDriveState.keyD = true;
+    document.getElementById('btn-drive-right')?.classList.add('active');
   } else if (code === 'Space') {
     e.preventDefault();
     bikeDriveState.keySpaceWheelie = true;
+    document.getElementById('btn-drive-wheelie')?.classList.add('active');
   } else if (code === 'KeyL') {
     setHeadlightsState(!isLightsAndBrakeOn);
   } else if (code === 'KeyB') {
@@ -1457,15 +1521,19 @@ window.addEventListener('keyup', (e) => {
   const code = e.code;
   if (code === 'KeyW' || code === 'ArrowUp') {
     bikeDriveState.keyW = false;
+    document.getElementById('btn-drive-gas')?.classList.remove('active');
   } else if (code === 'KeyS' || code === 'ArrowDown') {
     bikeDriveState.keyS = false;
     setBrakeAndRegenState(false);
   } else if (code === 'KeyA' || code === 'ArrowLeft') {
     bikeDriveState.keyA = false;
+    document.getElementById('btn-drive-left')?.classList.remove('active');
   } else if (code === 'KeyD' || code === 'ArrowRight') {
     bikeDriveState.keyD = false;
+    document.getElementById('btn-drive-right')?.classList.remove('active');
   } else if (code === 'Space') {
     bikeDriveState.keySpaceWheelie = false;
+    document.getElementById('btn-drive-wheelie')?.classList.remove('active');
   } else if (code === 'KeyB') {
     setHornActive(false);
   }
@@ -1477,26 +1545,33 @@ let prevWheelieAngle = 0;
 function updateSw900PhysicsAndScreen(dt) {
   const profile = PAS_PROFILES[sw900State.pas] || PAS_PROFILES[5];
 
-  // Keyboard W / S smooth throttle ramp
+  // Smooth, progressive throttle control (W accelerates smoothly, releasing W gently rolls off)
   if (bikeDriveState.keyW) {
-    sw900State.throttlePct = Math.min(100, sw900State.throttlePct + dt * 115);
+    sw900State.throttlePct = Math.min(100, sw900State.throttlePct + dt * 52);
     if (sliderThrottle) sliderThrottle.value = String(Math.round(sw900State.throttlePct));
     if (throttleLabel) throttleLabel.textContent = `ГАЗ (W): ${Math.round(sw900State.throttlePct)}%`;
   } else if (bikeDriveState.keyS) {
-    sw900State.throttlePct = Math.max(0, sw900State.throttlePct - dt * 220);
+    sw900State.throttlePct = Math.max(0, sw900State.throttlePct - dt * 160);
     if (sliderThrottle) sliderThrottle.value = String(Math.round(sw900State.throttlePct));
     if (throttleLabel) throttleLabel.textContent = `ГАЗ (W): ${Math.round(sw900State.throttlePct)}%`;
-  } else if ( bikeDriveState.keySpaceWheelie && sw900State.throttlePct < 65 ) {
-    // Auto-blip throttle when holding SPACE for Wheelie stunt
-    sw900State.throttlePct = Math.min(85, sw900State.throttlePct + dt * 140);
+  } else if (bikeDriveState.keySpaceWheelie && sw900State.throttlePct < 60) {
+    sw900State.throttlePct = Math.min(75, sw900State.throttlePct + dt * 68);
     if (sliderThrottle) sliderThrottle.value = String(Math.round(sw900State.throttlePct));
     if (throttleLabel) throttleLabel.textContent = `ГАЗ (W): ${Math.round(sw900State.throttlePct)}%`;
+  } else if (document.body.classList.contains('ui-mode-drive') && document.activeElement !== sliderThrottle) {
+    // Natural spring-back of the 20X half-twist throttle grip when W is released in Game Mode
+    if (sw900State.throttlePct > 0) {
+      sw900State.throttlePct = Math.max(0, sw900State.throttlePct - dt * 38);
+      if (sliderThrottle) sliderThrottle.value = String(Math.round(sw900State.throttlePct));
+      if (throttleLabel) throttleLabel.textContent = `ГАЗ (W): ${Math.round(sw900State.throttlePct)}%`;
+    }
   }
 
   const thr = sw900State.throttlePct / 100;
 
   if (sw900State.regenBrakeOn) {
-    sw900State.speedKmh = Math.max(0, sw900State.speedKmh - dt * 28.0);
+    // Smooth hydraulic + E-ABS braking deceleration
+    sw900State.speedKmh = Math.max(0, sw900State.speedKmh - dt * 21.0);
     if (sw900State.speedKmh > 2.0) {
       const regenFactor = Math.min(1.0, sw900State.speedKmh / 45.0);
       sw900State.currentAmps = -20.5 * regenFactor;
@@ -1505,12 +1580,13 @@ function updateSw900PhysicsAndScreen(dt) {
     }
   } else {
     const targetSpeed = profile.maxSpeed * thr;
-    const accelRate = targetSpeed > sw900State.speedKmh ? 24.0 : 8.5;
+    // Smooth inertia: gradual acceleration and natural coasting when throttle is released
+    const accelRate = targetSpeed > sw900State.speedKmh ? 11.5 : 4.2;
     sw900State.speedKmh += (targetSpeed - sw900State.speedKmh) * Math.min(1.0, dt * (accelRate / 10));
     if (sw900State.speedKmh < 0.08 && thr === 0) sw900State.speedKmh = 0;
 
     if (thr > 0.01) {
-      sw900State.currentAmps = profile.maxAmps * Math.pow(thr, 1.15);
+      sw900State.currentAmps = profile.maxAmps * Math.pow(thr, 1.25);
     } else {
       sw900State.currentAmps = 0;
     }
@@ -1544,34 +1620,36 @@ function updateSw900PhysicsAndScreen(dt) {
     cockpitNode.userData.brakeBladeGroups.forEach((b) => {
       const sideSign = b.userData?.side || 1;
       const targetRotY = -sideSign * targetSqueeze;
-      b.rotation.y += (targetRotY - b.rotation.y) * Math.min(1.0, dt * 16);
+      b.rotation.y += (targetRotY - b.rotation.y) * Math.min(1.0, dt * 12);
     });
   }
 
-  // 3) Steering (A / D) around inclined headtube axis + Cornering Lean Roll
+  // 3) Ultra-smooth Steering (A / D) with speed-sensitive damping + Cornering Lean Roll
   const steerInput = (bikeDriveState.keyA ? 1 : 0) - (bikeDriveState.keyD ? 1 : 0);
-  const maxSteerRad = 0.46; // ~26.5 deg
+  const highSpeedDamp = 1.0 - Math.min(0.48, (sw900State.speedKmh / 85.0) * 0.48);
+  const maxSteerRad = 0.38 * highSpeedDamp;
   const targetSteer = steerInput * maxSteerRad;
-  bikeDriveState.steerAngle += (targetSteer - bikeDriveState.steerAngle) * Math.min(1.0, dt * 10.0);
+  const steerSpeed = steerInput !== 0 ? 4.2 : 5.8; // Smooth turn-in and self-centering
+  bikeDriveState.steerAngle += (targetSteer - bikeDriveState.steerAngle) * Math.min(1.0, dt * steerSpeed);
   steeringPivotGroup.setRotationFromAxisAngle(HEAD_STEER_AXIS, bikeDriveState.steerAngle);
 
-  const speedFactor = Math.min(1.0, sw900State.speedKmh / 32.0);
-  const targetLeanRoll = -bikeDriveState.steerAngle * (0.35 + speedFactor * 0.45);
-  bikeDriveState.leanRoll += (targetLeanRoll - bikeDriveState.leanRoll) * Math.min(1.0, dt * 8.5);
+  const speedFactor = Math.min(1.0, sw900State.speedKmh / 36.0);
+  const targetLeanRoll = -bikeDriveState.steerAngle * (0.28 + speedFactor * 0.48);
+  bikeDriveState.leanRoll += (targetLeanRoll - bikeDriveState.leanRoll) * Math.min(1.0, dt * 4.8);
   bikeLeanGroup.rotation.x = bikeDriveState.leanRoll;
 
-  // 4) Stunt WHEELIE mode on SPACE (lifts front wheel 38-41 deg around rear axle)
+  // 4) Smooth Stunt WHEELIE mode on SPACE (lifts front wheel ~38 deg around rear axle)
   const canWheelie = bikeDriveState.keySpaceWheelie && !sw900State.regenBrakeOn;
-  const balanceOsc = canWheelie ? Math.sin(performance.now() * 0.008) * 0.035 : 0;
-  const targetWheelieRad = canWheelie ? (0.66 + balanceOsc) : 0.0; // ~38-40 deg
+  const balanceOsc = canWheelie ? Math.sin(performance.now() * 0.0055) * 0.022 : 0;
+  const targetWheelieRad = canWheelie ? (0.64 + balanceOsc) : 0.0;
   prevWheelieAngle = bikeDriveState.wheelieAngle;
-  bikeDriveState.wheelieAngle += (targetWheelieRad - bikeDriveState.wheelieAngle) * Math.min(1.0, dt * (canWheelie ? 6.5 : 8.0));
+  bikeDriveState.wheelieAngle += (targetWheelieRad - bikeDriveState.wheelieAngle) * Math.min(1.0, dt * (canWheelie ? 3.8 : 4.6));
   bikeWheeliePivot.rotation.z = bikeDriveState.wheelieAngle;
 
   // 5) Front FOXSID-X2 Fork Suspension Travel (0..70 mm) on Braking + Forest Bumps + Wheelie Landing
   let targetForkCompM = 0.0;
   if (sw900State.regenBrakeOn && bikeDriveState.wheelieAngle < 0.05) {
-    targetForkCompM = Math.min(0.065, 0.025 + (sw900State.speedKmh / 65.0) * 0.042);
+    targetForkCompM = Math.min(0.065, 0.022 + (sw900State.speedKmh / 65.0) * 0.042);
   }
   if (activeLocationKey === 'forest' && sw900State.speedKmh > 1.0 && bikeDriveState.wheelieAngle < 0.08) {
     const bx = bikeWorldRoot.position.x;
@@ -1585,12 +1663,11 @@ function updateSw900PhysicsAndScreen(dt) {
   } else if (activeLocationKey === 'field' && sw900State.speedKmh > 2.0 && bikeDriveState.wheelieAngle < 0.08) {
     targetForkCompM = Math.max(targetForkCompM, Math.abs(Math.sin(bikeWorldRoot.position.x * 3.5)) * 0.022);
   }
-  // Wheelie touchdown compression pulse
   if (prevWheelieAngle > 0.08 && bikeDriveState.wheelieAngle <= 0.08) {
-    bikeDriveState.forkCompressionM = 0.068;
+    bikeDriveState.forkCompressionM = 0.058;
   }
 
-  bikeDriveState.forkCompressionM += (targetForkCompM - bikeDriveState.forkCompressionM) * Math.min(1.0, dt * 14.0);
+  bikeDriveState.forkCompressionM += (targetForkCompM - bikeDriveState.forkCompressionM) * Math.min(1.0, dt * 10.0);
   if (explodeState.factor < 0.01) {
     if (forkNode.userData.forkLowersGroup) {
       forkNode.userData.forkLowersGroup.position
@@ -1810,6 +1887,7 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
 // ----------------------------------------------------------------------------
 let isLightsAndBrakeOn = false;
 const btnLights = document.getElementById('btn-lights');
+const btnDriveLight = document.getElementById('btn-drive-light');
 
 function setHeadlightsState(enable) {
   isLightsAndBrakeOn = enable;
@@ -1818,12 +1896,14 @@ function setHeadlightsState(enable) {
 
   if (isLightsAndBrakeOn) {
     btnLights?.classList.add('active-orange');
+    btnDriveLight?.classList.add('active');
     mats.MAT_HEADLIGHT_LED.emissiveIntensity = 5.5;
     mats.MAT_BRAKE_LED.emissive.setHex(0xff0000);
     mats.MAT_BRAKE_LED.emissiveIntensity = 4.0;
     rearBrakePointLight.intensity = 3.8;
   } else {
     btnLights?.classList.remove('active-orange');
+    btnDriveLight?.classList.remove('active');
     mats.MAT_HEADLIGHT_LED.emissiveIntensity = 0.5;
     if (!sw900State.regenBrakeOn) {
       mats.MAT_BRAKE_LED.emissiveIntensity = 0.35;
@@ -1895,7 +1975,7 @@ function setCameraMode(mode) {
   if (sw900Widget) sw900Widget.classList.toggle('pov-enlarged', isPov);
   if (btnPovRider) btnPovRider.classList.toggle('active', isPov);
   if (sw900PovBadge) {
-    sw900PovBadge.textContent = isPov ? 'РЕЖИМ POV 1:1' : (mode === 'chase' ? 'GTA CHASE CAM' : 'W/A/S/D + SPACE');
+    sw900PovBadge.textContent = isPov ? 'РЕЖИМ POV 1:1' : (mode === 'chase' ? 'GTA CHASE CAM' : 'ПЛАВНЫЙ КОНТРОЛЛЕР');
   }
 
   if (mode === 'pov') {
@@ -1945,28 +2025,28 @@ if (btnPovRider) {
 
 function updateActiveCameraTracking(dt) {
   if (cameraMode === 'pov') {
-    // First-person Rider POV attached to bikeMasterGroup (-0.08, 0.92, 0.0)
+    // Smooth First-person Rider POV attached to bikeMasterGroup
     const eyeLocal = new THREE.Vector3(-0.10, 0.92, 0.0);
-    const lookLocal = new THREE.Vector3(0.52, 0.58, -bikeDriveState.steerAngle * 0.25);
+    const lookLocal = new THREE.Vector3(0.52, 0.58, -bikeDriveState.steerAngle * 0.22);
     bikeMasterGroup.localToWorld(eyeLocal);
     bikeMasterGroup.localToWorld(lookLocal);
-    camera.position.copy(eyeLocal);
+    camera.position.lerp(eyeLocal, Math.min(1.0, dt * 18.0));
     camera.lookAt(lookLocal);
   } else if (cameraMode === 'chase') {
-    // GTA-style 3rd-person Chase Camera behind the bike
-    const desiredLocalPos = new THREE.Vector3(-2.45, 0.88, bikeDriveState.steerAngle * 0.35);
-    const desiredLocalTarget = new THREE.Vector3(0.65, 0.35 + bikeDriveState.wheelieAngle * 0.35, 0.0);
+    // Ultra-smooth GTA-style 3rd-person Chase Camera behind the bike
+    const desiredLocalPos = new THREE.Vector3(-2.45, 0.88, bikeDriveState.steerAngle * 0.25);
+    const desiredLocalTarget = new THREE.Vector3(0.65, 0.35 + bikeDriveState.wheelieAngle * 0.32, 0.0);
     bikeWorldRoot.localToWorld(desiredLocalPos);
     bikeWorldRoot.localToWorld(desiredLocalTarget);
-    camera.position.lerp(desiredLocalPos, Math.min(1.0, dt * 7.5));
-    controls.target.lerp(desiredLocalTarget, Math.min(1.0, dt * 10.0));
+    camera.position.lerp(desiredLocalPos, Math.min(1.0, dt * 5.2));
+    controls.target.lerp(desiredLocalTarget, Math.min(1.0, dt * 7.5));
     camera.lookAt(controls.target);
   } else {
     controls.update();
   }
 }
 
-// Mobile Drawers & Pin Toggles ('H' hotkey + '[👁️ СКРЫТЬ НАДПИСИ (H)]' button)
+// Mobile Drawers & Pin Toggles ('H' hotkey + '👁️ МЕТКИ (H)' button)
 const leftSidePanel = document.getElementById('left-side-panel');
 const rightHotspotDock = document.getElementById('right-hotspot-dock');
 const btnMobNodes = document.getElementById('btn-mob-nodes');
@@ -1980,10 +2060,10 @@ function toggleHotspotPinsVisibility() {
   arePinsVisible = !arePinsVisible;
   if (btnMobPins) btnMobPins.classList.toggle('active', arePinsVisible);
   if (btnHideLabels) {
-    btnHideLabels.classList.toggle('active', !arePinsVisible);
+    btnHideLabels.classList.toggle('active', arePinsVisible);
     btnHideLabels.textContent = arePinsVisible
-      ? '[👁️ СКРЫТЬ НАДПИСИ (H)]'
-      : '[👁️ ПОКАЗАТЬ НАДПИСИ (H)]';
+      ? '👁️ МЕТКИ: ВКЛ (H)'
+      : '👁️ МЕТКИ: ВЫКЛ (H)';
   }
   if (hotspotContainer) {
     hotspotContainer.style.display = arePinsVisible ? 'block' : 'none';
@@ -2370,6 +2450,14 @@ window.addEventListener('resize', () => {
 const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
 const locParam = urlParams.get('loc');
+
+// Default to clean 3D Drive Mode on Highway unless a CAD parameter is requested
+if (modeParam && ['xray', 'explode', 'xray_explode', 'cad', 'side'].includes(modeParam)) {
+  setWorkspaceUiMode('cad');
+} else {
+  setWorkspaceUiMode('drive');
+}
+
 if (locParam && ['studio', 'highway', 'forest', 'field', 'night'].includes(locParam)) {
   setOpenWorldLocation(locParam);
 }
