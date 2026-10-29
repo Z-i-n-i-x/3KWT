@@ -191,6 +191,112 @@ function createMotoVinylBumpTexture(size = 512) {
 }
 
 /**
+ * 4b. High-Definition Motocross Full-Waffle + Diamond Knurl Rubber Grip Texture (1:1 with Reference Photo!)
+ * Features a 6x8 raised rectangular waffle grid filled with crisp micro-diamond knurling (насечка ромбиком)
+ */
+function createMotoGripWaffleKnurlTextures(size = 1024) {
+  const colorCanvas = document.createElement('canvas');
+  colorCanvas.width = size;
+  colorCanvas.height = size;
+  const cCtx = colorCanvas.getContext('2d');
+
+  const bumpCanvas = document.createElement('canvas');
+  bumpCanvas.width = size;
+  bumpCanvas.height = size;
+  const bCtx = bumpCanvas.getContext('2d');
+
+  // Deep matte vulcanized rubber base
+  cCtx.fillStyle = '#111214';
+  cCtx.fillRect(0, 0, size, size);
+
+  bCtx.fillStyle = '#181818';
+  bCtx.fillRect(0, 0, size, size);
+
+  // 1) Crisp micro-diamond knurling pattern across the entire sleeve
+  const dStep = 16;
+  bCtx.lineWidth = 2.4;
+  cCtx.lineWidth = 1.6;
+  for (let i = -size; i < size * 2; i += dStep) {
+    // +45 deg knurl ridge
+    bCtx.strokeStyle = '#929292';
+    bCtx.beginPath();
+    bCtx.moveTo(i, 0);
+    bCtx.lineTo(i + size, size);
+    bCtx.stroke();
+
+    // -45 deg knurl ridge
+    bCtx.beginPath();
+    bCtx.moveTo(i, size);
+    bCtx.lineTo(i + size, 0);
+    bCtx.stroke();
+
+    cCtx.strokeStyle = '#1a1c20';
+    cCtx.beginPath();
+    cCtx.moveTo(i, 0);
+    cCtx.lineTo(i + size, size);
+    cCtx.moveTo(i, size);
+    cCtx.lineTo(i + size, 0);
+    cCtx.stroke();
+  }
+
+  // Diamond pyramid peaks at intersections
+  for (let y = 0; y < size; y += dStep) {
+    for (let x = 0; x < size; x += dStep) {
+      bCtx.fillStyle = '#c4c4c4';
+      bCtx.fillRect(x - 2, y - 2, 4, 4);
+      cCtx.fillStyle = '#202226';
+      cCtx.fillRect(x - 1, y - 1, 3, 3);
+    }
+  }
+
+  // 2) Raised Rectangular Waffle Grid (6 circumferential blocks x 8 longitudinal rings, 1:1 as on photo)
+  const cols = 8; // along grip length
+  const rows = 8; // around circumference
+  const ribW = 14;
+
+  // Circumferential waffle ribs
+  for (let c = 0; c <= cols; c++) {
+    const x = Math.round((c / cols) * size);
+    cCtx.fillStyle = '#0c0d0f';
+    cCtx.fillRect(x - ribW / 2 - 2, 0, ribW + 4, size);
+    cCtx.fillStyle = '#1d1f24';
+    cCtx.fillRect(x - ribW / 2, 0, ribW, size);
+
+    bCtx.fillStyle = '#080808';
+    bCtx.fillRect(x - ribW / 2 - 3, 0, ribW + 6, size);
+    bCtx.fillStyle = '#ffffff';
+    bCtx.fillRect(x - ribW / 2, 0, ribW, size);
+  }
+
+  // Longitudinal waffle ribs
+  for (let r = 0; r <= rows; r++) {
+    const y = Math.round((r / rows) * size);
+    cCtx.fillStyle = '#0c0d0f';
+    cCtx.fillRect(0, y - ribW / 2 - 2, size, ribW + 4);
+    cCtx.fillStyle = '#1d1f24';
+    cCtx.fillRect(0, y - ribW / 2, size, ribW);
+
+    bCtx.fillStyle = '#080808';
+    bCtx.fillRect(0, y - ribW / 2 - 3, size, ribW + 6);
+    bCtx.fillStyle = '#ffffff';
+    bCtx.fillRect(0, y - ribW / 2, size, ribW);
+  }
+
+  const colorTex = new THREE.CanvasTexture(colorCanvas);
+  colorTex.colorSpace = THREE.SRGBColorSpace;
+  colorTex.wrapS = THREE.RepeatWrapping;
+  colorTex.wrapT = THREE.RepeatWrapping;
+  colorTex.anisotropy = 8;
+
+  const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+  bumpTex.wrapS = THREE.RepeatWrapping;
+  bumpTex.wrapT = THREE.RepeatWrapping;
+  bumpTex.anisotropy = 8;
+
+  return { colorTex, bumpTex };
+}
+
+/**
  * 5. Authentic FOXSID 32 / XSD / AIR FORK decal material matching Reference Photo #4
  */
 export function createFoxsidDecalMaterial() {
@@ -792,7 +898,7 @@ export function createStealthMaterials() {
     clearcoatRoughness: 0.28
   });
 
-  // 4. MAT_RUBBER_KENDA (Tires Kenda K-Rad 26x2.35, handlebar grips)
+  // 4. MAT_RUBBER_KENDA (Tires Kenda K-Rad 26x2.35)
   const MAT_RUBBER_KENDA = new THREE.MeshPhysicalMaterial({
     name: 'MAT_RUBBER_KENDA',
     color: 0x161719,
@@ -800,6 +906,20 @@ export function createStealthMaterials() {
     metalness: 0.04,
     bumpMap: microGrainTex,
     bumpScale: 0.0012
+  });
+
+  // 4b. MAT_MOTO_GRIP_RUBBER (120mm Motocross Full-Waffle + Diamond Knurled Rubber Grips 1:1 with Photo)
+  const { colorTex: gripWaffleColor, bumpTex: gripWaffleBump } = createMotoGripWaffleKnurlTextures(1024);
+  const MAT_MOTO_GRIP_RUBBER = new THREE.MeshPhysicalMaterial({
+    name: 'MAT_MOTO_GRIP_RUBBER',
+    color: 0xffffff,
+    map: gripWaffleColor,
+    bumpMap: gripWaffleBump,
+    bumpScale: 0.0038,
+    roughnessMap: gripWaffleBump,
+    roughness: 0.88,
+    metalness: 0.02,
+    clearcoat: 0.03
   });
 
   // 5. MAT_STEEL_ROTOR (180mm brake rotors, spokes, M4/M5/M6 fasteners)
@@ -979,6 +1099,7 @@ export function createStealthMaterials() {
     MAT_CORDURA_1000D,
     MAT_ANODIZED_BLACK,
     MAT_RUBBER_KENDA,
+    MAT_MOTO_GRIP_RUBBER,
     MAT_STEEL_ROTOR,
     MAT_MOTO_VINYL,
     MAT_VELCRO_STRAP,

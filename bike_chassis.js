@@ -1057,75 +1057,174 @@ export function buildCockpitNode(mats) {
   phoneMount.add(mountClamp, phoneCradle, cradleKnob);
   cockpitGroup.add(phoneMount);
 
-  // Left & Right Ribbed Lock-On Rubber Grips with 3D Tactile Waffle Ribs & Anodized Lock-On Collars
-  const leftGrip = createCylinderBetween(
-    new THREE.Vector3(0.376, 0.656, 0.250),
-    new THREE.Vector3(0.365, 0.658, 0.370),
-    0.016,
-    0.016,
-    mats.MAT_RUBBER_KENDA,
-    28
-  );
-  cockpitGroup.add(leftGrip);
+  // ==========================================================================
+  // 1:1 MOTOCROSS 120MM (4.7IN) FULL-WAFFLE + DIAMOND-KNURLED RUBBER GRIPS
+  // & RIGHT-SIDE COAXIAL THROTTLE TWIST TUBE (WITH WHITE NYLON CAM PULLEY)
+  // ==========================================================================
+  const gripMat = mats.MAT_MOTO_GRIP_RUBBER || mats.MAT_RUBBER_KENDA;
 
-  // Right Side Half-Twist Throttle 20X Assembly (rotates around grip axis when accelerating!)
+  /**
+   * Helper: Builds a high-poly 120mm (4.7 in) Motocross Rubber Grip along local +Y (0 .. 0.120 m)
+   * y = 0.000: Inner Large Thumb Flange (Ø58 mm, curved dish profile)
+   * y = 0.006..0.115: Main grip sleeve (Ø32.5 mm) with 3D raised 6x8 waffle grid & diamond knurling
+   * y = 0.115..0.120: Outer lip flange (Ø39 mm) + closed end-cap with center vent hole (Ø4.5 mm)
+   * includeWhiteCam = true adds the internal white nylon throttle cam reel protruding from the inner flange
+   */
+  function createDetailedMotoGrip120mm(includeWhiteCam = false) {
+    const gGroup = new THREE.Group();
+
+    // 1. Main sculpted rubber profile via LatheGeometry (44 radial segments for ultra-smooth silhouette)
+    const lathePts = [
+      new THREE.Vector2(0.0115, 0.000),
+      new THREE.Vector2(0.0285, 0.000), // Inner large thumb flange base (R = 28.5mm -> Ø57mm)
+      new THREE.Vector2(0.0292, 0.0022),
+      new THREE.Vector2(0.0275, 0.0048),
+      new THREE.Vector2(0.0195, 0.0075), // Smooth fillet transition into grip barrel
+      new THREE.Vector2(0.0160, 0.0120),
+      new THREE.Vector2(0.0162, 0.0600), // Main diamond-knurled barrel (R = 16.2mm -> Ø32.4mm)
+      new THREE.Vector2(0.0160, 0.1120),
+      new THREE.Vector2(0.0196, 0.1155), // Outer lip flange (R = 19.6mm -> Ø39.2mm)
+      new THREE.Vector2(0.0198, 0.1185),
+      new THREE.Vector2(0.0182, 0.1200), // Outer closed end-cap face
+      new THREE.Vector2(0.0026, 0.1200), // Center injection vent hole edge (R = 2.6mm)
+      new THREE.Vector2(0.0026, 0.1165), // Vent hole depth
+      new THREE.Vector2(0.0000, 0.1165)
+    ];
+    const bodyGeom = new THREE.LatheGeometry(lathePts, 44);
+    const bodyMesh = new THREE.Mesh(bodyGeom, gripMat);
+    bodyMesh.castShadow = true;
+    bodyMesh.receiveShadow = true;
+    gGroup.add(bodyMesh);
+
+    // 2. Physical 3D Raised Waffle Grid Ribs (7 circumferential rings + 8 longitudinal ribs)
+    // so the rectangular waffle pockets have real 3D shadow & depth from every camera angle!
+    const ringCount = 7;
+    for (let r = 0; r < ringCount; r++) {
+      const yPos = 0.016 + (r / (ringCount - 1)) * 0.092;
+      const wafRing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.01685, 0.01685, 0.0022, 36),
+        mats.MAT_RUBBER_KENDA
+      );
+      wafRing.position.set(0, yPos, 0);
+      gGroup.add(wafRing);
+    }
+
+    const longRibCount = 8;
+    for (let k = 0; k < longRibCount; k++) {
+      const ang = (k / longRibCount) * Math.PI * 2;
+      const wafLong = new THREE.Mesh(
+        new THREE.BoxGeometry(0.0020, 0.094, 0.0020),
+        mats.MAT_RUBBER_KENDA
+      );
+      const rPos = 0.0164;
+      wafLong.position.set(Math.cos(ang) * rPos, 0.062, Math.sin(ang) * rPos);
+      wafLong.rotation.y = -ang;
+      gGroup.add(wafLong);
+    }
+
+    // 3. White Nylon Internal Throttle Tube & Cam Pulley (only on Right Throttle Grip, 1:1 as on Reference Photo!)
+    if (includeWhiteCam) {
+      const whiteCamGroup = new THREE.Group();
+      // White nylon inner sleeve protruding 14mm from inner flange (y = -0.014 .. 0.002)
+      const sleeveTube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0142, 0.0142, 0.018, 32),
+        mats.MAT_WHITE_INSULATOR
+      );
+      sleeveTube.position.set(0, -0.007, 0);
+      whiteCamGroup.add(sleeveTube);
+
+      // Inner dark bore of the white throttle tube
+      const innerBore = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0114, 0.0114, 0.019, 24),
+        mats.MAT_ANODIZED_BLACK
+      );
+      innerBore.position.set(0, -0.007, 0);
+      whiteCamGroup.add(innerBore);
+
+      // Dual-flange white cable cam reel & notched cable catch lug (exactly like the white plastic cam in photo)
+      const camFlange1 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0188, 0.0188, 0.0024, 32),
+        mats.MAT_WHITE_INSULATOR
+      );
+      camFlange1.position.set(0, -0.004, 0);
+      const camFlange2 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.0188, 0.0188, 0.0024, 32),
+        mats.MAT_WHITE_INSULATOR
+      );
+      camFlange2.position.set(0, -0.010, 0);
+
+      // Raised cable anchor block with dual cable slots on the white nylon cam
+      const cableCatchLug = new THREE.Mesh(
+        new THREE.BoxGeometry(0.011, 0.009, 0.008),
+        mats.MAT_WHITE_INSULATOR
+      );
+      cableCatchLug.position.set(-0.015, -0.007, 0.006);
+      const cableSlotNotch = new THREE.Mesh(
+        new THREE.BoxGeometry(0.004, 0.010, 0.0025),
+        mats.MAT_ANODIZED_BLACK
+      );
+      cableSlotNotch.position.set(-0.017, -0.007, 0.006);
+
+      whiteCamGroup.add(camFlange1, camFlange2, cableCatchLug, cableSlotNotch);
+      gGroup.add(whiteCamGroup);
+    }
+
+    return gGroup;
+  }
+
+  // 1) LEFT HANDLEBAR GRIP (z = +0.250 .. +0.370, length = 120mm / 4.7in, fixed to handlebar)
+  const pLeftInner = new THREE.Vector3(0.3822, 0.6552, 0.250);
+  const pLeftOuter = new THREE.Vector3(0.3650, 0.6580, 0.370);
+  const leftAxis = pLeftOuter.clone().sub(pLeftInner).normalize();
+
+  const leftGripGroup = new THREE.Group();
+  leftGripGroup.name = 'LEFT_MOTO_GRIP_120MM';
+  leftGripGroup.position.copy(pLeftInner);
+  leftGripGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), leftAxis);
+  leftGripGroup.add(createDetailedMotoGrip120mm(false));
+  cockpitGroup.add(leftGripGroup);
+
+  // 2) RIGHT HANDLEBAR THROTTLE GRIP (z = -0.250 .. -0.370, length = 120mm / 4.7in, RIGHT HAND SIDE!)
+  // Coaxially aligned with the right handlebar segment so rotating around local Y NEVER kinks or wobbles!
+  const pRightInner = new THREE.Vector3(0.3822, 0.6552, -0.250);
+  const pRightOuter = new THREE.Vector3(0.3650, 0.6580, -0.370);
+  const rightAxis = pRightOuter.clone().sub(pRightInner).normalize();
+
+  // Outer alignment mount oriented strictly along right handlebar axis
+  const rightThrottleMount = new THREE.Group();
+  rightThrottleMount.name = 'RIGHT_THROTTLE_AXIS_MOUNT';
+  rightThrottleMount.position.copy(pRightInner);
+  rightThrottleMount.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), rightAxis);
+  cockpitGroup.add(rightThrottleMount);
+
+  // Stationary Split Throttle Cam Housing clamped on the handlebar inboard of the right grip (y = -0.026 .. -0.003)
+  const stationaryThrottleHousing = new THREE.Group();
+  const housingDrum = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.0215, 0.0205, 0.018, 28),
+    mats.MAT_ANODIZED_BLACK
+  );
+  housingDrum.position.set(0, -0.013, 0);
+  const housingClamp = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.0158, 0.0158, 0.012, 24),
+    mats.MAT_ANODIZED_BLACK
+  );
+  housingClamp.position.set(0, -0.024, 0);
+  // Curved metal throttle cable guide elbow exiting bottom-front of the housing
+  const cableElbow = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.0038, 0.0038, 0.024, 12),
+    mats.MAT_STEEL_ROTOR
+  );
+  cableElbow.position.set(0.016, -0.014, 0.010);
+  cableElbow.rotation.z = -0.65;
+  stationaryThrottleHousing.add(housingDrum, housingClamp, cableElbow);
+  rightThrottleMount.add(stationaryThrottleHousing);
+
+  // Rotating Twist Sleeve Group (rotates strictly around its own local Y axis = exact handlebar centerline!)
   const throttleTwistGroup = new THREE.Group();
   throttleTwistGroup.name = 'THROTTLE_20X_TWIST_GROUP';
-  const throttlePivot = new THREE.Vector3(0.372, 0.656, -0.295);
-  throttleTwistGroup.position.copy(throttlePivot);
+  throttleTwistGroup.add(createDetailedMotoGrip120mm(true));
+  rightThrottleMount.add(throttleTwistGroup);
 
-  const rightGrip = createCylinderBetween(
-    new THREE.Vector3(0.374, 0.656, -0.275).sub(throttlePivot),
-    new THREE.Vector3(0.365, 0.658, -0.370).sub(throttlePivot),
-    0.016,
-    0.016,
-    mats.MAT_RUBBER_KENDA,
-    28
-  );
-  throttleTwistGroup.add(rightGrip);
-
-  // 18 Tactile 3D Ribbed Grip Rings per grip + CNC Lock-On Collar Rings + Bar-End Plugs
-  for (let r = 0; r < 16; r++) {
-    const tL = (r + 1) / 17;
-    const pGL = new THREE.Vector3(0.376, 0.656, 0.250).lerp(new THREE.Vector3(0.365, 0.658, 0.370), tL);
-    const ribL = new THREE.Mesh(new THREE.TorusGeometry(0.0162, 0.0009, 8, 20), mats.MAT_RUBBER_KENDA);
-    ribL.position.copy(pGL);
-    cockpitGroup.add(ribL);
-
-    const pGR = new THREE.Vector3(0.374, 0.656, -0.275).lerp(new THREE.Vector3(0.365, 0.658, -0.370), tL).sub(throttlePivot);
-    const ribR = new THREE.Mesh(new THREE.TorusGeometry(0.0162, 0.0009, 8, 20), mats.MAT_RUBBER_KENDA);
-    ribR.position.copy(pGR);
-    throttleTwistGroup.add(ribR);
-  }
-  [-0.371, 0.371].forEach((zPlug) => {
-    const plug = new THREE.Mesh(new THREE.CylinderGeometry(0.0168, 0.0168, 0.005, 20), mats.MAT_ANODIZED_BLACK);
-    plug.rotation.x = Math.PI / 2;
-    plug.position.set(0.365, 0.658, zPlug);
-    cockpitGroup.add(plug);
-  });
-
-  // Right Side Half-Twist Throttle 20X with Knurled Grip ridges & Curved Cable Barrel Adjuster
-  const throttleBody = createCylinderBetween(
-    new THREE.Vector3(0.382, 0.654, -0.220).sub(throttlePivot),
-    new THREE.Vector3(0.374, 0.656, -0.275).sub(throttlePivot),
-    0.021,
-    0.019,
-    mats.MAT_ANODIZED_BLACK,
-    28
-  );
-  const throttleRing = createCylinderBetween(
-    new THREE.Vector3(0.380, 0.655, -0.232).sub(throttlePivot),
-    new THREE.Vector3(0.378, 0.655, -0.242).sub(throttlePivot),
-    0.0225,
-    0.0225,
-    mats.MAT_STEEL_ROTOR,
-    24
-  );
-  // Visual red index dot on 20X twist collar so rotation is clearly visible in POV
-  const throttleIndexDot = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.004, 0.036), mats.MAT_RED_ANODIZED);
-  throttleIndexDot.position.set(-0.012, 0.018, 0.035);
-  throttleTwistGroup.add(throttleBody, throttleRing, throttleIndexDot);
-  cockpitGroup.add(throttleTwistGroup);
   cockpitGroup.userData.throttleTwistGroup = throttleTwistGroup;
 
   // Left Side 2-in-1 Switch Block (Headlight toggle + Red 105 dB Moto Horn Button)

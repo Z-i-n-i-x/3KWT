@@ -1609,9 +1609,9 @@ function updateSw900PhysicsAndScreen(dt) {
   // --------------------------------------------------------------------------
   // 3D CONTROLS KINEMATICS: THROTTLE GRIP, BRAKE LEVERS, STEERING, LEAN, WHEELIE
   // --------------------------------------------------------------------------
-  // 1) Twist right 20X throttle grip
+  // 1) Twist right-hand 120mm throttle grip coaxially toward the rider around handlebar axis (local +Y)
   if (cockpitNode.userData.throttleTwistGroup) {
-    cockpitNode.userData.throttleTwistGroup.rotation.x = -thr * 0.58;
+    cockpitNode.userData.throttleTwistGroup.rotation.set(0, thr * 1.15, 0);
   }
 
   // 2) Squeeze left & right ZOOM HB-890E brake lever blades on S / Brake
