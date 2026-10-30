@@ -173,29 +173,29 @@ export function buildBatterySystemNode(mats) {
   const batteryRoot = new THREE.Group();
   batteryRoot.name = 'NODE_05_BATTERY_20S7P_SYSTEM';
 
-  // Exact Inner Triangle Contour matching Reference Photo #3 & #1
+  // Exact Inner Triangle Contour matching the tighter Stock Stern Dynamic 1.0 Frame Triangle (narrow front bridge at Head Tube!)
   const bagPts = [
-    new THREE.Vector2(0.008, 0.028),  // Bottom vertex at BB
-    new THREE.Vector2(0.392, 0.456),  // Lower head tube corner
-    new THREE.Vector2(0.372, 0.528),  // Upper head tube corner (70mm front bridge)
-    new THREE.Vector2(-0.122, 0.402)  // Seat tube upper corner under saddle nose
+    new THREE.Vector2(0.008, 0.032),  // Tight bottom vertex at BB shell
+    new THREE.Vector2(0.386, 0.478),  // Lower head tube corner (along raised Downtube)
+    new THREE.Vector2(0.376, 0.514),  // Upper head tube corner (narrow ~36mm front bridge at Head Tube!)
+    new THREE.Vector2(-0.120, 0.398)  // Seat tube upper corner under Toptube
   ];
 
-  const bagShape = createRoundedPolygonShape(bagPts, 0.018);
+  const bagShape = createRoundedPolygonShape(bagPts, 0.015);
 
   // 1.1 Central Cordura Base + EVA 15mm Damper Cocoon + Authentic Velcro Straps
   const corduraCenterGroup = new THREE.Group();
   corduraCenterGroup.name = 'CORDURA_BAG_CENTER';
 
   const innerCutPts = [
-    new THREE.Vector2(0.013, 0.044),
-    new THREE.Vector2(0.378, 0.458),
-    new THREE.Vector2(0.358, 0.512),
-    new THREE.Vector2(-0.108, 0.388)
+    new THREE.Vector2(0.013, 0.046),
+    new THREE.Vector2(0.374, 0.480),
+    new THREE.Vector2(0.364, 0.506),
+    new THREE.Vector2(-0.106, 0.386)
   ];
-  const innerCutPath = createRoundedPolygonShape(innerCutPts, 0.012);
+  const innerCutPath = createRoundedPolygonShape(innerCutPts, 0.011);
 
-  const bagRimShape = createRoundedPolygonShape(bagPts, 0.018);
+  const bagRimShape = createRoundedPolygonShape(bagPts, 0.015);
   bagRimShape.holes.push(innerCutPath);
 
   const rimExtrude = new THREE.ExtrudeGeometry(bagRimShape, {
@@ -225,10 +225,10 @@ export function buildBatterySystemNode(mats) {
   // 7 Wide 45mm Matte Black Velcro Straps around Toptube (3), Seat Tube (2) & Downtube (2) + Reinforced D-Ring Buckles (Spec 1.3 & Photo #3!)
   const strapWidth = 0.045;
   [0.24, 0.48, 0.72].forEach((t) => {
-    const p1 = new THREE.Vector3(-0.135, 0.415, 0).lerp(new THREE.Vector3(0.395, 0.545, 0), t);
-    const dir = new THREE.Vector3(0.530, 0.130, 0).normalize();
+    const p1 = new THREE.Vector3(-0.135, 0.410, 0).lerp(new THREE.Vector3(0.400, 0.526, 0), t);
+    const dir = new THREE.Vector3(0.535, 0.116, 0).normalize();
     const p2 = p1.clone().addScaledVector(dir, strapWidth);
-    const strap = createBiOvalTubeBetween(p1, p2, 0.022, 0.043, mats.MAT_VELCRO_STRAP, 28);
+    const strap = createBiOvalTubeBetween(p1, p2, 0.021, 0.043, mats.MAT_VELCRO_STRAP, 28);
     corduraCenterGroup.add(strap);
 
     // Anodized Metal Cinch Buckle on Left side of each strap
@@ -238,9 +238,9 @@ export function buildBatterySystemNode(mats) {
     corduraCenterGroup.add(buckle);
   });
 
-  [0.24, 0.68].forEach((t) => {
-    const p1 = new THREE.Vector3(0, 0, 0).lerp(new THREE.Vector3(-0.145, 0.435, 0), t);
-    const dir = new THREE.Vector3(-0.145, 0.435, 0).normalize();
+  [0.24, 0.66].forEach((t) => {
+    const p1 = new THREE.Vector3(0, 0, 0).lerp(new THREE.Vector3(-0.135, 0.410, 0), t);
+    const dir = new THREE.Vector3(-0.135, 0.410, 0).normalize();
     const p2 = p1.clone().addScaledVector(dir, strapWidth);
     const strap = createBiOvalTubeBetween(p1, p2, 0.021, 0.042, mats.MAT_VELCRO_STRAP, 28);
     corduraCenterGroup.add(strap);
@@ -253,10 +253,10 @@ export function buildBatterySystemNode(mats) {
 
   // 2 Additional 45mm Velcro Straps wrapping the Cordura bag around the Downtube (Total = 3 + 2 + 2 = 7 Velcro straps on the bag!)
   [0.38, 0.74].forEach((t) => {
-    const p1 = new THREE.Vector3(0.015, 0.015, 0).lerp(new THREE.Vector3(0.415, 0.465, 0), t);
-    const dir = new THREE.Vector3(0.400, 0.450, 0).normalize();
+    const p1 = new THREE.Vector3(0.014, 0.012, 0).lerp(new THREE.Vector3(0.410, 0.494, 0), t);
+    const dir = new THREE.Vector3(0.396, 0.482, 0).normalize();
     const p2 = p1.clone().addScaledVector(dir, strapWidth);
-    const strap = createBiOvalTubeBetween(p1, p2, 0.026, 0.043, mats.MAT_VELCRO_STRAP, 28);
+    const strap = createBiOvalTubeBetween(p1, p2, 0.025, 0.043, mats.MAT_VELCRO_STRAP, 28);
     corduraCenterGroup.add(strap);
 
     const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.008, 0.004), mats.MAT_ANODIZED_BLACK);
