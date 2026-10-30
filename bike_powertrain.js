@@ -267,10 +267,9 @@ export function buildBatterySystemNode(mats) {
 
   batteryRoot.add(corduraCenterGroup);
 
-  // Helper to build 1:1 Photorealistic Woven Cordura 1000D Side Cover matching the attached close-up photo:
-  // - Multi-segment organic draped cloth surface with natural tension folds & soft pillowing
-  // - Distinct light-grey/silver reflective piping welt (светоотражающий серый кант-кедер) running parallel to Toptube above the zipper
-  // - Sewn upper Cordura storm-flap hood above the grey piping & recessed waterproof coil zipper below it
+  // Helper to build 1:1 Photorealistic Woven Cordura 1000D Side Cover driven by a 3D HeightMap:
+  // - Smooth beveled perimeter base + 56x56 Indexed 3D HeightMap Cloth Mesh (soft battery pillowing, Velcro strap tension pleats, diagonal cloth folds & recessed zipper seam valley)
+  // - Deep matte black sewn upper Cordura storm-flap hood & dark matte textile welt above the recessed waterproof coil zipper
   // - Rear zipper slider & hanging black pull-tab at the left/rear end (-0.108, 0.354)
   function buildDetailedCorduraSideCover(sideSign, name) {
     const group = new THREE.Group();
@@ -278,7 +277,7 @@ export function buildBatterySystemNode(mats) {
 
     const coverGeom = new THREE.ExtrudeGeometry(bagShape, {
       depth: 0.008,
-      steps: 4,
+      steps: 2,
       bevelEnabled: true,
       bevelSize: 0.0045,
       bevelThickness: 0.0045,
@@ -287,37 +286,110 @@ export function buildBatterySystemNode(mats) {
     });
     coverGeom.translate(0, 0, sideSign > 0 ? 0.0375 : -0.0455);
 
-    // Organic 3D cloth draping: soft outward cushion over the 20S7P battery pack +
-    // diagonal fabric tension creases radiating from the bottom BB corner and Velcro straps (1:1 as on close-up photo!)
-    const cPos = coverGeom.attributes.position;
-    for (let i = 0; i < cPos.count; i++) {
-      const vx = cPos.getX(i);
-      const vy = cPos.getY(i);
-      const vz = cPos.getZ(i);
-      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.039) {
-        // Distance from the center of the triangular cloth panel
-        const distCenter = Math.hypot((vx - 0.13) * 0.9, (vy - 0.31) * 1.1);
-        const pillowBulge = Math.max(0, 0.0052 * (1.0 - Math.pow(Math.min(1.0, distCenter / 0.27), 1.7)));
-
-        // Natural diagonal cloth folds running from rear/top toward lower downtube & BB corner (visible in photo!)
-        const crease1 = Math.sin((vx * 19.5 - vy * 15.0) + 0.4) * 0.0021;
-        const crease2 = Math.cos((vx * 31.0 - vy * 22.0) - 0.5) * 0.0013;
-        const crease3 = Math.sin((vx * 11.0 + vy * 25.0) + 1.1) * 0.0014;
-
-        // Slight inward pinch along the zipper line (vy ≈ 0.36 + (vx + 0.11) * 0.22) so the fabric tucks into the seam!
-        const zipLineY = 0.360 + (vx + 0.110) * 0.215;
-        const distToZip = Math.abs(vy - zipLineY);
-        const zipPinch = distToZip < 0.022 ? -0.0026 * (1.0 - distToZip / 0.022) : 0.0;
-
-        cPos.setZ(i, vz + sideSign * (pillowBulge + crease1 + crease2 + crease3 + zipPinch));
-      }
-    }
-    coverGeom.computeVertexNormals();
-
     const coverMesh = new THREE.Mesh(coverGeom, mats.MAT_CORDURA_1000D);
     coverMesh.castShadow = true;
     coverMesh.receiveShadow = true;
     group.add(coverMesh);
+
+    // True Indexed 56x56 3D HeightMap Cloth Surface over the triangular side panel:
+    // Because it is an indexed grid with shared vertices, computeVertexNormals() produces silky-smooth 3D cloth fold shading!
+    const gridN = 56;
+    const clothGeom = new THREE.BufferGeometry();
+    const numVerts = (gridN + 1) * (gridN + 1);
+    const positions = new Float32Array(numVerts * 3);
+    const uvs = new Float32Array(numVerts * 2);
+    const indices = [];
+
+    // 4 inset corners of the frame triangle bag (tucked under the 4.2mm perimeter binding tube)
+    const Q0x = 0.011, Q0y = 0.042;   // Bottom BB corner
+    const Q1x = 0.378, Q1y = 0.476;   // Lower head tube corner
+    const Q2x = 0.369, Q2y = 0.506;   // Upper head tube corner
+    const Q3x = -0.112, Q3y = 0.393;  // Rear seat tube corner
+    const baseZ = sideSign * 0.0432;
+
+    let vPtr = 0;
+    let uvPtr = 0;
+    for (let iv = 0; iv <= gridN; iv++) {
+      const v = iv / gridN;
+      for (let iu = 0; iu <= gridN; iu++) {
+        const u = iu / gridN;
+
+        // Bilinear mapping onto the frame triangle bag contour
+        const b00 = (1 - u) * (1 - v);
+        const b10 = u * (1 - v);
+        const b11 = u * v;
+        const b01 = (1 - u) * v;
+
+        const vx = b00 * Q0x + b10 * Q1x + b11 * Q2x + b01 * Q3x;
+        const vy = b00 * Q0y + b10 * Q1y + b11 * Q2y + b01 * Q3y;
+
+        // Smooth boundary envelope (0 at stitched edges, 1 in interior)
+        const edgeEnv = Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
+        const cushionEnv = Math.pow(Math.max(0, edgeEnv), 0.58);
+        const foldEnv = Math.pow(Math.max(0, edgeEnv), 0.38);
+
+        // 1) Soft quilted outward cushion over the 20S7P battery pack (+4.8 mm)
+        const pillowHeight = cushionEnv * 0.0048;
+
+        // 2) Diagonal cloth tension folds & natural fabric draping creases (HeightMap layer)
+        const creaseDiag1 = Math.sin((vx * 24.0 - vy * 17.5) + 0.45) * 0.00155;
+        const creaseDiag2 = Math.cos((vx * 36.0 - vy * 24.0) - 0.60) * 0.00095;
+        const creaseDiag3 = Math.sin((vx * 13.5 + vy * 27.0) + 1.15) * 0.00105;
+
+        // 3) Tension pleats radiating from the 7 Velcro mounting straps along Toptube (v->1), Downtube (v->0), and Seat tube (u->0)
+        const topStrapPull = Math.exp(-Math.pow((1.0 - v) * 5.5, 2)) * Math.cos(u * Math.PI * 6.0) * 0.00095;
+        const downStrapPull = Math.exp(-Math.pow(v * 5.5, 2)) * Math.sin(u * Math.PI * 4.5) * 0.00085;
+        const seatStrapPull = Math.exp(-Math.pow(u * 5.5, 2)) * Math.cos(v * Math.PI * 4.5) * 0.00085;
+
+        // 4) Recessed zipper seam trough + raised stitched fabric welts along the waterproof zipper line
+        const zipLineY = 0.354 + (vx + 0.110) * 0.218;
+        const dyZip = vy - zipLineY;
+        const absDyZip = Math.abs(dyZip);
+        let zipRelief = 0.0;
+        if (absDyZip < 0.018) {
+          const tZip = absDyZip / 0.018;
+          // Deep recessed seam groove at dy=0, with raised stitched cloth welts at |dy| ~ 0.009m
+          zipRelief = (-0.0028 * Math.cos(tZip * Math.PI * 0.5) + 0.0011 * Math.sin(tZip * Math.PI)) * foldEnv;
+        }
+
+        const totalHeight =
+          pillowHeight +
+          foldEnv * (creaseDiag1 + creaseDiag2 + creaseDiag3 + topStrapPull + downStrapPull + seatStrapPull) +
+          zipRelief;
+
+        positions[vPtr++] = vx;
+        positions[vPtr++] = vy;
+        positions[vPtr++] = baseZ + sideSign * totalHeight;
+
+        // World-space meter UVs matching ExtrudeGeometry so Cordura weave scale is 100% uniform
+        uvs[uvPtr++] = vx;
+        uvs[uvPtr++] = vy;
+      }
+    }
+
+    for (let iv = 0; iv < gridN; iv++) {
+      for (let iu = 0; iu < gridN; iu++) {
+        const a = iv * (gridN + 1) + iu;
+        const b = a + 1;
+        const c = a + (gridN + 1);
+        const d = c + 1;
+        if (sideSign > 0) {
+          indices.push(a, b, d, a, d, c);
+        } else {
+          indices.push(a, d, b, a, c, d);
+        }
+      }
+    }
+
+    clothGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    clothGeom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    clothGeom.setIndex(indices);
+    clothGeom.computeVertexNormals();
+
+    const clothHeightMesh = new THREE.Mesh(clothGeom, mats.MAT_CORDURA_1000D);
+    clothHeightMesh.castShadow = true;
+    clothHeightMesh.receiveShadow = true;
+    group.add(clothHeightMesh);
 
     // 1. Continuous Rounded Perimeter Nylon Edge Binding (матовая тканевая окантовочная лента по краю сумки)
     const zPiping = sideSign * 0.0442;
@@ -349,41 +421,24 @@ export function buildBatterySystemNode(mats) {
     });
     flapGeom.translate(0, 0, sideSign > 0 ? 0.0445 : -0.0483);
 
-    const fPos = flapGeom.attributes.position;
-    for (let i = 0; i < fPos.count; i++) {
-      const fx = fPos.getX(i);
-      const fy = fPos.getY(i);
-      const fz = fPos.getZ(i);
-      const wave = Math.sin(fx * 22.0 + 0.5) * 0.0009 + Math.cos(fx * 35.0) * 0.0005 + (0.39 - fy) * 0.004;
-      fPos.setZ(i, fz + sideSign * wave);
-    }
-    flapGeom.computeVertexNormals();
     const stormFlapMesh = new THREE.Mesh(flapGeom, mats.MAT_CORDURA_1000D);
     stormFlapMesh.castShadow = true;
     stormFlapMesh.receiveShadow = true;
     group.add(stormFlapMesh);
 
-    // 3. DISTINCT SILVER-GREY REFLECTIVE PIPING WELT (светло-серый светоотражающий кант вдоль всей верхней части сумки над молнией — 1:1 как на фото!)
-    const reflectivePipingMat = new THREE.MeshStandardMaterial({
-      color: 0x8c929ac,
-      roughness: 0.58,
-      metalness: 0.18,
-      envMapIntensity: 0.25
-    });
-    reflectivePipingMat.color.setHex(0x8e949c);
-
-    const greyPipingCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.115, 0.365, sideSign * 0.0482),
-      new THREE.Vector3(0.040, 0.400, sideSign * 0.0492),
-      new THREE.Vector3(0.205, 0.436, sideSign * 0.0490),
-      new THREE.Vector3(0.362, 0.466, sideSign * 0.0475)
+    // 3. Dark Matte Textile Piping Welt along the storm-flap seam above the zipper (deep matte charcoal-black so it never stands out as grey)
+    const seamWeltCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.115, 0.365, sideSign * 0.0480),
+      new THREE.Vector3(0.040, 0.400, sideSign * 0.0488),
+      new THREE.Vector3(0.205, 0.436, sideSign * 0.0486),
+      new THREE.Vector3(0.362, 0.466, sideSign * 0.0473)
     ]);
-    const greyPipingMesh = new THREE.Mesh(
-      new THREE.TubeGeometry(greyPipingCurve, 56, 0.0019, 12, false),
-      reflectivePipingMat
+    const seamWeltMesh = new THREE.Mesh(
+      new THREE.TubeGeometry(seamWeltCurve, 56, 0.0018, 12, false),
+      mats.MAT_VELCRO_STRAP
     );
-    greyPipingMesh.castShadow = true;
-    group.add(greyPipingMesh);
+    seamWeltMesh.castShadow = true;
+    group.add(seamWeltMesh);
 
     // Black nylon welt lip directly below the grey reflective piping (forms the deep shadow groove over the zipper!)
     const blackLipCurve = new THREE.CatmullRomCurve3([

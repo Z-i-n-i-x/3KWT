@@ -53,103 +53,158 @@ function createCorduraWeaveTextures(size = 1024) {
   bumpCanvas.height = size;
   const bCtx = bumpCanvas.getContext('2d');
 
-  // Deep matte charcoal-black woven canvas / Cordura 1000D base (visibly textile, never flat black plastic!)
-  cCtx.fillStyle = '#141619';
+  // Deep jet-black textile base (#08090b) — strictly black so the bag never looks grey or washed out!
+  cCtx.fillStyle = '#08090b';
   cCtx.fillRect(0, 0, size, size);
 
-  bCtx.fillStyle = '#121212';
+  bCtx.fillStyle = '#080808';
   bCtx.fillRect(0, 0, size, size);
 
-  // 64x64 distinct 2x2 basketweave 1000D nylon filament bundles per 1024x1024 tile
+  // 1) Draw 64x64 woven 2x2 basketweave 1000D nylon yarn pillows into the heightmap (bumpCanvas)
   const cell = 16;
   for (let y = 0; y < size; y += cell) {
     for (let x = 0; x < size; x += cell) {
       const isWarp = ((x / cell) + (y / cell)) % 2 === 0;
-      const jitter = Math.floor(Math.sin(x * 0.17 + y * 0.31) * 9);
-      // Soft macro textile mottling (natural light-catching nap of heavy Cordura 1000D cloth)
-      const macroNap = Math.floor(
-        Math.sin(x * 0.015 + y * 0.019) * 5 + Math.cos(x * 0.027 - y * 0.023) * 4
-      );
+      const jitter = Math.floor(Math.sin(x * 0.19 + y * 0.29) * 12);
 
       if (isWarp) {
-        // Vertical 1000D ballistic nylon twin-filament bundle
-        const cPeak = Math.max(30, Math.min(54, 42 + macroNap));
-        const cMid = Math.max(20, Math.min(40, 29 + macroNap));
+        // Subtle jet-black thread variation (#070809 .. #111316)
         const gradC = cCtx.createLinearGradient(x, y, x + cell, y);
-        gradC.addColorStop(0.0, '#0b0c0e');
-        gradC.addColorStop(0.18, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
-        gradC.addColorStop(0.42, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
-        gradC.addColorStop(0.50, '#101215'); // center groove between twin 1000D yarns
-        gradC.addColorStop(0.58, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
-        gradC.addColorStop(0.82, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
-        gradC.addColorStop(1.0, '#0b0c0e');
+        gradC.addColorStop(0.0, '#050607');
+        gradC.addColorStop(0.25, '#0c0d10');
+        gradC.addColorStop(0.45, '#121418');
+        gradC.addColorStop(0.50, '#070809');
+        gradC.addColorStop(0.55, '#121418');
+        gradC.addColorStop(0.75, '#0c0d10');
+        gradC.addColorStop(1.0, '#050607');
         cCtx.fillStyle = gradC;
-        cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+        cCtx.fillRect(x, y, cell, cell);
 
-        // Micro-fiber thread lines inside the yarn bundle
-        cCtx.fillStyle = 'rgba(255, 255, 255, 0.035)';
-        cCtx.fillRect(x + 4, y + 2, 1, cell - 4);
-        cCtx.fillRect(x + cell - 5, y + 2, 1, cell - 4);
-
-        // High-contrast bump height profile for crisp tactile weave relief
-        const peak = Math.max(195, Math.min(255, 242 + jitter)).toString(16);
+        // Heightmap (0..255) for vertical twin-filament 1000D yarn bundle
+        const peak = Math.max(195, Math.min(255, 240 + jitter)).toString(16);
         const gradB = bCtx.createLinearGradient(x, y, x + cell, y);
-        gradB.addColorStop(0.0, '#0a0a0a');
-        gradB.addColorStop(0.35, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#383838');
-        gradB.addColorStop(0.65, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(1.0, '#0a0a0a');
+        gradB.addColorStop(0.00, '#080808');
+        gradB.addColorStop(0.18, '#787878');
+        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#505050'); // groove between twin filaments
+        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.82, '#787878');
+        gradB.addColorStop(1.00, '#080808');
         bCtx.fillStyle = gradB;
         bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       } else {
-        // Horizontal 1000D ballistic nylon twin-filament bundle
-        const cPeak = Math.max(27, Math.min(50, 38 + macroNap));
-        const cMid = Math.max(18, Math.min(36, 26 + macroNap));
         const gradC = cCtx.createLinearGradient(x, y, x, y + cell);
-        gradC.addColorStop(0.0, '#0a0b0d');
-        gradC.addColorStop(0.18, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
-        gradC.addColorStop(0.42, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
-        gradC.addColorStop(0.50, '#0e1013');
-        gradC.addColorStop(0.58, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
-        gradC.addColorStop(0.82, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
-        gradC.addColorStop(1.0, '#0a0b0d');
+        gradC.addColorStop(0.0, '#050607');
+        gradC.addColorStop(0.25, '#0b0c0f');
+        gradC.addColorStop(0.45, '#101216');
+        gradC.addColorStop(0.50, '#060708');
+        gradC.addColorStop(0.55, '#101216');
+        gradC.addColorStop(0.75, '#0b0c0f');
+        gradC.addColorStop(1.0, '#050607');
         cCtx.fillStyle = gradC;
-        cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+        cCtx.fillRect(x, y, cell, cell);
 
-        cCtx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-        cCtx.fillRect(x + 2, y + 4, cell - 4, 1);
-        cCtx.fillRect(x + 2, y + cell - 5, cell - 4, 1);
-
-        const peak = Math.max(185, Math.min(250, 226 + jitter)).toString(16);
+        // Heightmap (0..255) for horizontal twin-filament 1000D yarn bundle
+        const peak = Math.max(185, Math.min(248, 224 + jitter)).toString(16);
         const gradB = bCtx.createLinearGradient(x, y, x, y + cell);
-        gradB.addColorStop(0.0, '#0a0a0a');
-        gradB.addColorStop(0.35, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#323232');
-        gradB.addColorStop(0.65, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(1.0, '#0a0a0a');
+        gradB.addColorStop(0.00, '#080808');
+        gradB.addColorStop(0.18, '#707070');
+        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#484848');
+        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.82, '#707070');
+        gradB.addColorStop(1.00, '#080808');
         bCtx.fillStyle = gradB;
         bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       }
     }
   }
 
-  // Note: ExtrudeGeometry in Three.js uses world-meter coordinates directly as UVs (width ~0.5m).
-  // Repeat = 18x18 means 18 tiles per meter -> 9 tiles across the 0.5m bag -> ~576 yarns across the bag (~0.85mm per yarn),
-  // which makes the woven fabric texture unmistakably visible at both normal and close-up camera distances!
+  // 2) Superimpose macro fabric height ripples + micro-spun yarn grain onto the heightmap,
+  //    and compute a true RGB Tangent-Space Normal Map via Sobel height derivatives!
+  const bImg = bCtx.getImageData(0, 0, size, size);
+  const bData = bImg.data;
+  const heightField = new Float32Array(size * size);
+
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const idx = py * size + px;
+      const baseH = bData[idx * 4] / 255.0;
+      // Tileable macro cloth undulation (gives soft textile height relief across the bag)
+      const u = (px / size) * Math.PI * 2;
+      const v = (py / size) * Math.PI * 2;
+      const macroClothWave =
+        Math.sin(u * 2.0 + v * 1.0) * 0.14 +
+        Math.cos(u * 3.0 - v * 2.0) * 0.10 +
+        Math.sin(u * 5.0 + v * 4.0) * 0.06;
+      // Spun nylon micro-fuzz grain
+      const microFuzz = (Math.sin(px * 1.7 + py * 2.3) * 0.5 + Math.cos(px * 3.1 - py * 1.9) * 0.5) * 0.06;
+      const h = Math.max(0.0, Math.min(1.0, baseH * 0.72 + (macroClothWave + 0.30) * 0.22 + microFuzz));
+      heightField[idx] = h;
+      const hByte = Math.round(h * 255);
+      bData[idx * 4] = hByte;
+      bData[idx * 4 + 1] = hByte;
+      bData[idx * 4 + 2] = hByte;
+      bData[idx * 4 + 3] = 255;
+    }
+  }
+  bCtx.putImageData(bImg, 0, 0);
+
+  // Generate RGB Tangent-Space Normal Map from the composite HeightMap (Sobel filter)
+  const normCanvas = document.createElement('canvas');
+  normCanvas.width = size;
+  normCanvas.height = size;
+  const nCtx = normCanvas.getContext('2d');
+  const nImg = nCtx.createImageData(size, size);
+  const nData = nImg.data;
+  const strength = 6.5;
+
+  for (let py = 0; py < size; py++) {
+    const yPrev = (py - 1 + size) & (size - 1);
+    const yNext = (py + 1) & (size - 1);
+    for (let px = 0; px < size; px++) {
+      const xPrev = (px - 1 + size) & (size - 1);
+      const xNext = (px + 1) & (size - 1);
+
+      const hL = heightField[py * size + xPrev];
+      const hR = heightField[py * size + xNext];
+      const hU = heightField[yPrev * size + px];
+      const hD = heightField[yNext * size + px];
+
+      const dx = (hL - hR) * strength;
+      const dy = (hU - hD) * strength;
+      const dz = 1.0;
+      const invLen = 1.0 / Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      const pIdx = (py * size + px) * 4;
+      nData[pIdx] = Math.round((dx * invLen * 0.5 + 0.5) * 255);
+      nData[pIdx + 1] = Math.round((dy * invLen * 0.5 + 0.5) * 255);
+      nData[pIdx + 2] = Math.round((dz * invLen * 0.5 + 0.5) * 255);
+      nData[pIdx + 3] = 255;
+    }
+  }
+  nCtx.putImageData(nImg, 0, 0);
+
   const colorTex = new THREE.CanvasTexture(colorCanvas);
   colorTex.colorSpace = THREE.SRGBColorSpace;
   colorTex.wrapS = THREE.RepeatWrapping;
   colorTex.wrapT = THREE.RepeatWrapping;
-  colorTex.repeat.set(18, 18);
+  colorTex.repeat.set(14, 14);
   colorTex.anisotropy = 8;
 
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = THREE.RepeatWrapping;
   bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(18, 18);
+  bumpTex.repeat.set(14, 14);
   bumpTex.anisotropy = 8;
 
-  return { colorTex, bumpTex };
+  const normalTex = new THREE.CanvasTexture(normCanvas);
+  normalTex.wrapS = THREE.RepeatWrapping;
+  normalTex.wrapT = THREE.RepeatWrapping;
+  normalTex.repeat.set(14, 14);
+  normalTex.anisotropy = 8;
+
+  return { colorTex, bumpTex, normalTex };
 }
 
 /**
@@ -869,7 +924,11 @@ export function createBatterySeriesLabelMaterial(seriesId, polarityOnThisSide) {
  */
 export function createStealthMaterials() {
   const microGrainTex = createMicroGrainTexture(512, 0.28);
-  const { colorTex: corduraColorTex, bumpTex: corduraBumpTex } = createCorduraWeaveTextures(1024);
+  const {
+    colorTex: corduraColorTex,
+    bumpTex: corduraBumpTex,
+    normalTex: corduraNormalTex
+  } = createCorduraWeaveTextures(1024);
   const rotorTex = createRotorBrushedTexture(512);
   const motoVinylTex = createMotoVinylBumpTexture(512);
   const mtxDecalTex = createMtx39DecalTexture();
@@ -883,27 +942,22 @@ export function createStealthMaterials() {
     roughness: 0.94,
     metalness: 0.08,
     bumpMap: microGrainTex,
-    bumpScale: 0.0022,
+    bumpScale: 0.14,
     envMapIntensity: 0.10
   });
 
-  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — 100% genuine woven ballistic nylon Cordura 1000D, ZERO plastic gloss!)
-  // NOTE: Do NOT assign corduraBumpTex to roughnessMap — dark grooves in bumpTex would become roughness=0.06 (shiny!).
-  // Uniform roughness: 0.995 + strong velvet textile sheen gives true light-absorbing matte woven cloth.
-  const MAT_CORDURA_1000D = new THREE.MeshPhysicalMaterial({
+  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — deep jet-black woven ballistic nylon Cordura 1000D driven by HeightMap & NormalMap)
+  const MAT_CORDURA_1000D = new THREE.MeshStandardMaterial({
     name: 'MAT_CORDURA_1000D',
     color: 0xffffff,
     map: corduraColorTex,
-    roughness: 0.995,
+    roughness: 0.94,
     metalness: 0.0,
-    clearcoat: 0.0,
-    reflectivity: 0.01,
+    normalMap: corduraNormalTex,
+    normalScale: new THREE.Vector2(2.15, 2.15),
     bumpMap: corduraBumpTex,
-    bumpScale: 0.0082,
-    envMapIntensity: 0.04,
-    sheen: 0.42,
-    sheenRoughness: 0.94,
-    sheenColor: new THREE.Color(0x282b30),
+    bumpScale: 1.45,
+    envMapIntensity: 0.05,
     transparent: false,
     depthWrite: true,
     opacity: 1.0
@@ -927,7 +981,7 @@ export function createStealthMaterials() {
     roughness: 0.97,
     metalness: 0.0,
     bumpMap: microGrainTex,
-    bumpScale: 0.0014,
+    bumpScale: 0.12,
     envMapIntensity: 0.06
   });
 
@@ -938,7 +992,7 @@ export function createStealthMaterials() {
     color: 0xffffff,
     map: gripWaffleColor,
     bumpMap: gripWaffleBump,
-    bumpScale: 0.0042,
+    bumpScale: 0.42,
     roughness: 0.99,
     metalness: 0.0,
     envMapIntensity: 0.04
@@ -952,7 +1006,7 @@ export function createStealthMaterials() {
     metalness: 0.95,
     map: rotorTex,
     bumpMap: rotorTex,
-    bumpScale: 0.0008
+    bumpScale: 0.06
   });
 
   // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike 530mm moto saddle — matte anti-slip skin roughness: 0.92)
@@ -962,17 +1016,19 @@ export function createStealthMaterials() {
     roughness: 0.92,
     metalness: 0.0,
     bumpMap: motoVinylTex,
-    bumpScale: 0.0028,
+    bumpScale: 0.28,
     envMapIntensity: 0.08
   });
 
   const MAT_VELCRO_STRAP = new THREE.MeshStandardMaterial({
     name: 'MAT_VELCRO_STRAP',
-    color: 0x0b0c0e,
-    roughness: 0.98,
+    color: 0x0a0b0d,
+    roughness: 0.96,
     metalness: 0.0,
+    normalMap: corduraNormalTex,
+    normalScale: new THREE.Vector2(1.35, 1.35),
     bumpMap: corduraBumpTex,
-    bumpScale: 0.0038,
+    bumpScale: 0.95,
     envMapIntensity: 0.04
   });
 
