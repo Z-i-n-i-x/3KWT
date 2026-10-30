@@ -76,177 +76,143 @@ export function buildFrameNode(mats) {
   frameGroup.name = 'FRAME_STERN_18_MOD';
   const mat = mats.MAT_FRAME_RAL9005;
 
-  // 1.1 Bottom Bracket Shell (BB): center (0,0,0), Z width 68mm (-0.034..+0.034), OD 42mm (R=0.021)
-  const bbGeom = new THREE.CylinderGeometry(0.021, 0.021, 0.068, 32);
+  // ==========================================================================
+  // STOCK STERN DYNAMIC 1.0 / 2.0 (18" HI-TEN STEEL) EXACT TUBULAR GEOMETRY
+  // Painted in Deep Matte Black Powder-Coat (RAL 9005):
+  // - Straight cylindrical steel tubes (NO triangular gusset plates!)
+  // - Distinct separation (~42mm) between Toptube & Downtube on the straight 1-1/8" Head Tube
+  // - Seat Tube extends ~55mm above Toptube weld, Seatstays weld ~30mm below Toptube
+  // - Stock welded V-Brake Pivot Bosses & Cable Stop Guides on tubes
+  // ==========================================================================
+
+  // 1.1 Bottom Bracket Shell (BB): center (0,0,0), Z width 68mm (-0.034..+0.034), OD 40mm (R=0.020)
+  const bbGeom = new THREE.CylinderGeometry(0.020, 0.020, 0.068, 32);
   bbGeom.rotateX(Math.PI / 2);
   const bbMesh = new THREE.Mesh(bbGeom, mat);
   bbMesh.castShadow = true;
   bbMesh.receiveShadow = true;
   frameGroup.add(bbMesh);
 
-  // BB threaded cups (deep matte black)
+  // BB threaded cups (matte black)
   [-0.036, 0.036].forEach((zPos) => {
-    const cupGeom = new THREE.CylinderGeometry(0.022, 0.022, 0.005, 24);
+    const cupGeom = new THREE.CylinderGeometry(0.0212, 0.0212, 0.005, 24);
     cupGeom.rotateX(Math.PI / 2);
     const cup = new THREE.Mesh(cupGeom, mat);
     cup.position.set(0, 0, zPos);
     frameGroup.add(cup);
   });
 
-  // 1.2 Seat Tube: (0,0,0) -> (-0.145, 0.435, 0), length 455mm (18"), OD 34.9mm (R=0.0174)
+  // 1.2 Straight Cylindrical Hi-Ten Steel Seat Tube:
+  // Welds to Toptube at (-0.135, 0.410, 0) and extends ~50mm higher to (-0.152, 0.460, 0) (1:1 as on Stock Photo!)
+  // OD = 31.8mm (R = 0.0159m)
   const pBB = new THREE.Vector3(0, 0, 0);
-  const pSeatTop = new THREE.Vector3(-0.145, 0.435, 0);
-  const seatTube = createCylinderBetween(pBB, pSeatTop, 0.0174, 0.0174, mat, 32);
+  const pSeatTop = new THREE.Vector3(-0.152, 0.460, 0);
+  const seatTube = createCylinderBetween(pBB, pSeatTop, 0.0159, 0.0159, mat, 32);
   frameGroup.add(seatTube);
 
-  // Seatpost clamp at (-0.145, 0.435, 0)
+  // Seatpost collar clamp with quick-release / Allen ears at top of Seat Tube (-0.152, 0.460, 0)
   const clampDir = pSeatTop.clone().sub(pBB).normalize();
   const clampMesh = createCylinderBetween(
-    pSeatTop.clone().addScaledVector(clampDir, -0.016),
-    pSeatTop.clone().addScaledVector(clampDir, 0.004),
-    0.0195,
-    0.0195,
+    pSeatTop.clone().addScaledVector(clampDir, -0.015),
+    pSeatTop.clone().addScaledVector(clampDir, 0.003),
+    0.0182,
+    0.0182,
     mat,
-    24
+    28
   );
   frameGroup.add(clampMesh);
 
-  // 1.3 Sculpted Hourglass Head Tube 1 1/8" (ZS44 / EC34): bottom (0.425, 0.450, 0) -> top (0.390, 0.565, 0), L=120mm
-  // Includes flared integrated top/bottom bearing cups & raised 3D embossed STERN crest on front face (1:1 as on Photo!)
+  // 1.3 Straight Cylindrical 1 1/8" Steel Head Tube (EC34):
+  // Bottom (0.425, 0.450, 0) -> Top (0.390, 0.565, 0), Length = 120mm, straight OD = 36mm (R = 0.0180m)
   const pHeadBot = new THREE.Vector3(0.425, 0.450, 0);
   const pHeadTop = new THREE.Vector3(0.390, 0.565, 0);
   const headAxis = pHeadTop.clone().sub(pHeadBot).normalize();
   const headLen = pHeadBot.distanceTo(pHeadTop);
   const headMid = pHeadBot.clone().add(pHeadTop).multiplyScalar(0.5);
 
-  const headLathePts = [
-    new THREE.Vector2(0.0245, 0.000),
-    new THREE.Vector2(0.0252, 0.010),
-    new THREE.Vector2(0.0225, 0.024),
-    new THREE.Vector2(0.0212, headLen * 0.50),
-    new THREE.Vector2(0.0225, headLen - 0.024),
-    new THREE.Vector2(0.0252, headLen - 0.010),
-    new THREE.Vector2(0.0245, headLen)
-  ];
-  const headGeom = new THREE.LatheGeometry(headLathePts, 36);
-  headGeom.translate(0, -headLen * 0.5, 0);
-  const headTube = new THREE.Mesh(headGeom, mat);
-  headTube.position.copy(headMid);
-  headTube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), headAxis);
-  headTube.castShadow = true;
-  headTube.receiveShadow = true;
+  const headTube = createCylinderBetween(pHeadBot, pHeadTop, 0.0180, 0.0180, mat, 32);
   frameGroup.add(headTube);
 
-  // Raised 3D Embossed Matte-Black "STERN" Geometric Shield Emblem on the front of the Head Tube (visible in user's photo!)
+  // Subtle matte-black embossed STERN shield emblem on the front of the straight Head Tube
   const headBadgeGroup = new THREE.Group();
   headBadgeGroup.position.copy(headMid);
   headBadgeGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), headAxis);
   const badgeShield = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.0222, 0.0222, 0.034, 24, 1, true, -Math.PI * 0.22, Math.PI * 0.44),
+    new THREE.CylinderGeometry(0.0186, 0.0186, 0.030, 24, 1, true, -Math.PI * 0.20, Math.PI * 0.40),
     mat
   );
   badgeShield.rotation.y = Math.PI * 0.5;
   headBadgeGroup.add(badgeShield);
-  // Geometric raised bars of the Stern headtube crest
-  [-0.010, 0.0, 0.010].forEach((by, bIdx) => {
+  [-0.008, 0.0, 0.008].forEach((by, bIdx) => {
     const crestBar = new THREE.Mesh(
-      new THREE.BoxGeometry(0.0022, 0.0036, bIdx === 1 ? 0.016 : 0.012),
+      new THREE.BoxGeometry(0.0016, 0.0030, bIdx === 1 ? 0.013 : 0.010),
       mat
     );
-    crestBar.position.set(0.0218, by, 0);
+    crestBar.position.set(0.0184, by, 0);
     headBadgeGroup.add(crestBar);
-  });
-  [-0.0055, 0.0055].forEach((bz) => {
-    const crestVert = new THREE.Mesh(new THREE.BoxGeometry(0.0022, 0.024, 0.0032), mat);
-    crestVert.position.set(0.0218, 0, bz);
-    headBadgeGroup.add(crestVert);
   });
   frameGroup.add(headBadgeGroup);
 
-  // External Pressed Headset Bearing Cups (Top & Bottom matte finish)
+  // External Pressed EC34 Headset Bearing Cups (Top & Bottom on the straight Head Tube — 1:1 as on Stock Photo!)
   const lowerCup = createCylinderBetween(
-    pHeadBot.clone().addScaledVector(headAxis, -0.010),
+    pHeadBot.clone().addScaledVector(headAxis, -0.011),
     pHeadBot,
-    0.0235,
-    0.0252,
+    0.0205,
+    0.0222,
     mat,
     32
   );
   const upperCup = createCylinderBetween(
     pHeadTop,
-    pHeadTop.clone().addScaledVector(headAxis, 0.010),
-    0.0252,
-    0.0235,
+    pHeadTop.clone().addScaledVector(headAxis, 0.011),
+    0.0222,
+    0.0205,
     mat,
     32
   );
   frameGroup.add(lowerCup, upperCup);
 
-  // 1.4 Muscular Hydroformed Bi-Oval Downtube (48x38mm -> rx=0.024, rz=0.019): (0.015, 0.015, 0) -> (0.415, 0.465, 0)
-  const pDownStart = new THREE.Vector3(0.015, 0.015, 0);
-  const pDownEnd = new THREE.Vector3(0.415, 0.465, 0);
-  const downTube = createBiOvalTubeBetween(pDownStart, pDownEnd, 0.024, 0.019, mat, 32);
+  // 1.4 Straight Cylindrical Steel Downtube (NO gusset plates!):
+  // Welds to lower half of Head Tube at (0.415, 0.472, 0), leaving a clean open gap on the Head Tube below Toptube (1:1 as on Stock Photo!)
+  // OD = 38mm (R = 0.0190m)
+  const pDownStart = new THREE.Vector3(0.014, 0.012, 0);
+  const pDownEnd = new THREE.Vector3(0.415, 0.472, 0);
+  const downTube = createCylinderBetween(pDownStart, pDownEnd, 0.0190, 0.0190, mat, 32);
   frameGroup.add(downTube);
 
-  // Welded Hydroformed Throat Gusset uniting Head Tube, Toptube & Downtube into a solid matte triangle throat (1:1 as on Photo!)
-  const gussetShape = new THREE.Shape();
-  gussetShape.moveTo(0.342, 0.388);
-  gussetShape.lineTo(0.425, 0.452);
-  gussetShape.lineTo(0.395, 0.545);
-  gussetShape.lineTo(0.332, 0.525);
-  gussetShape.lineTo(0.352, 0.468);
-  gussetShape.closePath();
-  const gussetGeom = new THREE.ExtrudeGeometry(gussetShape, {
-    depth: 0.030,
-    bevelEnabled: true,
-    bevelThickness: 0.004,
-    bevelSize: 0.004,
-    bevelSegments: 4
-  });
-  gussetGeom.translate(0, 0, -0.015);
-  const gussetMesh = new THREE.Mesh(gussetGeom, mat);
-  gussetMesh.castShadow = true;
-  gussetMesh.receiveShadow = true;
-  frameGroup.add(gussetMesh);
-
-  // 1.5 Hydroformed Sloping Toptube: (0.395, 0.545, 0) -> (-0.135, 0.415, 0), Bi-oval 36x32mm (rx=0.0185, rz=0.0165)
-  const pTopStart = new THREE.Vector3(0.395, 0.545, 0);
-  const pTopEnd = new THREE.Vector3(-0.135, 0.415, 0);
-  const topTube = createBiOvalTubeBetween(pTopStart, pTopEnd, 0.0185, 0.0165, mat, 32);
+  // 1.5 Straight Cylindrical Sloping Steel Toptube (NO gusset plates!):
+  // Welds to upper half of Head Tube at (0.396, 0.542, 0) -> Seat Tube at (-0.135, 0.410, 0)
+  // OD = 31.8mm (R = 0.0159m) — noticeably slimmer than Downtube, 1:1 as on Stock Photo!
+  const pTopStart = new THREE.Vector3(0.396, 0.542, 0);
+  const pTopEnd = new THREE.Vector3(-0.135, 0.410, 0);
+  const topTube = createCylinderBetween(pTopStart, pTopEnd, 0.0159, 0.0159, mat, 32);
   frameGroup.add(topTube);
 
-  // Welded Seat Tube <-> Toptube Reinforcing Gusset Triangle under Saddle Nose
-  const seatGussetShape = new THREE.Shape();
-  seatGussetShape.moveTo(-0.075, 0.430);
-  seatGussetShape.lineTo(-0.135, 0.415);
-  seatGussetShape.lineTo(-0.112, 0.345);
-  seatGussetShape.closePath();
-  const seatGussetGeom = new THREE.ExtrudeGeometry(seatGussetShape, {
-    depth: 0.022,
-    bevelEnabled: true,
-    bevelThickness: 0.003,
-    bevelSize: 0.003,
-    bevelSegments: 3
+  // Stock welded cable-stop guides along the underside/side of the Toptube (authentic Stern Dynamic frame detail!)
+  [0.18, 0.82].forEach((tStop) => {
+    const pStop = pTopEnd.clone().lerp(pTopStart, tStop);
+    const stopLug = new THREE.Mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.012, 10), mat);
+    stopLug.rotation.z = Math.PI / 2 - 0.24;
+    stopLug.position.set(pStop.x, pStop.y - 0.016, 0.006);
+    frameGroup.add(stopLug);
   });
-  seatGussetGeom.translate(0, 0, -0.011);
-  frameGroup.add(new THREE.Mesh(seatGussetGeom, mat));
 
   // 1.6 Rear Triangle (OLD = 135mm, z = ±0.0675, Rear Axle = (-0.438, 0.015, 0))
   [-1, 1].forEach((side) => {
-    const zChainBB = side * 0.026;
+    const zChainBB = side * 0.025;
     const zDrop = side * 0.0675;
 
-    // Muscular Rectangular-Oval Chainstay for 26x2.35" Kenda K-Rad tire clearance
+    // Straight Tapered Steel Chainstay (OD 22mm at BB -> 16mm at rear dropout, 1:1 as on Stock Photo!)
     const chainCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.0, -0.004, zChainBB),
-      new THREE.Vector3(-0.115, 0.000, side * 0.044),
-      new THREE.Vector3(-0.270, 0.008, side * 0.062),
-      new THREE.Vector3(-0.428, 0.014, zDrop)
+      new THREE.Vector3(-0.120, 0.000, side * 0.044),
+      new THREE.Vector3(-0.275, 0.007, side * 0.060),
+      new THREE.Vector3(-0.426, 0.013, zDrop)
     ]);
-    const chainGeom = new THREE.TubeGeometry(chainCurve, 32, 0.0125, 16, false);
+    const chainGeom = new THREE.TubeGeometry(chainCurve, 32, 0.0102, 16, false);
     const cPos = chainGeom.attributes.position;
     for (let i = 0; i < cPos.count; i++) {
-      cPos.setY(i, cPos.getY(i) * 1.18);
+      cPos.setY(i, cPos.getY(i) * 1.14);
     }
     chainGeom.computeVertexNormals();
     const chainMesh = new THREE.Mesh(chainGeom, mat);
@@ -254,33 +220,42 @@ export function buildFrameNode(mats) {
     chainMesh.receiveShadow = true;
     frameGroup.add(chainMesh);
 
-    // Seatstay: (-0.138, 0.395, ±0.020) -> (-0.438, 0.032, ±0.0675), diameter 21mm (R=0.0105)
-    // Aligns into a continuous straight line with the Sloping Toptube (1:1 as on Reference Photo!)
-    const seatStayCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.138, 0.395, side * 0.020),
-      new THREE.Vector3(-0.278, 0.228, side * 0.050),
-      new THREE.Vector3(-0.434, 0.034, zDrop)
-    ]);
-    const seatStayGeom = new THREE.TubeGeometry(seatStayCurve, 24, 0.0105, 16, false);
-    const seatStayMesh = new THREE.Mesh(seatStayGeom, mat);
-    seatStayMesh.castShadow = true;
-    seatStayMesh.receiveShadow = true;
+    // Straight Slim Cylindrical Seatstay (OD 17mm -> R = 0.0085m):
+    // Welds to Seat Tube at (-0.126, 0.382, ±0.016) — ~28mm BELOW the Toptube junction, exactly as on the Stock Stern Dynamic photo!
+    const pSeatStayTop = new THREE.Vector3(-0.126, 0.382, side * 0.016);
+    const pSeatStayBot = new THREE.Vector3(-0.432, 0.032, zDrop);
+    const seatStayMesh = createCylinderBetween(pSeatStayTop, pSeatStayBot, 0.0085, 0.0080, mat, 20);
     frameGroup.add(seatStayMesh);
 
-    // Sculpted Forged Frame Dropout Plate uniting Seatstay & Chainstay
+    // Stock Welded V-Brake Pivot Bosses on the upper third of the Seatstays (authentic Stern Dynamic 1.0/2.0 rim-brake frame detail visible in photo!)
+    const pVBrakeBoss = pSeatStayTop.clone().lerp(pSeatStayBot, 0.34);
+    const vBossBase = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.016, 14), mat);
+    vBossBase.rotation.z = -0.65;
+    vBossBase.position.set(pVBrakeBoss.x - 0.006, pVBrakeBoss.y + 0.006, pVBrakeBoss.z + side * 0.005);
+    const vBossStud = new THREE.Mesh(new THREE.CylinderGeometry(0.0038, 0.0038, 0.014, 12), mat);
+    vBossStud.rotation.z = -0.65;
+    vBossStud.position.set(pVBrakeBoss.x - 0.012, pVBrakeBoss.y + 0.012, pVBrakeBoss.z + side * 0.006);
+    frameGroup.add(vBossBase, vBossStud);
+
+    // Compact Stamped 5mm Steel Rear Dropout Plate with Rear Derailleur Hanger Ear on Right Side (1:1 as on Stock Photo!)
     const dropShape = new THREE.Shape();
-    dropShape.moveTo(-0.410, 0.000);
-    dropShape.lineTo(-0.460, 0.000);
-    dropShape.lineTo(-0.460, 0.052);
-    dropShape.lineTo(-0.414, 0.048);
+    dropShape.moveTo(-0.416, 0.002);
+    dropShape.lineTo(-0.456, 0.002);
+    dropShape.lineTo(-0.456, 0.044);
+    dropShape.lineTo(-0.418, 0.040);
+    if (side === -1) {
+      // Lower derailleur hanger tab on right dropout
+      dropShape.lineTo(-0.422, -0.018);
+      dropShape.lineTo(-0.442, -0.018);
+    }
     dropShape.closePath();
     const dropGeom = new THREE.ExtrudeGeometry(dropShape, {
-      depth: 0.006,
+      depth: 0.005,
       bevelEnabled: true,
-      bevelThickness: 0.001,
-      bevelSize: 0.001
+      bevelThickness: 0.0008,
+      bevelSize: 0.0008
     });
-    dropGeom.translate(0, 0, zDrop - 0.003);
+    dropGeom.translate(0, 0, zDrop - 0.0025);
     const dropMesh = new THREE.Mesh(dropGeom, mat);
     dropMesh.castShadow = true;
     frameGroup.add(dropMesh);
@@ -288,29 +263,29 @@ export function buildFrameNode(mats) {
 
   // Black nylon cable zip-ties along left chainstay securing the motor phase harness
   [-0.14, -0.24, -0.34].forEach((xTie) => {
-    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.0135, 0.0018, 8, 20), mats.MAT_VELCRO_STRAP);
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.0125, 0.0018, 8, 20), mats.MAT_VELCRO_STRAP);
     tie.rotation.y = Math.PI / 2;
     tie.position.set(xTie, 0.006, 0.056);
     frameGroup.add(tie);
   });
 
-  // Seatstay bridge above rear 26" tire
-  const bridgeP1 = new THREE.Vector3(-0.228, 0.285, -0.042);
-  const bridgeP2 = new THREE.Vector3(-0.228, 0.285, 0.042);
-  frameGroup.add(createCylinderBetween(bridgeP1, bridgeP2, 0.009, 0.009, mat, 16));
+  // Seatstay bridge above rear 26" tire (with center fender mounting hole tab)
+  const bridgeP1 = new THREE.Vector3(-0.228, 0.268, -0.036);
+  const bridgeP2 = new THREE.Vector3(-0.228, 0.268, 0.036);
+  frameGroup.add(createCylinderBetween(bridgeP1, bridgeP2, 0.0075, 0.0075, mat, 16));
 
   // Chainstay bridge near BB
-  const csBridgeP1 = new THREE.Vector3(-0.075, -0.001, -0.036);
-  const csBridgeP2 = new THREE.Vector3(-0.075, -0.001, 0.036);
-  frameGroup.add(createCylinderBetween(csBridgeP1, csBridgeP2, 0.009, 0.009, mat, 16));
+  const csBridgeP1 = new THREE.Vector3(-0.075, -0.001, -0.035);
+  const csBridgeP2 = new THREE.Vector3(-0.075, -0.001, 0.035);
+  frameGroup.add(createCylinderBetween(csBridgeP1, csBridgeP2, 0.0075, 0.0075, mat, 16));
 
-  // 1.7 Procedural TIG Weld Seams at all frame tube intersections
+  // 1.7 Clean Circular TIG Weld Seams at all straight tube intersections
   frameGroup.add(
-    createWeldSeam(new THREE.Vector3(0.015, 0.015, 0), pDownEnd.clone().sub(pDownStart), 0.023, 0.0035, mat),
-    createWeldSeam(new THREE.Vector3(-0.008, 0.022, 0), pSeatTop.clone().sub(pBB), 0.018, 0.0032, mat),
-    createWeldSeam(new THREE.Vector3(0.412, 0.468, 0), pDownEnd.clone().sub(pDownStart), 0.024, 0.0038, mat),
-    createWeldSeam(new THREE.Vector3(0.392, 0.544, 0), pTopStart.clone().sub(pTopEnd), 0.019, 0.0035, mat),
-    createWeldSeam(new THREE.Vector3(-0.133, 0.414, 0), pTopStart.clone().sub(pTopEnd), 0.0185, 0.0034, mat)
+    createWeldSeam(new THREE.Vector3(0.014, 0.012, 0), pDownEnd.clone().sub(pDownStart), 0.0195, 0.0028, mat),
+    createWeldSeam(new THREE.Vector3(-0.006, 0.018, 0), pSeatTop.clone().sub(pBB), 0.0165, 0.0026, mat),
+    createWeldSeam(new THREE.Vector3(0.415, 0.472, 0), pDownEnd.clone().sub(pDownStart), 0.0195, 0.0030, mat),
+    createWeldSeam(new THREE.Vector3(0.396, 0.542, 0), pTopStart.clone().sub(pTopEnd), 0.0165, 0.0028, mat),
+    createWeldSeam(new THREE.Vector3(-0.135, 0.410, 0), pTopStart.clone().sub(pTopEnd), 0.0165, 0.0028, mat)
   );
 
   // 1.8 Bottom Bracket Crankset, 38T Machined Narrow-Wide Chainring, 96-Link 3D Roller Chain & CNC Pedals
