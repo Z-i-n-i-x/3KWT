@@ -3659,11 +3659,11 @@ function createCorduraWeaveTextures(size = 1024) {
   bumpCanvas.height = size;
   const bCtx = bumpCanvas.getContext('2d');
 
-  // Deep matte tactical black base (RAL 9005 / Cordura 1000D Black)
-  cCtx.fillStyle = '#090a0c';
+  // Deep matte tactical charcoal-black base (Cordura 1000D Ballistic Nylon)
+  cCtx.fillStyle = '#0e1013';
   cCtx.fillRect(0, 0, size, size);
 
-  bCtx.fillStyle = '#121212';
+  bCtx.fillStyle = '#141414';
   bCtx.fillRect(0, 0, size, size);
 
   // 64x64 distinct 2x2 basketweave 1000D nylon filament bundles per 1024x1024 tile
@@ -3671,51 +3671,57 @@ function createCorduraWeaveTextures(size = 1024) {
   for (let y = 0; y < size; y += cell) {
     for (let x = 0; x < size; x += cell) {
       const isWarp = ((x / cell) + (y / cell)) % 2 === 0;
-      const jitter = Math.floor(Math.sin(x * 0.17 + y * 0.31) * 7);
+      const jitter = Math.floor(Math.sin(x * 0.17 + y * 0.31) * 8);
+      // Organic low-frequency fabric shading across the bag panel
+      const macroWave = Math.floor(Math.sin(x * 0.012 + y * 0.018) * 3);
 
       if (isWarp) {
         // Vertical 1000D ballistic nylon twin-filament bundle
+        const cPeak = Math.max(22, Math.min(38, 30 + macroWave));
+        const cMid = Math.max(16, Math.min(28, 21 + macroWave));
         const gradC = cCtx.createLinearGradient(x, y, x + cell, y);
-        gradC.addColorStop(0.0, '#070809');
-        gradC.addColorStop(0.20, '#131518');
-        gradC.addColorStop(0.45, '#1b1e22');
-        gradC.addColorStop(0.50, '#0a0b0d'); // center groove between twin 1000D yarns
-        gradC.addColorStop(0.55, '#1b1e22');
-        gradC.addColorStop(0.80, '#131518');
-        gradC.addColorStop(1.0, '#070809');
+        gradC.addColorStop(0.0, '#090a0c');
+        gradC.addColorStop(0.20, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
+        gradC.addColorStop(0.44, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
+        gradC.addColorStop(0.50, '#0c0d10'); // center groove between twin 1000D yarns
+        gradC.addColorStop(0.56, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
+        gradC.addColorStop(0.80, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
+        gradC.addColorStop(1.0, '#090a0c');
         cCtx.fillStyle = gradC;
         cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
 
         // High-contrast bump height profile for crisp tactile weave relief
-        const peak = Math.max(185, Math.min(254, 235 + jitter)).toString(16);
+        const peak = Math.max(190, Math.min(254, 238 + jitter)).toString(16);
         const gradB = bCtx.createLinearGradient(x, y, x + cell, y);
-        gradB.addColorStop(0.0, '#101010');
-        gradB.addColorStop(0.38, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#444444');
-        gradB.addColorStop(0.62, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(1.0, '#101010');
+        gradB.addColorStop(0.0, '#0e0e0e');
+        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#424242');
+        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(1.0, '#0e0e0e');
         bCtx.fillStyle = gradB;
         bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       } else {
         // Horizontal 1000D ballistic nylon twin-filament bundle
+        const cPeak = Math.max(20, Math.min(35, 27 + macroWave));
+        const cMid = Math.max(14, Math.min(25, 19 + macroWave));
         const gradC = cCtx.createLinearGradient(x, y, x, y + cell);
-        gradC.addColorStop(0.0, '#060708');
-        gradC.addColorStop(0.20, '#111316');
-        gradC.addColorStop(0.45, '#191b1f');
-        gradC.addColorStop(0.50, '#090a0c');
-        gradC.addColorStop(0.55, '#191b1f');
-        gradC.addColorStop(0.80, '#111316');
-        gradC.addColorStop(1.0, '#060708');
+        gradC.addColorStop(0.0, '#08090b');
+        gradC.addColorStop(0.20, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
+        gradC.addColorStop(0.44, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
+        gradC.addColorStop(0.50, '#0b0c0f');
+        gradC.addColorStop(0.56, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
+        gradC.addColorStop(0.80, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
+        gradC.addColorStop(1.0, '#08090b');
         cCtx.fillStyle = gradC;
         cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
 
-        const peak = Math.max(175, Math.min(246, 215 + jitter)).toString(16);
+        const peak = Math.max(180, Math.min(248, 220 + jitter)).toString(16);
         const gradB = bCtx.createLinearGradient(x, y, x, y + cell);
-        gradB.addColorStop(0.0, '#101010');
-        gradB.addColorStop(0.38, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#3e3e3e');
-        gradB.addColorStop(0.62, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(1.0, '#101010');
+        gradB.addColorStop(0.0, '#0e0e0e');
+        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#3c3c3c');
+        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(1.0, '#0e0e0e');
         bCtx.fillStyle = gradB;
         bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       }
@@ -3726,13 +3732,13 @@ function createCorduraWeaveTextures(size = 1024) {
   colorTex.colorSpace = THREE.SRGBColorSpace;
   colorTex.wrapS = THREE.RepeatWrapping;
   colorTex.wrapT = THREE.RepeatWrapping;
-  colorTex.repeat.set(32, 32);
+  colorTex.repeat.set(36, 36);
   colorTex.anisotropy = 8;
 
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = THREE.RepeatWrapping;
   bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(32, 32);
+  bumpTex.repeat.set(36, 36);
   bumpTex.anisotropy = 8;
 
   return { colorTex, bumpTex };
@@ -4462,46 +4468,48 @@ function createStealthMaterials() {
   const sw900Controller = createSw900ScreenTexture();
   const sw900Tex = sw900Controller.tex;
 
-  // 1. MAT_FRAME_RAL9005 (Frame, subframe, 6mm dropout armor plates)
-  const MAT_FRAME_RAL9005 = new THREE.MeshPhysicalMaterial({
+  // 1. MAT_FRAME_RAL9005 (Frame, subframe, 6mm dropout armor plates — deep ultra-matte sandblasted powder coat RAL 9005)
+  const MAT_FRAME_RAL9005 = new THREE.MeshStandardMaterial({
     name: 'MAT_FRAME_RAL9005',
-    color: 0x121316,
-    roughness: 0.84,
-    metalness: 0.25,
-    clearcoat: 0.04,
+    color: 0x111215,
+    roughness: 0.94,
+    metalness: 0.08,
     bumpMap: microGrainTex,
-    bumpScale: 0.0015,
-    roughnessMap: microGrainTex
+    bumpScale: 0.0022,
+    envMapIntensity: 0.10
   });
 
-  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — deep matte black 1000D basketweave, ZERO plastic shine)
+  // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — 100% genuine woven ballistic nylon Cordura 1000D, ZERO plastic gloss!)
+  // NOTE: Do NOT assign corduraBumpTex to roughnessMap — dark grooves in bumpTex would become roughness=0.06 (shiny!).
+  // Uniform roughness: 0.995 + sheen gives true light-absorbing matte woven textile.
   const MAT_CORDURA_1000D = new THREE.MeshPhysicalMaterial({
     name: 'MAT_CORDURA_1000D',
     color: 0xffffff,
     map: corduraColorTex,
-    roughness: 0.98,
+    roughness: 0.995,
     metalness: 0.0,
     clearcoat: 0.0,
+    reflectivity: 0.02,
     bumpMap: corduraBumpTex,
-    bumpScale: 0.0042,
-    roughnessMap: corduraBumpTex,
-    envMapIntensity: 0.1,
-    sheen: 0.12,
-    sheenRoughness: 0.95,
-    sheenColor: new THREE.Color(0x141619),
+    bumpScale: 0.0052,
+    envMapIntensity: 0.04,
+    sheen: 0.22,
+    sheenRoughness: 0.96,
+    sheenColor: new THREE.Color(0x1b1d21),
     transparent: false,
     depthWrite: true,
     opacity: 1.0
   });
 
-  // 3. MAT_ANODIZED_BLACK (Fork FOXSID-X2 stanchions, handlebar, stem, ZOOM calipers, motor covers)
+  // 3. MAT_ANODIZED_BLACK (Fork FOXSID-X2 stanchions, handlebar, stem, ZOOM calipers, motor covers — satin matte black)
   const MAT_ANODIZED_BLACK = new THREE.MeshPhysicalMaterial({
     name: 'MAT_ANODIZED_BLACK',
-    color: 0x0b0c0e,
-    roughness: 0.30,
-    metalness: 0.88,
-    clearcoat: 0.18,
-    clearcoatRoughness: 0.28
+    color: 0x0d0e11,
+    roughness: 0.52,
+    metalness: 0.65,
+    clearcoat: 0.06,
+    clearcoatRoughness: 0.45,
+    envMapIntensity: 0.25
   });
 
   // 4. MAT_RUBBER_KENDA (Tires Kenda K-Rad 26x2.35 — deep matte rubber)
@@ -4539,23 +4547,25 @@ function createStealthMaterials() {
     bumpScale: 0.0008
   });
 
-  // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike 530mm moto saddle — matte anti-slip skin roughness: 0.85)
-  const MAT_MOTO_VINYL = new THREE.MeshPhysicalMaterial({
+  // 6. MAT_MOTO_VINYL (Long Sur-Ron / Pitbike 530mm moto saddle — matte anti-slip skin roughness: 0.92)
+  const MAT_MOTO_VINYL = new THREE.MeshStandardMaterial({
     name: 'MAT_MOTO_VINYL',
-    color: 0x17181b,
-    roughness: 0.85,
-    metalness: 0.03,
+    color: 0x16171a,
+    roughness: 0.92,
+    metalness: 0.0,
     bumpMap: motoVinylTex,
-    bumpScale: 0.0028
+    bumpScale: 0.0028,
+    envMapIntensity: 0.08
   });
 
-  const MAT_VELCRO_STRAP = new THREE.MeshPhysicalMaterial({
+  const MAT_VELCRO_STRAP = new THREE.MeshStandardMaterial({
     name: 'MAT_VELCRO_STRAP',
-    color: 0x090a0c,
-    roughness: 0.95,
-    metalness: 0.02,
+    color: 0x0b0c0e,
+    roughness: 0.98,
+    metalness: 0.0,
     bumpMap: corduraBumpTex,
-    bumpScale: 0.003
+    bumpScale: 0.0038,
+    envMapIntensity: 0.04
   });
 
   const MAT_RED_ANODIZED = new THREE.MeshPhysicalMaterial({
@@ -4863,26 +4873,27 @@ function buildFrameNode(mats) {
   frameGroup.name = 'FRAME_STERN_18_MOD';
   const mat = mats.MAT_FRAME_RAL9005;
 
-  // 1.1 Bottom Bracket Shell (BB): center (0,0,0), Z width 68mm (-0.034..+0.034), OD 40mm (R=0.020)
-  const bbGeom = new THREE.CylinderGeometry(0.020, 0.020, 0.068, 32);
+  // 1.1 Bottom Bracket Shell (BB): center (0,0,0), Z width 68mm (-0.034..+0.034), OD 42mm (R=0.021)
+  const bbGeom = new THREE.CylinderGeometry(0.021, 0.021, 0.068, 32);
   bbGeom.rotateX(Math.PI / 2);
   const bbMesh = new THREE.Mesh(bbGeom, mat);
   bbMesh.castShadow = true;
+  bbMesh.receiveShadow = true;
   frameGroup.add(bbMesh);
 
-  // BB threaded cups (anodized black)
+  // BB threaded cups (deep matte black)
   [-0.036, 0.036].forEach((zPos) => {
-    const cupGeom = new THREE.CylinderGeometry(0.0215, 0.0215, 0.005, 24);
+    const cupGeom = new THREE.CylinderGeometry(0.022, 0.022, 0.005, 24);
     cupGeom.rotateX(Math.PI / 2);
-    const cup = new THREE.Mesh(cupGeom, mats.MAT_ANODIZED_BLACK);
+    const cup = new THREE.Mesh(cupGeom, mat);
     cup.position.set(0, 0, zPos);
     frameGroup.add(cup);
   });
 
-  // 1.2 Seat Tube: (0,0,0) -> (-0.145, 0.435, 0), length 455mm (18"), OD 31.8mm (R=0.0159)
+  // 1.2 Seat Tube: (0,0,0) -> (-0.145, 0.435, 0), length 455mm (18"), OD 34.9mm (R=0.0174)
   const pBB = new THREE.Vector3(0, 0, 0);
   const pSeatTop = new THREE.Vector3(-0.145, 0.435, 0);
-  const seatTube = createCylinderBetween(pBB, pSeatTop, 0.0159, 0.0159, mat, 28);
+  const seatTube = createCylinderBetween(pBB, pSeatTop, 0.0174, 0.0174, mat, 32);
   frameGroup.add(seatTube);
 
   // Seatpost clamp at (-0.145, 0.435, 0)
@@ -4890,118 +4901,191 @@ function buildFrameNode(mats) {
   const clampMesh = createCylinderBetween(
     pSeatTop.clone().addScaledVector(clampDir, -0.016),
     pSeatTop.clone().addScaledVector(clampDir, 0.004),
-    0.0185,
-    0.0185,
-    mats.MAT_ANODIZED_BLACK,
+    0.0195,
+    0.0195,
+    mat,
     24
   );
   frameGroup.add(clampMesh);
 
-  // 1.3 Head Tube 1 1/8" EC34: bottom (0.425, 0.450, 0) -> top (0.390, 0.565, 0), L=120mm, OD=38mm (R=0.019)
+  // 1.3 Sculpted Hourglass Head Tube 1 1/8" (ZS44 / EC34): bottom (0.425, 0.450, 0) -> top (0.390, 0.565, 0), L=120mm
+  // Includes flared integrated top/bottom bearing cups & raised 3D embossed STERN crest on front face (1:1 as on Photo!)
   const pHeadBot = new THREE.Vector3(0.425, 0.450, 0);
   const pHeadTop = new THREE.Vector3(0.390, 0.565, 0);
   const headAxis = pHeadTop.clone().sub(pHeadBot).normalize();
-  const headTube = createCylinderBetween(pHeadBot, pHeadTop, 0.019, 0.019, mat, 32);
+  const headLen = pHeadBot.distanceTo(pHeadTop);
+  const headMid = pHeadBot.clone().add(pHeadTop).multiplyScalar(0.5);
+
+  const headLathePts = [
+    new THREE.Vector2(0.0245, 0.000),
+    new THREE.Vector2(0.0252, 0.010),
+    new THREE.Vector2(0.0225, 0.024),
+    new THREE.Vector2(0.0212, headLen * 0.50),
+    new THREE.Vector2(0.0225, headLen - 0.024),
+    new THREE.Vector2(0.0252, headLen - 0.010),
+    new THREE.Vector2(0.0245, headLen)
+  ];
+  const headGeom = new THREE.LatheGeometry(headLathePts, 36);
+  headGeom.translate(0, -headLen * 0.5, 0);
+  const headTube = new THREE.Mesh(headGeom, mat);
+  headTube.position.copy(headMid);
+  headTube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), headAxis);
+  headTube.castShadow = true;
+  headTube.receiveShadow = true;
   frameGroup.add(headTube);
 
-  // EC34 External Pressed Headset Cups (Top & Bottom with chamfers)
+  // Raised 3D Embossed Matte-Black "STERN" Geometric Shield Emblem on the front of the Head Tube (visible in user's photo!)
+  const headBadgeGroup = new THREE.Group();
+  headBadgeGroup.position.copy(headMid);
+  headBadgeGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), headAxis);
+  const badgeShield = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.0222, 0.0222, 0.034, 24, 1, true, -Math.PI * 0.22, Math.PI * 0.44),
+    mat
+  );
+  badgeShield.rotation.y = Math.PI * 0.5;
+  headBadgeGroup.add(badgeShield);
+  // Geometric raised bars of the Stern headtube crest
+  [-0.010, 0.0, 0.010].forEach((by, bIdx) => {
+    const crestBar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.0022, 0.0036, bIdx === 1 ? 0.016 : 0.012),
+      mat
+    );
+    crestBar.position.set(0.0218, by, 0);
+    headBadgeGroup.add(crestBar);
+  });
+  [-0.0055, 0.0055].forEach((bz) => {
+    const crestVert = new THREE.Mesh(new THREE.BoxGeometry(0.0022, 0.024, 0.0032), mat);
+    crestVert.position.set(0.0218, 0, bz);
+    headBadgeGroup.add(crestVert);
+  });
+  frameGroup.add(headBadgeGroup);
+
+  // External Pressed Headset Bearing Cups (Top & Bottom matte finish)
   const lowerCup = createCylinderBetween(
-    pHeadBot.clone().addScaledVector(headAxis, -0.012),
+    pHeadBot.clone().addScaledVector(headAxis, -0.010),
     pHeadBot,
-    0.022,
-    0.0245,
-    mats.MAT_ANODIZED_BLACK,
+    0.0235,
+    0.0252,
+    mat,
     32
   );
   const upperCup = createCylinderBetween(
     pHeadTop,
-    pHeadTop.clone().addScaledVector(headAxis, 0.012),
-    0.0245,
-    0.022,
-    mats.MAT_ANODIZED_BLACK,
+    pHeadTop.clone().addScaledVector(headAxis, 0.010),
+    0.0252,
+    0.0235,
+    mat,
     32
   );
   frameGroup.add(lowerCup, upperCup);
 
-  // 1.4 Downtube (Bi-oval 42x34mm -> rx=0.021, rz=0.017): (0.015, 0.015, 0) -> (0.415, 0.465, 0)
+  // 1.4 Muscular Hydroformed Bi-Oval Downtube (48x38mm -> rx=0.024, rz=0.019): (0.015, 0.015, 0) -> (0.415, 0.465, 0)
   const pDownStart = new THREE.Vector3(0.015, 0.015, 0);
   const pDownEnd = new THREE.Vector3(0.415, 0.465, 0);
-  const downTube = createBiOvalTubeBetween(pDownStart, pDownEnd, 0.021, 0.017, mat, 32);
+  const downTube = createBiOvalTubeBetween(pDownStart, pDownEnd, 0.024, 0.019, mat, 32);
   frameGroup.add(downTube);
 
-  // Welded reinforcing gusset plate under Head Tube / Downtube junction
+  // Welded Hydroformed Throat Gusset uniting Head Tube, Toptube & Downtube into a solid matte triangle throat (1:1 as on Photo!)
   const gussetShape = new THREE.Shape();
-  gussetShape.moveTo(0.355, 0.400);
-  gussetShape.lineTo(0.424, 0.452);
-  gussetShape.lineTo(0.412, 0.478);
-  gussetShape.lineTo(0.340, 0.415);
+  gussetShape.moveTo(0.342, 0.388);
+  gussetShape.lineTo(0.425, 0.452);
+  gussetShape.lineTo(0.395, 0.545);
+  gussetShape.lineTo(0.332, 0.525);
+  gussetShape.lineTo(0.352, 0.468);
   gussetShape.closePath();
   const gussetGeom = new THREE.ExtrudeGeometry(gussetShape, {
-    depth: 0.026,
+    depth: 0.030,
+    bevelEnabled: true,
+    bevelThickness: 0.004,
+    bevelSize: 0.004,
+    bevelSegments: 4
+  });
+  gussetGeom.translate(0, 0, -0.015);
+  const gussetMesh = new THREE.Mesh(gussetGeom, mat);
+  gussetMesh.castShadow = true;
+  gussetMesh.receiveShadow = true;
+  frameGroup.add(gussetMesh);
+
+  // 1.5 Hydroformed Sloping Toptube: (0.395, 0.545, 0) -> (-0.135, 0.415, 0), Bi-oval 36x32mm (rx=0.0185, rz=0.0165)
+  const pTopStart = new THREE.Vector3(0.395, 0.545, 0);
+  const pTopEnd = new THREE.Vector3(-0.135, 0.415, 0);
+  const topTube = createBiOvalTubeBetween(pTopStart, pTopEnd, 0.0185, 0.0165, mat, 32);
+  frameGroup.add(topTube);
+
+  // Welded Seat Tube <-> Toptube Reinforcing Gusset Triangle under Saddle Nose
+  const seatGussetShape = new THREE.Shape();
+  seatGussetShape.moveTo(-0.075, 0.430);
+  seatGussetShape.lineTo(-0.135, 0.415);
+  seatGussetShape.lineTo(-0.112, 0.345);
+  seatGussetShape.closePath();
+  const seatGussetGeom = new THREE.ExtrudeGeometry(seatGussetShape, {
+    depth: 0.022,
     bevelEnabled: true,
     bevelThickness: 0.003,
     bevelSize: 0.003,
     bevelSegments: 3
   });
-  gussetGeom.translate(0, 0, -0.013);
-  const gussetMesh = new THREE.Mesh(gussetGeom, mat);
-  frameGroup.add(gussetMesh);
-
-  // 1.5 Toptube: (0.395, 0.545, 0) -> (-0.135, 0.415, 0), OD 31.8mm (R=0.0159)
-  const pTopStart = new THREE.Vector3(0.395, 0.545, 0);
-  const pTopEnd = new THREE.Vector3(-0.135, 0.415, 0);
-  const topTube = createCylinderBetween(pTopStart, pTopEnd, 0.0159, 0.0159, mat, 28);
-  frameGroup.add(topTube);
+  seatGussetGeom.translate(0, 0, -0.011);
+  frameGroup.add(new THREE.Mesh(seatGussetGeom, mat));
 
   // 1.6 Rear Triangle (OLD = 135mm, z = ±0.0675, Rear Axle = (-0.438, 0.015, 0))
   [-1, 1].forEach((side) => {
     const zChainBB = side * 0.026;
     const zDrop = side * 0.0675;
 
-    // S-bend Chainstay for 26x2.30" Kenda K-Rad tire clearance (70mm gap at BB)
+    // Muscular Rectangular-Oval Chainstay for 26x2.35" Kenda K-Rad tire clearance
     const chainCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.0, -0.004, zChainBB),
       new THREE.Vector3(-0.115, 0.000, side * 0.044),
       new THREE.Vector3(-0.270, 0.008, side * 0.062),
       new THREE.Vector3(-0.428, 0.014, zDrop)
     ]);
-    const chainGeom = new THREE.TubeGeometry(chainCurve, 32, 0.0115, 16, false);
+    const chainGeom = new THREE.TubeGeometry(chainCurve, 32, 0.0125, 16, false);
     const cPos = chainGeom.attributes.position;
     for (let i = 0; i < cPos.count; i++) {
-      cPos.setY(i, cPos.getY(i) * 1.12);
+      cPos.setY(i, cPos.getY(i) * 1.18);
     }
     chainGeom.computeVertexNormals();
     const chainMesh = new THREE.Mesh(chainGeom, mat);
     chainMesh.castShadow = true;
+    chainMesh.receiveShadow = true;
     frameGroup.add(chainMesh);
 
-    // Seatstay: (-0.138, 0.395, ±0.020) -> (-0.438, 0.032, ±0.0675), diameter 19mm (R=0.0095)
+    // Seatstay: (-0.138, 0.395, ±0.020) -> (-0.438, 0.032, ±0.0675), diameter 21mm (R=0.0105)
+    // Aligns into a continuous straight line with the Sloping Toptube (1:1 as on Reference Photo!)
     const seatStayCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(-0.138, 0.395, side * 0.020),
       new THREE.Vector3(-0.278, 0.228, side * 0.050),
       new THREE.Vector3(-0.434, 0.034, zDrop)
     ]);
-    const seatStayGeom = new THREE.TubeGeometry(seatStayCurve, 24, 0.0095, 16, false);
+    const seatStayGeom = new THREE.TubeGeometry(seatStayCurve, 24, 0.0105, 16, false);
     const seatStayMesh = new THREE.Mesh(seatStayGeom, mat);
     seatStayMesh.castShadow = true;
+    seatStayMesh.receiveShadow = true;
     frameGroup.add(seatStayMesh);
 
-    // Factory 5mm frame dropout plate
+    // Sculpted Forged Frame Dropout Plate uniting Seatstay & Chainstay
     const dropShape = new THREE.Shape();
-    dropShape.moveTo(-0.415, 0.002);
-    dropShape.lineTo(-0.458, 0.002);
-    dropShape.lineTo(-0.458, 0.048);
-    dropShape.lineTo(-0.418, 0.044);
+    dropShape.moveTo(-0.410, 0.000);
+    dropShape.lineTo(-0.460, 0.000);
+    dropShape.lineTo(-0.460, 0.052);
+    dropShape.lineTo(-0.414, 0.048);
     dropShape.closePath();
-    const dropGeom = new THREE.ExtrudeGeometry(dropShape, { depth: 0.005, bevelEnabled: false });
-    dropGeom.translate(0, 0, zDrop - 0.0025);
+    const dropGeom = new THREE.ExtrudeGeometry(dropShape, {
+      depth: 0.006,
+      bevelEnabled: true,
+      bevelThickness: 0.001,
+      bevelSize: 0.001
+    });
+    dropGeom.translate(0, 0, zDrop - 0.003);
     const dropMesh = new THREE.Mesh(dropGeom, mat);
+    dropMesh.castShadow = true;
     frameGroup.add(dropMesh);
   });
 
   // Black nylon cable zip-ties along left chainstay securing the motor phase harness
   [-0.14, -0.24, -0.34].forEach((xTie) => {
-    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.013, 0.0018, 8, 20), mats.MAT_VELCRO_STRAP);
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.0135, 0.0018, 8, 20), mats.MAT_VELCRO_STRAP);
     tie.rotation.y = Math.PI / 2;
     tie.position.set(xTie, 0.006, 0.056);
     frameGroup.add(tie);
@@ -5010,20 +5094,20 @@ function buildFrameNode(mats) {
   // Seatstay bridge above rear 26" tire
   const bridgeP1 = new THREE.Vector3(-0.228, 0.285, -0.042);
   const bridgeP2 = new THREE.Vector3(-0.228, 0.285, 0.042);
-  frameGroup.add(createCylinderBetween(bridgeP1, bridgeP2, 0.008, 0.008, mat, 16));
+  frameGroup.add(createCylinderBetween(bridgeP1, bridgeP2, 0.009, 0.009, mat, 16));
 
   // Chainstay bridge near BB
   const csBridgeP1 = new THREE.Vector3(-0.075, -0.001, -0.036);
   const csBridgeP2 = new THREE.Vector3(-0.075, -0.001, 0.036);
-  frameGroup.add(createCylinderBetween(csBridgeP1, csBridgeP2, 0.008, 0.008, mat, 16));
+  frameGroup.add(createCylinderBetween(csBridgeP1, csBridgeP2, 0.009, 0.009, mat, 16));
 
   // 1.7 Procedural TIG Weld Seams at all frame tube intersections
   frameGroup.add(
-    createWeldSeam(new THREE.Vector3(0.015, 0.015, 0), pDownEnd.clone().sub(pDownStart), 0.020, 0.0032, mat),
-    createWeldSeam(new THREE.Vector3(-0.008, 0.022, 0), pSeatTop.clone().sub(pBB), 0.0165, 0.003, mat),
-    createWeldSeam(new THREE.Vector3(0.412, 0.468, 0), pDownEnd.clone().sub(pDownStart), 0.021, 0.0035, mat),
-    createWeldSeam(new THREE.Vector3(0.392, 0.544, 0), pTopStart.clone().sub(pTopEnd), 0.0165, 0.0032, mat),
-    createWeldSeam(new THREE.Vector3(-0.133, 0.414, 0), pTopStart.clone().sub(pTopEnd), 0.0165, 0.0032, mat)
+    createWeldSeam(new THREE.Vector3(0.015, 0.015, 0), pDownEnd.clone().sub(pDownStart), 0.023, 0.0035, mat),
+    createWeldSeam(new THREE.Vector3(-0.008, 0.022, 0), pSeatTop.clone().sub(pBB), 0.018, 0.0032, mat),
+    createWeldSeam(new THREE.Vector3(0.412, 0.468, 0), pDownEnd.clone().sub(pDownStart), 0.024, 0.0038, mat),
+    createWeldSeam(new THREE.Vector3(0.392, 0.544, 0), pTopStart.clone().sub(pTopEnd), 0.019, 0.0035, mat),
+    createWeldSeam(new THREE.Vector3(-0.133, 0.414, 0), pTopStart.clone().sub(pTopEnd), 0.0185, 0.0034, mat)
   );
 
   // 1.8 Bottom Bracket Crankset, 38T Machined Narrow-Wide Chainring, 96-Link 3D Roller Chain & CNC Pedals
@@ -7153,30 +7237,35 @@ function buildBatterySystemNode(mats) {
 
   batteryRoot.add(corduraCenterGroup);
 
-  // Helper to build detailed Cordura Side Cover with 3D quilted tension relief, perimeter piping (кедер),
-  // 70LL nylon stitch dashes & waterproof zipper with micro-teeth
+  // Helper to build detailed Cordura Side Cover with 3D fabric tension folds, rounded perimeter piping (кедер),
+  // wide top sewn zipper storm flap (клапан над молнией как на фото!) & waterproof zipper with puller tabs
   function buildDetailedCorduraSideCover(sideSign, name) {
     const group = new THREE.Group();
     group.name = name;
 
     const coverGeom = new THREE.ExtrudeGeometry(bagShape, {
-      depth: 0.005,
+      depth: 0.006,
       bevelEnabled: true,
-      bevelSize: 0.0015,
-      bevelThickness: 0.0015,
-      bevelSegments: 5
+      bevelSize: 0.0025,
+      bevelThickness: 0.0025,
+      bevelSegments: 6
     });
-    coverGeom.translate(0, 0, sideSign > 0 ? 0.0392 : -0.0442);
+    coverGeom.translate(0, 0, sideSign > 0 ? 0.0385 : -0.0445);
 
-    // Subtle organic 3D pillowing + diagonal fabric tension creases toward the Velcro straps (as on Photo #3!)
+    // Realistic 3D textile pillowing + natural diagonal fabric tension folds radiating from Velcro straps & bottom corner (1:1 as on Photo!)
     const cPos = coverGeom.attributes.position;
     for (let i = 0; i < cPos.count; i++) {
       const vx = cPos.getX(i);
       const vy = cPos.getY(i);
       const vz = cPos.getZ(i);
-      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.041) {
-        const wrinkle = Math.sin(vx * 28.0 - vy * 22.0) * 0.0008 + Math.cos(vx * 14.0 + vy * 19.0) * 0.0006;
-        cPos.setZ(i, vz + sideSign * wrinkle);
+      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.0405) {
+        // Gentle outward cushion bulge in the center of the triangle + diagonal fabric folds
+        const distCenter = Math.hypot(vx - 0.14, vy - 0.32);
+        const cushion = Math.max(0, 0.0032 * (1.0 - Math.pow(distCenter / 0.28, 1.6)));
+        const fold1 = Math.sin((vx * 18.0 - vy * 14.0) + 0.6) * 0.0014;
+        const fold2 = Math.cos((vx * 29.0 + vy * 21.0) - 0.3) * 0.0009;
+        const fold3 = Math.sin((vx * 9.0 - vy * 24.0)) * 0.0011;
+        cPos.setZ(i, vz + sideSign * (cushion + fold1 + fold2 + fold3));
       }
     }
     coverGeom.computeVertexNormals();
@@ -7186,33 +7275,88 @@ function buildBatterySystemNode(mats) {
     coverMesh.receiveShadow = true;
     group.add(coverMesh);
 
-    // Perimeter heavy nylon piping (кедер) + reinforced stitch seam
-    const zPiping = sideSign * 0.0448;
-    for (let i = 0; i < bagPts.length; i++) {
-      const pA = bagPts[i];
-      const pB = bagPts[(i + 1) % bagPts.length];
-      const pipeSeg = createCylinderBetween(
-        new THREE.Vector3(pA.x, pA.y, zPiping),
-        new THREE.Vector3(pB.x, pB.y, zPiping),
-        0.0035,
-        0.0035,
-        mats.MAT_VELCRO_STRAP,
-        16
+    // Continuous Rounded Perimeter Nylon Piping (тканевый кедер + окантовочная стропа по контуру сумки, без угловатых шариков!)
+    const zPiping = sideSign * 0.0442;
+    const contourPts2D = bagShape.getPoints(64);
+    const pipingPts3D = contourPts2D.map((pt) => new THREE.Vector3(pt.x, pt.y, zPiping));
+    const pipingCurve = new THREE.CatmullRomCurve3(pipingPts3D, true);
+    const pipingTube = new THREE.Mesh(
+      new THREE.TubeGeometry(pipingCurve, 96, 0.0038, 12, true),
+      mats.MAT_VELCRO_STRAP
+    );
+    pipingTube.castShadow = true;
+    pipingTube.receiveShadow = true;
+    group.add(pipingTube);
+
+    // Inner parallel stitch welt seam 5mm inside the outer piping
+    const innerWeltPts3D = contourPts2D.map((pt) => {
+      const cx = 0.14;
+      const cy = 0.34;
+      return new THREE.Vector3(
+        cx + (pt.x - cx) * 0.965,
+        cy + (pt.y - cy) * 0.965,
+        zPiping + sideSign * 0.0008
       );
-      group.add(pipeSeg);
+    });
+    const innerWeltCurve = new THREE.CatmullRomCurve3(innerWeltPts3D, true);
+    const innerWeltTube = new THREE.Mesh(
+      new THREE.TubeGeometry(innerWeltCurve, 80, 0.0014, 8, true),
+      mats.MAT_CORDURA_1000D
+    );
+    group.add(innerWeltTube);
 
-      const cornerSphere = new THREE.Mesh(new THREE.SphereGeometry(0.0036, 12, 12), mats.MAT_VELCRO_STRAP);
-      cornerSphere.position.set(pA.x, pA.y, zPiping);
-      group.add(cornerSphere);
+    // WIDE SEWN CORDURA STORM FLAP (широкий тканевый клапан-козырек вдоль верхней части сумки над молнией — 1:1 как на фото!)
+    const flapPts = [
+      new THREE.Vector2(-0.116, 0.362), // Rear lower edge of storm flap
+      new THREE.Vector2(0.364, 0.464),  // Front lower edge of storm flap
+      new THREE.Vector2(0.370, 0.522),  // Front upper edge along toptube
+      new THREE.Vector2(-0.118, 0.400)  // Rear upper edge under saddle nose
+    ];
+    const flapShape = createRoundedPolygonShape(flapPts, 0.008);
+    const flapGeom = new THREE.ExtrudeGeometry(flapShape, {
+      depth: 0.0032,
+      bevelEnabled: true,
+      bevelSize: 0.0012,
+      bevelThickness: 0.0012,
+      bevelSegments: 3
+    });
+    flapGeom.translate(0, 0, sideSign > 0 ? 0.0442 : -0.0474);
+    // Add slight natural fabric wave to the storm flap
+    const fPos = flapGeom.attributes.position;
+    for (let i = 0; i < fPos.count; i++) {
+      const fx = fPos.getX(i);
+      const fy = fPos.getY(i);
+      const fz = fPos.getZ(i);
+      const wave = Math.sin(fx * 24.0) * 0.0007 + (0.39 - fy) * 0.004;
+      fPos.setZ(i, fz + sideSign * wave);
     }
+    flapGeom.computeVertexNormals();
+    const stormFlapMesh = new THREE.Mesh(flapGeom, mats.MAT_CORDURA_1000D);
+    stormFlapMesh.castShadow = true;
+    stormFlapMesh.receiveShadow = true;
+    group.add(stormFlapMesh);
 
-    // Recessed Waterproof Coil Zipper Track parallel to Toptube (1:1 as on Reference Photo #3!)
-    const zZip = sideSign * 0.0462;
-    const zipRear = new THREE.Vector3(-0.104, 0.372, zZip);
-    const zipMid = new THREE.Vector3(0.135, 0.432, zZip);
-    const zipFront = new THREE.Vector3(0.354, 0.486, zZip);
+    // Sewn nylon webbing trim along the bottom lip of the storm flap (создает четкую теневую ступеньку вдоль всей сумки как на фото!)
+    const flapLipCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.114, 0.363, sideSign * 0.0468),
+      new THREE.Vector3(0.040, 0.396, sideSign * 0.0476),
+      new THREE.Vector3(0.205, 0.431, sideSign * 0.0476),
+      new THREE.Vector3(0.360, 0.465, sideSign * 0.0468)
+    ]);
+    const flapLipTrim = new THREE.Mesh(
+      new THREE.TubeGeometry(flapLipCurve, 44, 0.0022, 10, false),
+      mats.MAT_VELCRO_STRAP
+    );
+    flapLipTrim.castShadow = true;
+    group.add(flapLipTrim);
 
-    [-0.0024, 0.0024].forEach((dy) => {
+    // Recessed Waterproof Coil Zipper Track tucked just under the storm flap lip
+    const zZip = sideSign * 0.0454;
+    const zipRear = new THREE.Vector3(-0.106, 0.356, zZip);
+    const zipMid = new THREE.Vector3(0.130, 0.408, zZip);
+    const zipFront = new THREE.Vector3(0.354, 0.458, zZip);
+
+    [-0.0022, 0.0022].forEach((dy) => {
       const lip1 = createCylinderBetween(
         new THREE.Vector3(zipRear.x, zipRear.y + dy, zZip),
         new THREE.Vector3(zipMid.x, zipMid.y + dy, zZip),
@@ -7234,40 +7378,36 @@ function buildBatterySystemNode(mats) {
 
     // 48 Instanced Micro-Teeth along the Waterproof Coil Zipper Track
     const toothZipGeom = new THREE.BoxGeometry(0.0016, 0.0028, 0.0014);
-    const instZipTeeth = new THREE.InstancedMesh(toothZipGeom, mats.MAT_ANODIZED_BLACK, 48);
+    const instZipTeeth = new THREE.InstancedMesh(toothZipGeom, mats.MAT_VELCRO_STRAP, 48);
     const dummyZ = new THREE.Object3D();
     for (let zt = 0; zt < 48; zt++) {
       const u = zt / 47;
       const zx = zipRear.x + u * (zipFront.x - zipRear.x);
       const zy = zipRear.y + u * (zipFront.y - zipRear.y);
       dummyZ.position.set(zx, zy, zZip + sideSign * 0.0008);
-      dummyZ.rotation.set(0, 0, 0.24);
+      dummyZ.rotation.set(0, 0, 0.21);
       dummyZ.updateMatrix();
       instZipTeeth.setMatrixAt(zt, dummyZ.matrix);
     }
     instZipTeeth.instanceMatrix.needsUpdate = true;
     group.add(instZipTeeth);
 
-    // Dual matte black zipper sliders, bail loops & ergonomic textured cord puller tabs (front and rear)
+    // Dual matte black zipper sliders & cord puller tabs peeking out from under the storm flap
     [
-      { x: 0.335, y: 0.481, dx: -0.016, dy: -0.026 },
-      { x: -0.078, y: 0.378, dx: 0.012, dy: -0.026 }
+      { x: 0.332, y: 0.453, dx: -0.014, dy: -0.024 },
+      { x: -0.082, y: 0.361, dx: 0.010, dy: -0.024 }
     ].forEach((zp) => {
-      const sliderBody = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.0085, 0.0055), mats.MAT_ANODIZED_BLACK);
+      const sliderBody = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.0085, 0.0055), mats.MAT_FRAME_RAL9005);
       sliderBody.position.set(zp.x, zp.y, zZip + sideSign * 0.002);
-      sliderBody.rotation.z = 0.24;
+      sliderBody.rotation.z = 0.21;
       group.add(sliderBody);
-
-      const bailRing = new THREE.Mesh(new THREE.TorusGeometry(0.0028, 0.0007, 8, 14), mats.MAT_STEEL_ROTOR);
-      bailRing.position.set(zp.x, zp.y - 0.003, zZip + sideSign * 0.0035);
-      group.add(bailRing);
 
       const pullerTab = createCylinderBetween(
         new THREE.Vector3(zp.x, zp.y, zZip + sideSign * 0.003),
-        new THREE.Vector3(zp.x + zp.dx, zp.y + zp.dy, zZip + sideSign * 0.005),
+        new THREE.Vector3(zp.x + zp.dx, zp.y + zp.dy, zZip + sideSign * 0.0045),
         0.0018,
-        0.0036,
-        mats.MAT_ANODIZED_BLACK,
+        0.0034,
+        mats.MAT_VELCRO_STRAP,
         12
       );
       group.add(pullerTab);
