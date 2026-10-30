@@ -47,117 +47,99 @@ function createCorduraWeaveTextures(size = 1024) {
   colorCanvas.width = size;
   colorCanvas.height = size;
   const cCtx = colorCanvas.getContext('2d');
+  const cImg = cCtx.createImageData(size, size);
+  const cData = cImg.data;
 
   const bumpCanvas = document.createElement('canvas');
   bumpCanvas.width = size;
   bumpCanvas.height = size;
   const bCtx = bumpCanvas.getContext('2d');
+  const bImg = bCtx.createImageData(size, size);
+  const bData = bImg.data;
 
-  // Deep jet-black textile base (#08090b) — strictly black so the bag never looks grey or washed out!
-  cCtx.fillStyle = '#08090b';
-  cCtx.fillRect(0, 0, size, size);
+  const heightField = new Float32Array(size * size);
+  const cell = 16; // 64x64 woven 1000D yarn cells per tile
 
-  bCtx.fillStyle = '#080808';
-  bCtx.fillRect(0, 0, size, size);
+  // 1) Synthesize a true 2D interlocked over-under 1000D ballistic nylon basketweave HeightMap + Micro-AO deep black Albedo
+  for (let py = 0; py < size; py++) {
+    const cy = Math.floor(py / cell);
+    const ty = ((py % cell) + 0.5) / cell; // 0..1 inside cell Y
+    const vRad = (py / size) * Math.PI * 2.0;
 
-  // 1) Draw 64x64 woven 2x2 basketweave 1000D nylon yarn pillows into the heightmap (bumpCanvas)
-  const cell = 16;
-  for (let y = 0; y < size; y += cell) {
-    for (let x = 0; x < size; x += cell) {
-      const isWarp = ((x / cell) + (y / cell)) % 2 === 0;
-      const jitter = Math.floor(Math.sin(x * 0.19 + y * 0.29) * 12);
+    for (let px = 0; px < size; px++) {
+      const cx = Math.floor(px / cell);
+      const tx = ((px % cell) + 0.5) / cell; // 0..1 inside cell X
+      const uRad = (px / size) * Math.PI * 2.0;
+
+      const isWarp = ((cx + cy) & 1) === 0;
+      const yarnJitter = Math.sin(cx * 1.73 + cy * 2.39) * 0.045;
+
+      let yarnHeight = 0.0;
+      let filamentTwist = 0.0;
 
       if (isWarp) {
-        // Subtle jet-black thread variation (#070809 .. #111316)
-        const gradC = cCtx.createLinearGradient(x, y, x + cell, y);
-        gradC.addColorStop(0.0, '#050607');
-        gradC.addColorStop(0.25, '#0c0d10');
-        gradC.addColorStop(0.45, '#121418');
-        gradC.addColorStop(0.50, '#070809');
-        gradC.addColorStop(0.55, '#121418');
-        gradC.addColorStop(0.75, '#0c0d10');
-        gradC.addColorStop(1.0, '#050607');
-        cCtx.fillStyle = gradC;
-        cCtx.fillRect(x, y, cell, cell);
-
-        // Heightmap (0..255) for vertical twin-filament 1000D yarn bundle
-        const peak = Math.max(195, Math.min(255, 240 + jitter)).toString(16);
-        const gradB = bCtx.createLinearGradient(x, y, x + cell, y);
-        gradB.addColorStop(0.00, '#080808');
-        gradB.addColorStop(0.18, '#787878');
-        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#505050'); // groove between twin filaments
-        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.82, '#787878');
-        gradB.addColorStop(1.00, '#080808');
-        bCtx.fillStyle = gradB;
-        bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+        // Vertical 2-ply 1000D yarn bundle arching over horizontal weft
+        const crossEnv = Math.pow(Math.sin(Math.PI * tx), 0.40);
+        const twinGroove = 1.0 - 0.32 * Math.exp(-Math.pow((tx - 0.5) * 7.8, 2));
+        const overUnderArch = Math.pow(Math.sin(Math.PI * ty), 0.36);
+        filamentTwist = Math.sin((tx * 5.0 + ty * 3.0) * Math.PI * 2.0) * 0.045;
+        yarnHeight = crossEnv * twinGroove * overUnderArch * (0.96 + yarnJitter);
       } else {
-        const gradC = cCtx.createLinearGradient(x, y, x, y + cell);
-        gradC.addColorStop(0.0, '#050607');
-        gradC.addColorStop(0.25, '#0b0c0f');
-        gradC.addColorStop(0.45, '#101216');
-        gradC.addColorStop(0.50, '#060708');
-        gradC.addColorStop(0.55, '#101216');
-        gradC.addColorStop(0.75, '#0b0c0f');
-        gradC.addColorStop(1.0, '#050607');
-        cCtx.fillStyle = gradC;
-        cCtx.fillRect(x, y, cell, cell);
-
-        // Heightmap (0..255) for horizontal twin-filament 1000D yarn bundle
-        const peak = Math.max(185, Math.min(248, 224 + jitter)).toString(16);
-        const gradB = bCtx.createLinearGradient(x, y, x, y + cell);
-        gradB.addColorStop(0.00, '#080808');
-        gradB.addColorStop(0.18, '#707070');
-        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#484848');
-        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.82, '#707070');
-        gradB.addColorStop(1.00, '#080808');
-        bCtx.fillStyle = gradB;
-        bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+        // Horizontal 2-ply 1000D yarn bundle arching over vertical warp
+        const crossEnv = Math.pow(Math.sin(Math.PI * ty), 0.40);
+        const twinGroove = 1.0 - 0.32 * Math.exp(-Math.pow((ty - 0.5) * 7.8, 2));
+        const overUnderArch = Math.pow(Math.sin(Math.PI * tx), 0.36);
+        filamentTwist = Math.sin((ty * 5.0 - tx * 3.0) * Math.PI * 2.0) * 0.045;
+        yarnHeight = crossEnv * twinGroove * overUnderArch * (0.90 + yarnJitter);
       }
-    }
-  }
 
-  // 2) Superimpose macro fabric height ripples + micro-spun yarn grain onto the heightmap,
-  //    and compute a true RGB Tangent-Space Normal Map via Sobel height derivatives!
-  const bImg = bCtx.getImageData(0, 0, size, size);
-  const bData = bImg.data;
-  const heightField = new Float32Array(size * size);
-
-  for (let py = 0; py < size; py++) {
-    for (let px = 0; px < size; px++) {
-      const idx = py * size + px;
-      const baseH = bData[idx * 4] / 255.0;
-      // Tileable macro cloth undulation (gives soft textile height relief across the bag)
-      const u = (px / size) * Math.PI * 2;
-      const v = (py / size) * Math.PI * 2;
+      // Tileable meso-scale cloth micro-creases & spun nylon fiber grain
       const macroClothWave =
-        Math.sin(u * 2.0 + v * 1.0) * 0.14 +
-        Math.cos(u * 3.0 - v * 2.0) * 0.10 +
-        Math.sin(u * 5.0 + v * 4.0) * 0.06;
-      // Spun nylon micro-fuzz grain
-      const microFuzz = (Math.sin(px * 1.7 + py * 2.3) * 0.5 + Math.cos(px * 3.1 - py * 1.9) * 0.5) * 0.06;
-      const h = Math.max(0.0, Math.min(1.0, baseH * 0.72 + (macroClothWave + 0.30) * 0.22 + microFuzz));
+        Math.sin(uRad * 2.0 + vRad * 1.0) * 0.09 +
+        Math.cos(uRad * 3.0 - vRad * 2.0) * 0.07 +
+        Math.sin(uRad * 5.0 + vRad * 4.0) * 0.04;
+      const spunFuzz =
+        (Math.sin(px * 1.9 + py * 2.7) * 0.5 + Math.cos(px * 3.3 - py * 2.1) * 0.5) * 0.045;
+
+      const h = Math.max(
+        0.0,
+        Math.min(1.0, yarnHeight * 0.78 + filamentTwist + (macroClothWave + 0.20) * 0.18 + spunFuzz)
+      );
+
+      const idx = py * size + px;
       heightField[idx] = h;
+
+      const pIdx = idx * 4;
       const hByte = Math.round(h * 255);
-      bData[idx * 4] = hByte;
-      bData[idx * 4 + 1] = hByte;
-      bData[idx * 4 + 2] = hByte;
-      bData[idx * 4 + 3] = 255;
+      bData[pIdx] = hByte;
+      bData[pIdx + 1] = hByte;
+      bData[pIdx + 2] = hByte;
+      bData[pIdx + 3] = 255;
+
+      // Deep jet-black Albedo with physically accurate Micro-Cavity Ambient Occlusion in the weave pits:
+      // Pits (h=0) -> rgb(4, 5, 6); Arched thread crowns (h=1) -> rgb(16, 18, 22)
+      const aoShade = Math.pow(h, 1.35);
+      const rC = Math.round(4 + aoShade * 12);
+      const gC = Math.round(5 + aoShade * 13);
+      const bC = Math.round(6 + aoShade * 16);
+      cData[pIdx] = rC;
+      cData[pIdx + 1] = gC;
+      cData[pIdx + 2] = bC;
+      cData[pIdx + 3] = 255;
     }
   }
+
+  cCtx.putImageData(cImg, 0, 0);
   bCtx.putImageData(bImg, 0, 0);
 
-  // Generate RGB Tangent-Space Normal Map from the composite HeightMap (Sobel filter)
+  // 2) Generate RGB Tangent-Space Normal Map from the composite HeightMap (3x3 Sobel operator)
   const normCanvas = document.createElement('canvas');
   normCanvas.width = size;
   normCanvas.height = size;
   const nCtx = normCanvas.getContext('2d');
   const nImg = nCtx.createImageData(size, size);
   const nData = nImg.data;
-  const strength = 6.5;
+  const strength = 7.5;
 
   for (let py = 0; py < size; py++) {
     const yPrev = (py - 1 + size) & (size - 1);
@@ -166,13 +148,18 @@ function createCorduraWeaveTextures(size = 1024) {
       const xPrev = (px - 1 + size) & (size - 1);
       const xNext = (px + 1) & (size - 1);
 
-      const hL = heightField[py * size + xPrev];
-      const hR = heightField[py * size + xNext];
-      const hU = heightField[yPrev * size + px];
-      const hD = heightField[yNext * size + px];
+      // Full 3x3 Sobel filter for crisp, low-noise textile normals
+      const hTL = heightField[yPrev * size + xPrev];
+      const hTC = heightField[yPrev * size + px];
+      const hTR = heightField[yPrev * size + xNext];
+      const hML = heightField[py * size + xPrev];
+      const hMR = heightField[py * size + xNext];
+      const hBL = heightField[yNext * size + xPrev];
+      const hBC = heightField[yNext * size + px];
+      const hBR = heightField[yNext * size + xNext];
 
-      const dx = (hL - hR) * strength;
-      const dy = (hU - hD) * strength;
+      const dx = ((hTL + 2.0 * hML + hBL) - (hTR + 2.0 * hMR + hBR)) * 0.25 * strength;
+      const dy = ((hTL + 2.0 * hTC + hTR) - (hBL + 2.0 * hBC + hBR)) * 0.25 * strength;
       const dz = 1.0;
       const invLen = 1.0 / Math.sqrt(dx * dx + dy * dy + dz * dz);
 
@@ -189,19 +176,19 @@ function createCorduraWeaveTextures(size = 1024) {
   colorTex.colorSpace = THREE.SRGBColorSpace;
   colorTex.wrapS = THREE.RepeatWrapping;
   colorTex.wrapT = THREE.RepeatWrapping;
-  colorTex.repeat.set(14, 14);
+  colorTex.repeat.set(13, 13);
   colorTex.anisotropy = 8;
 
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = THREE.RepeatWrapping;
   bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(14, 14);
+  bumpTex.repeat.set(13, 13);
   bumpTex.anisotropy = 8;
 
   const normalTex = new THREE.CanvasTexture(normCanvas);
   normalTex.wrapS = THREE.RepeatWrapping;
   normalTex.wrapT = THREE.RepeatWrapping;
-  normalTex.repeat.set(14, 14);
+  normalTex.repeat.set(13, 13);
   normalTex.anisotropy = 8;
 
   return { colorTex, bumpTex, normalTex };
