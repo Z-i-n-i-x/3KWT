@@ -53,11 +53,11 @@ function createCorduraWeaveTextures(size = 1024) {
   bumpCanvas.height = size;
   const bCtx = bumpCanvas.getContext('2d');
 
-  // Deep matte tactical charcoal-black base (Cordura 1000D Ballistic Nylon)
-  cCtx.fillStyle = '#0e1013';
+  // Deep matte charcoal-black woven canvas / Cordura 1000D base (visibly textile, never flat black plastic!)
+  cCtx.fillStyle = '#141619';
   cCtx.fillRect(0, 0, size, size);
 
-  bCtx.fillStyle = '#141414';
+  bCtx.fillStyle = '#121212';
   bCtx.fillRect(0, 0, size, size);
 
   // 64x64 distinct 2x2 basketweave 1000D nylon filament bundles per 1024x1024 tile
@@ -65,74 +65,88 @@ function createCorduraWeaveTextures(size = 1024) {
   for (let y = 0; y < size; y += cell) {
     for (let x = 0; x < size; x += cell) {
       const isWarp = ((x / cell) + (y / cell)) % 2 === 0;
-      const jitter = Math.floor(Math.sin(x * 0.17 + y * 0.31) * 8);
-      // Organic low-frequency fabric shading across the bag panel
-      const macroWave = Math.floor(Math.sin(x * 0.012 + y * 0.018) * 3);
+      const jitter = Math.floor(Math.sin(x * 0.17 + y * 0.31) * 9);
+      // Soft macro textile mottling (natural light-catching nap of heavy Cordura 1000D cloth)
+      const macroNap = Math.floor(
+        Math.sin(x * 0.015 + y * 0.019) * 5 + Math.cos(x * 0.027 - y * 0.023) * 4
+      );
 
       if (isWarp) {
         // Vertical 1000D ballistic nylon twin-filament bundle
-        const cPeak = Math.max(22, Math.min(38, 30 + macroWave));
-        const cMid = Math.max(16, Math.min(28, 21 + macroWave));
+        const cPeak = Math.max(30, Math.min(54, 42 + macroNap));
+        const cMid = Math.max(20, Math.min(40, 29 + macroNap));
         const gradC = cCtx.createLinearGradient(x, y, x + cell, y);
-        gradC.addColorStop(0.0, '#090a0c');
-        gradC.addColorStop(0.20, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
-        gradC.addColorStop(0.44, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
-        gradC.addColorStop(0.50, '#0c0d10'); // center groove between twin 1000D yarns
-        gradC.addColorStop(0.56, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
-        gradC.addColorStop(0.80, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
-        gradC.addColorStop(1.0, '#090a0c');
+        gradC.addColorStop(0.0, '#0b0c0e');
+        gradC.addColorStop(0.18, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
+        gradC.addColorStop(0.42, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
+        gradC.addColorStop(0.50, '#101215'); // center groove between twin 1000D yarns
+        gradC.addColorStop(0.58, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
+        gradC.addColorStop(0.82, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
+        gradC.addColorStop(1.0, '#0b0c0e');
         cCtx.fillStyle = gradC;
         cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
 
+        // Micro-fiber thread lines inside the yarn bundle
+        cCtx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        cCtx.fillRect(x + 4, y + 2, 1, cell - 4);
+        cCtx.fillRect(x + cell - 5, y + 2, 1, cell - 4);
+
         // High-contrast bump height profile for crisp tactile weave relief
-        const peak = Math.max(190, Math.min(254, 238 + jitter)).toString(16);
+        const peak = Math.max(195, Math.min(255, 242 + jitter)).toString(16);
         const gradB = bCtx.createLinearGradient(x, y, x + cell, y);
-        gradB.addColorStop(0.0, '#0e0e0e');
-        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#424242');
-        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(1.0, '#0e0e0e');
+        gradB.addColorStop(0.0, '#0a0a0a');
+        gradB.addColorStop(0.35, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#383838');
+        gradB.addColorStop(0.65, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(1.0, '#0a0a0a');
         bCtx.fillStyle = gradB;
         bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       } else {
         // Horizontal 1000D ballistic nylon twin-filament bundle
-        const cPeak = Math.max(20, Math.min(35, 27 + macroWave));
-        const cMid = Math.max(14, Math.min(25, 19 + macroWave));
+        const cPeak = Math.max(27, Math.min(50, 38 + macroNap));
+        const cMid = Math.max(18, Math.min(36, 26 + macroNap));
         const gradC = cCtx.createLinearGradient(x, y, x, y + cell);
-        gradC.addColorStop(0.0, '#08090b');
-        gradC.addColorStop(0.20, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
-        gradC.addColorStop(0.44, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
-        gradC.addColorStop(0.50, '#0b0c0f');
-        gradC.addColorStop(0.56, `rgb(${cPeak},${cPeak + 2},${cPeak + 5})`);
-        gradC.addColorStop(0.80, `rgb(${cMid},${cMid + 2},${cMid + 4})`);
-        gradC.addColorStop(1.0, '#08090b');
+        gradC.addColorStop(0.0, '#0a0b0d');
+        gradC.addColorStop(0.18, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
+        gradC.addColorStop(0.42, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
+        gradC.addColorStop(0.50, '#0e1013');
+        gradC.addColorStop(0.58, `rgb(${cPeak},${cPeak + 3},${cPeak + 6})`);
+        gradC.addColorStop(0.82, `rgb(${cMid},${cMid + 2},${cMid + 5})`);
+        gradC.addColorStop(1.0, '#0a0b0d');
         cCtx.fillStyle = gradC;
         cCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
 
-        const peak = Math.max(180, Math.min(248, 220 + jitter)).toString(16);
+        cCtx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+        cCtx.fillRect(x + 2, y + 4, cell - 4, 1);
+        cCtx.fillRect(x + 2, y + cell - 5, cell - 4, 1);
+
+        const peak = Math.max(185, Math.min(250, 226 + jitter)).toString(16);
         const gradB = bCtx.createLinearGradient(x, y, x, y + cell);
-        gradB.addColorStop(0.0, '#0e0e0e');
-        gradB.addColorStop(0.36, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(0.50, '#3c3c3c');
-        gradB.addColorStop(0.64, `#${peak}${peak}${peak}`);
-        gradB.addColorStop(1.0, '#0e0e0e');
+        gradB.addColorStop(0.0, '#0a0a0a');
+        gradB.addColorStop(0.35, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(0.50, '#323232');
+        gradB.addColorStop(0.65, `#${peak}${peak}${peak}`);
+        gradB.addColorStop(1.0, '#0a0a0a');
         bCtx.fillStyle = gradB;
         bCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       }
     }
   }
 
+  // Note: ExtrudeGeometry in Three.js uses world-meter coordinates directly as UVs (width ~0.5m).
+  // Repeat = 18x18 means 18 tiles per meter -> 9 tiles across the 0.5m bag -> ~576 yarns across the bag (~0.85mm per yarn),
+  // which makes the woven fabric texture unmistakably visible at both normal and close-up camera distances!
   const colorTex = new THREE.CanvasTexture(colorCanvas);
   colorTex.colorSpace = THREE.SRGBColorSpace;
   colorTex.wrapS = THREE.RepeatWrapping;
   colorTex.wrapT = THREE.RepeatWrapping;
-  colorTex.repeat.set(36, 36);
+  colorTex.repeat.set(18, 18);
   colorTex.anisotropy = 8;
 
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = THREE.RepeatWrapping;
   bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(36, 36);
+  bumpTex.repeat.set(18, 18);
   bumpTex.anisotropy = 8;
 
   return { colorTex, bumpTex };
@@ -875,7 +889,7 @@ export function createStealthMaterials() {
 
   // 2. MAT_CORDURA_1000D (Tactical battery bag in frame triangle — 100% genuine woven ballistic nylon Cordura 1000D, ZERO plastic gloss!)
   // NOTE: Do NOT assign corduraBumpTex to roughnessMap — dark grooves in bumpTex would become roughness=0.06 (shiny!).
-  // Uniform roughness: 0.995 + sheen gives true light-absorbing matte woven textile.
+  // Uniform roughness: 0.995 + strong velvet textile sheen gives true light-absorbing matte woven cloth.
   const MAT_CORDURA_1000D = new THREE.MeshPhysicalMaterial({
     name: 'MAT_CORDURA_1000D',
     color: 0xffffff,
@@ -883,13 +897,13 @@ export function createStealthMaterials() {
     roughness: 0.995,
     metalness: 0.0,
     clearcoat: 0.0,
-    reflectivity: 0.02,
+    reflectivity: 0.01,
     bumpMap: corduraBumpTex,
-    bumpScale: 0.0052,
+    bumpScale: 0.0082,
     envMapIntensity: 0.04,
-    sheen: 0.22,
-    sheenRoughness: 0.96,
-    sheenColor: new THREE.Color(0x1b1d21),
+    sheen: 0.42,
+    sheenRoughness: 0.94,
+    sheenColor: new THREE.Color(0x282b30),
     transparent: false,
     depthWrite: true,
     opacity: 1.0

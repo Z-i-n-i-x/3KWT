@@ -267,35 +267,49 @@ export function buildBatterySystemNode(mats) {
 
   batteryRoot.add(corduraCenterGroup);
 
-  // Helper to build detailed Cordura Side Cover with 3D fabric tension folds, rounded perimeter piping (кедер),
-  // wide top sewn zipper storm flap (клапан над молнией как на фото!) & waterproof zipper with puller tabs
+  // Helper to build 1:1 Photorealistic Woven Cordura 1000D Side Cover matching the attached close-up photo:
+  // - Multi-segment organic draped cloth surface with natural tension folds & soft pillowing
+  // - Distinct light-grey/silver reflective piping welt (светоотражающий серый кант-кедер) running parallel to Toptube above the zipper
+  // - Sewn upper Cordura storm-flap hood above the grey piping & recessed waterproof coil zipper below it
+  // - Rear zipper slider & hanging black pull-tab at the left/rear end (-0.108, 0.354)
   function buildDetailedCorduraSideCover(sideSign, name) {
     const group = new THREE.Group();
     group.name = name;
 
     const coverGeom = new THREE.ExtrudeGeometry(bagShape, {
-      depth: 0.006,
+      depth: 0.008,
+      steps: 4,
       bevelEnabled: true,
-      bevelSize: 0.0025,
-      bevelThickness: 0.0025,
-      bevelSegments: 6
+      bevelSize: 0.0045,
+      bevelThickness: 0.0045,
+      bevelSegments: 8,
+      curveSegments: 32
     });
-    coverGeom.translate(0, 0, sideSign > 0 ? 0.0385 : -0.0445);
+    coverGeom.translate(0, 0, sideSign > 0 ? 0.0375 : -0.0455);
 
-    // Realistic 3D textile pillowing + natural diagonal fabric tension folds radiating from Velcro straps & bottom corner (1:1 as on Photo!)
+    // Organic 3D cloth draping: soft outward cushion over the 20S7P battery pack +
+    // diagonal fabric tension creases radiating from the bottom BB corner and Velcro straps (1:1 as on close-up photo!)
     const cPos = coverGeom.attributes.position;
     for (let i = 0; i < cPos.count; i++) {
       const vx = cPos.getX(i);
       const vy = cPos.getY(i);
       const vz = cPos.getZ(i);
-      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.0405) {
-        // Gentle outward cushion bulge in the center of the triangle + diagonal fabric folds
-        const distCenter = Math.hypot(vx - 0.14, vy - 0.32);
-        const cushion = Math.max(0, 0.0032 * (1.0 - Math.pow(distCenter / 0.28, 1.6)));
-        const fold1 = Math.sin((vx * 18.0 - vy * 14.0) + 0.6) * 0.0014;
-        const fold2 = Math.cos((vx * 29.0 + vy * 21.0) - 0.3) * 0.0009;
-        const fold3 = Math.sin((vx * 9.0 - vy * 24.0)) * 0.0011;
-        cPos.setZ(i, vz + sideSign * (cushion + fold1 + fold2 + fold3));
+      if (Math.sign(vz) === sideSign && Math.abs(vz) > 0.039) {
+        // Distance from the center of the triangular cloth panel
+        const distCenter = Math.hypot((vx - 0.13) * 0.9, (vy - 0.31) * 1.1);
+        const pillowBulge = Math.max(0, 0.0052 * (1.0 - Math.pow(Math.min(1.0, distCenter / 0.27), 1.7)));
+
+        // Natural diagonal cloth folds running from rear/top toward lower downtube & BB corner (visible in photo!)
+        const crease1 = Math.sin((vx * 19.5 - vy * 15.0) + 0.4) * 0.0021;
+        const crease2 = Math.cos((vx * 31.0 - vy * 22.0) - 0.5) * 0.0013;
+        const crease3 = Math.sin((vx * 11.0 + vy * 25.0) + 1.1) * 0.0014;
+
+        // Slight inward pinch along the zipper line (vy ≈ 0.36 + (vx + 0.11) * 0.22) so the fabric tucks into the seam!
+        const zipLineY = 0.360 + (vx + 0.110) * 0.215;
+        const distToZip = Math.abs(vy - zipLineY);
+        const zipPinch = distToZip < 0.022 ? -0.0026 * (1.0 - distToZip / 0.022) : 0.0;
+
+        cPos.setZ(i, vz + sideSign * (pillowBulge + crease1 + crease2 + crease3 + zipPinch));
       }
     }
     coverGeom.computeVertexNormals();
@@ -305,59 +319,42 @@ export function buildBatterySystemNode(mats) {
     coverMesh.receiveShadow = true;
     group.add(coverMesh);
 
-    // Continuous Rounded Perimeter Nylon Piping (тканевый кедер + окантовочная стропа по контуру сумки, без угловатых шариков!)
+    // 1. Continuous Rounded Perimeter Nylon Edge Binding (матовая тканевая окантовочная лента по краю сумки)
     const zPiping = sideSign * 0.0442;
-    const contourPts2D = bagShape.getPoints(64);
+    const contourPts2D = bagShape.getPoints(72);
     const pipingPts3D = contourPts2D.map((pt) => new THREE.Vector3(pt.x, pt.y, zPiping));
     const pipingCurve = new THREE.CatmullRomCurve3(pipingPts3D, true);
     const pipingTube = new THREE.Mesh(
-      new THREE.TubeGeometry(pipingCurve, 96, 0.0038, 12, true),
+      new THREE.TubeGeometry(pipingCurve, 104, 0.0042, 12, true),
       mats.MAT_VELCRO_STRAP
     );
     pipingTube.castShadow = true;
     pipingTube.receiveShadow = true;
     group.add(pipingTube);
 
-    // Inner parallel stitch welt seam 5mm inside the outer piping
-    const innerWeltPts3D = contourPts2D.map((pt) => {
-      const cx = 0.14;
-      const cy = 0.34;
-      return new THREE.Vector3(
-        cx + (pt.x - cx) * 0.965,
-        cy + (pt.y - cy) * 0.965,
-        zPiping + sideSign * 0.0008
-      );
-    });
-    const innerWeltCurve = new THREE.CatmullRomCurve3(innerWeltPts3D, true);
-    const innerWeltTube = new THREE.Mesh(
-      new THREE.TubeGeometry(innerWeltCurve, 80, 0.0014, 8, true),
-      mats.MAT_CORDURA_1000D
-    );
-    group.add(innerWeltTube);
-
-    // WIDE SEWN CORDURA STORM FLAP (широкий тканевый клапан-козырек вдоль верхней части сумки над молнией — 1:1 как на фото!)
+    // 2. Sewn Upper Cordura Storm-Flap Panel (верхний тканевый клапан-козырек вдоль верхней трубы рамы)
     const flapPts = [
       new THREE.Vector2(-0.116, 0.362), // Rear lower edge of storm flap
-      new THREE.Vector2(0.364, 0.464),  // Front lower edge of storm flap
-      new THREE.Vector2(0.370, 0.522),  // Front upper edge along toptube
-      new THREE.Vector2(-0.118, 0.400)  // Rear upper edge under saddle nose
+      new THREE.Vector2(0.362, 0.464),  // Front lower edge of storm flap
+      new THREE.Vector2(0.372, 0.510),  // Front upper edge along toptube
+      new THREE.Vector2(-0.118, 0.396)  // Rear upper edge under saddle nose
     ];
     const flapShape = createRoundedPolygonShape(flapPts, 0.008);
     const flapGeom = new THREE.ExtrudeGeometry(flapShape, {
-      depth: 0.0032,
+      depth: 0.0038,
       bevelEnabled: true,
-      bevelSize: 0.0012,
-      bevelThickness: 0.0012,
-      bevelSegments: 3
+      bevelSize: 0.0016,
+      bevelThickness: 0.0016,
+      bevelSegments: 4
     });
-    flapGeom.translate(0, 0, sideSign > 0 ? 0.0442 : -0.0474);
-    // Add slight natural fabric wave to the storm flap
+    flapGeom.translate(0, 0, sideSign > 0 ? 0.0445 : -0.0483);
+
     const fPos = flapGeom.attributes.position;
     for (let i = 0; i < fPos.count; i++) {
       const fx = fPos.getX(i);
       const fy = fPos.getY(i);
       const fz = fPos.getZ(i);
-      const wave = Math.sin(fx * 24.0) * 0.0007 + (0.39 - fy) * 0.004;
+      const wave = Math.sin(fx * 22.0 + 0.5) * 0.0009 + Math.cos(fx * 35.0) * 0.0005 + (0.39 - fy) * 0.004;
       fPos.setZ(i, fz + sideSign * wave);
     }
     flapGeom.computeVertexNormals();
@@ -366,25 +363,47 @@ export function buildBatterySystemNode(mats) {
     stormFlapMesh.receiveShadow = true;
     group.add(stormFlapMesh);
 
-    // Sewn nylon webbing trim along the bottom lip of the storm flap (создает четкую теневую ступеньку вдоль всей сумки как на фото!)
-    const flapLipCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.114, 0.363, sideSign * 0.0468),
-      new THREE.Vector3(0.040, 0.396, sideSign * 0.0476),
-      new THREE.Vector3(0.205, 0.431, sideSign * 0.0476),
-      new THREE.Vector3(0.360, 0.465, sideSign * 0.0468)
+    // 3. DISTINCT SILVER-GREY REFLECTIVE PIPING WELT (светло-серый светоотражающий кант вдоль всей верхней части сумки над молнией — 1:1 как на фото!)
+    const reflectivePipingMat = new THREE.MeshStandardMaterial({
+      color: 0x8c929ac,
+      roughness: 0.58,
+      metalness: 0.18,
+      envMapIntensity: 0.25
+    });
+    reflectivePipingMat.color.setHex(0x8e949c);
+
+    const greyPipingCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.115, 0.365, sideSign * 0.0482),
+      new THREE.Vector3(0.040, 0.400, sideSign * 0.0492),
+      new THREE.Vector3(0.205, 0.436, sideSign * 0.0490),
+      new THREE.Vector3(0.362, 0.466, sideSign * 0.0475)
     ]);
-    const flapLipTrim = new THREE.Mesh(
-      new THREE.TubeGeometry(flapLipCurve, 44, 0.0022, 10, false),
+    const greyPipingMesh = new THREE.Mesh(
+      new THREE.TubeGeometry(greyPipingCurve, 56, 0.0019, 12, false),
+      reflectivePipingMat
+    );
+    greyPipingMesh.castShadow = true;
+    group.add(greyPipingMesh);
+
+    // Black nylon welt lip directly below the grey reflective piping (forms the deep shadow groove over the zipper!)
+    const blackLipCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.114, 0.361, sideSign * 0.0478),
+      new THREE.Vector3(0.040, 0.396, sideSign * 0.0488),
+      new THREE.Vector3(0.205, 0.432, sideSign * 0.0486),
+      new THREE.Vector3(0.360, 0.462, sideSign * 0.0472)
+    ]);
+    const blackLipTrim = new THREE.Mesh(
+      new THREE.TubeGeometry(blackLipCurve, 48, 0.0020, 10, false),
       mats.MAT_VELCRO_STRAP
     );
-    flapLipTrim.castShadow = true;
-    group.add(flapLipTrim);
+    blackLipTrim.castShadow = true;
+    group.add(blackLipTrim);
 
-    // Recessed Waterproof Coil Zipper Track tucked just under the storm flap lip
-    const zZip = sideSign * 0.0454;
-    const zipRear = new THREE.Vector3(-0.106, 0.356, zZip);
-    const zipMid = new THREE.Vector3(0.130, 0.408, zZip);
-    const zipFront = new THREE.Vector3(0.354, 0.458, zZip);
+    // 4. Recessed Waterproof Coil Zipper Track tucked under the grey reflective piping & black storm lip
+    const zZip = sideSign * 0.0462;
+    const zipRear = new THREE.Vector3(-0.110, 0.354, zZip);
+    const zipMid = new THREE.Vector3(0.125, 0.407, zZip);
+    const zipFront = new THREE.Vector3(0.354, 0.456, zZip);
 
     [-0.0022, 0.0022].forEach((dy) => {
       const lip1 = createCylinderBetween(
@@ -422,21 +441,21 @@ export function buildBatterySystemNode(mats) {
     instZipTeeth.instanceMatrix.needsUpdate = true;
     group.add(instZipTeeth);
 
-    // Dual matte black zipper sliders & cord puller tabs peeking out from under the storm flap
+    // Rear & Front Matte Black Zipper Sliders with Hanging Pull-Tabs (Rear pull-tab at (-0.104, 0.355) exactly matches close-up photo!)
     [
-      { x: 0.332, y: 0.453, dx: -0.014, dy: -0.024 },
-      { x: -0.082, y: 0.361, dx: 0.010, dy: -0.024 }
+      { x: -0.102, y: 0.356, dx: -0.008, dy: -0.026 },
+      { x: 0.334, y: 0.452, dx: -0.012, dy: -0.024 }
     ].forEach((zp) => {
       const sliderBody = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.0085, 0.0055), mats.MAT_FRAME_RAL9005);
-      sliderBody.position.set(zp.x, zp.y, zZip + sideSign * 0.002);
+      sliderBody.position.set(zp.x, zp.y, zZip + sideSign * 0.0022);
       sliderBody.rotation.z = 0.21;
       group.add(sliderBody);
 
       const pullerTab = createCylinderBetween(
-        new THREE.Vector3(zp.x, zp.y, zZip + sideSign * 0.003),
-        new THREE.Vector3(zp.x + zp.dx, zp.y + zp.dy, zZip + sideSign * 0.0045),
-        0.0018,
-        0.0034,
+        new THREE.Vector3(zp.x, zp.y, zZip + sideSign * 0.0032),
+        new THREE.Vector3(zp.x + zp.dx, zp.y + zp.dy, zZip + sideSign * 0.0050),
+        0.0020,
+        0.0038,
         mats.MAT_VELCRO_STRAP,
         12
       );
